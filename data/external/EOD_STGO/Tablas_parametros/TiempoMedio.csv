@@ -1,0 +1,10 @@
+Id;TiempoMedio
+1;menor o igual a 30 minutos
+2;entre 31 minutos y 1 hora
+3;entre 1 hora y 1 hora 30 minutos
+4;entre 1 hora 30 minutos y 2 horas
+5;entre 2 horas y 2 horas 30 minutos
+6;entre 2 horas 30 minutos y 3 horas
+7;entre 3 horas y 3 horas 30 minutos
+8;entre 3 horas 30 minutos y 4 horas
+9;más de 4 horas

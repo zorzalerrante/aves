@@ -1,0 +1,8 @@
+Id;TramoIngreso
+1;Menos de 200.000 pesos
+2;Entre 200.001 y 400.000 pesos
+3;Entre 400.001 y 800.000 pesos
+4;Entre 800.001 y 1.600.000 pesos
+5;Entre 1.600.001 y 2.400.000 pesos
+6;Más de 2.400.000 pesos
+7;No contesta

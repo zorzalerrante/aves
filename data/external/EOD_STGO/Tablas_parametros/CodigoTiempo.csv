@@ -1,0 +1,7 @@
+Código;Observación
+0;Tiempo de viaje correcto
+1;Viaje hacia (o desde) zona externa
+2;Viaje motorizado corto (200 m o menos)
+3;Tiempo sin coordenadas geográficas
+4;Tiempo con distancia = 0
+5;Inconsistencia en reporte de horas

@@ -1,0 +1,19 @@
+ID;Modo
+1;Auto
+2;Bus TS
+3;Bus no TS
+4;Metro
+5;Taxi Colectivo
+6;Taxi 
+7;Bus TS - Bus no TS
+8;Auto - Metro
+9;Bus TS - Metro
+10;Bus no TS - Metro
+11;Taxi Colectivo - Metro
+12;Taxi - Metro
+13;Otros - Metro
+14;Otros - Bus TS
+15;Otros - Bus TS - Metro
+16;Otros
+17;Caminata
+18;Bicicleta

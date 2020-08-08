@@ -1,0 +1,4 @@
+Id;horario_metro;Campo1
+1;Punta (lunes a viernes de 07:00 a 08:59 y de 18:00 a 19:59 horas);
+2;Valle (lunes a viernes de 06:30 a 06:59, de 09:00 a 17:59 horas y de 20:00 a 20:44 horas, sábados, domingos y festivos todo el día);
+3;Bajo (lunes a viernes de 06:00 a 06:29 y de 20:45 a 23:00 horas);

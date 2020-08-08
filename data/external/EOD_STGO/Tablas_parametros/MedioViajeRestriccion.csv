@@ -1,0 +1,12 @@
+Id;medio_viaje
+1;Tren
+2;Micro o Bus
+3;Metro
+4;Taxi colectivo
+5;Taxi o radiotaxi
+6;Bicicleta
+7;Auto
+8;Motocicleta
+9;Caminata
+10;No viaja
+11;Otro (especifique)

@@ -1,0 +1,5 @@
+Id;jornada_trabajo
+1;Jornada completa (40 o más horas semanales)
+2;Jornada parcial (menos de 40 horas semanales, excluye sólo fines de semana)
+3;Sólo fines de semana
+4;Ocasional

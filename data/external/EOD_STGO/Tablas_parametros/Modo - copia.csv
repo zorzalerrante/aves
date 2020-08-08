@@ -1,0 +1,19 @@
+Id;Modo
+1;Auto Chofer
+2;Bus alimentador
+3;Bus troncal
+4;Metro
+5;Taxi colectivo
+6;Furgón escolar, como pasajero
+7;Taxi o radiotaxi
+8;Enteramente a pie
+9;Bicicleta
+10;Motocicleta
+11;Bus institucional
+12;Bus interurbano o rural
+13;Furgón escolar, como chofer o acompañante
+14;Bus urbano con pago al conductor (Metrobus y otros)
+15;Servicio Informal
+16;Tren
+17;Auto Acompañante
+18;Motocicleta Acompañante

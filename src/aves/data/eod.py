@@ -3,7 +3,7 @@ import numpy as np
 from pathlib import Path
 
 
-DATA_PATH = Path(__file__).resolve().parent.parent.parent.parent / 'data' / 'external' / 'EOD_STGO'
+_DATA_PATH = Path(__file__).resolve().parent.parent.parent.parent / 'data' / 'external' / 'EOD_STGO'
 
 
 def decode_column(df, fname, col_name, index_col='Id', value_col=None, sep=';', encoding='utf-8', index_dtype=np.float64):
@@ -28,7 +28,12 @@ def decode_column(df, fname, col_name, index_col='Id', value_col=None, sep=';', 
     return src_df.join(values_df, on=col_name)[value_col]
 
 
-def read_trips():
+def read_trips(path=None):
+    if path is None:
+        DATA_PATH = _DATA_PATH
+    else:
+        DATA_PATH = path
+        
     df = (pd.read_csv(DATA_PATH / 'viajes.csv', sep=';', decimal=',')
           .join(pd.read_csv(DATA_PATH / 'ViajesDifusion.csv', sep=';', index_col='Viaje'), on='Viaje')
           .join(pd.read_csv(DATA_PATH / 'DistanciaViaje.csv', sep=';', index_col='Viaje'), on='Viaje')
@@ -56,7 +61,12 @@ def read_trips():
     return df
 
 
-def read_homes():
+def read_homes(path=None):
+    if path is None:
+        DATA_PATH = _DATA_PATH
+    else:
+        DATA_PATH = path
+        
     df = (pd.read_csv(DATA_PATH / 'Hogares.csv', sep=';', decimal=',', encoding='utf-8')
                .rename(columns={'Factor': 'FactorHogar'})
     )
@@ -67,7 +77,12 @@ def read_homes():
     
 
 
-def read_people():
+def read_people(path=None):
+    if path is None:
+        DATA_PATH = _DATA_PATH
+    else:
+        DATA_PATH = path
+    
     df = (pd.read_csv(DATA_PATH / 'personas.csv', sep=';', decimal=',', encoding='utf-8')
           .rename(columns={'Factor': 'FactorPersona'})
     )
@@ -78,7 +93,12 @@ def read_people():
     df['Ocupacion'] = decode_column(df, DATA_PATH / 'Tablas_parametros' / 'Ocupacion.csv', 'Ocupacion', value_col='ocupacion')
     return df
 
-def read_transantiago_usage():
+def read_transantiago_usage(path=None):
+    if path is None:
+        DATA_PATH = _DATA_PATH
+    else:
+        DATA_PATH = path
+    
     df = (pd.read_csv(DATA_PATH / 'personas.csv', sep=';', decimal=',', encoding='utf-8')
           .pipe(lambda x: x[pd.notnull(x.NoUsaTransantiago)])
           .set_index('Persona')

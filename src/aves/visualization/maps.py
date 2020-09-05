@@ -161,16 +161,18 @@ def choropleth_map(ax, geodf, column, k=10, cmap=None, default_divergent='RdBu_r
     return ax, cbar_ax
 
 
-def heat_map(ax, geodf, min_value=0, n_levels=5, alpha=1.0, palette='magma', kernel='cosine', norm=2, bandwidth=1e-2, grid_points=2**6, weight_column=None, return_heat=False):
-    heat = kde_from_points(geodf, kernel=kernel, norm=norm, bandwidth=bandwidth, grid_points=grid_points, weight_column=None)
+def heat_map(ax, geodf, low_threshold=0, max_threshold=1.0, n_levels=5, alpha=1.0, palette='magma', kernel='cosine', norm=2, bandwidth=1e-2, grid_points=2**6, weight_column=None, return_heat=False):
+    heat = kde_from_points(geodf, kernel=kernel, norm=norm, bandwidth=bandwidth, grid_points=grid_points, weight_column=weight_column)
     
-    masked_z = np.ma.array(heat[2], mask=heat[2] < min_value)
+    norm_heat = (heat[2] / heat[2].max())
     cmap = colormap_from_palette(palette, n_colors=n_levels)
 
+    levels = np.linspace(low_threshold, max_threshold, n_levels)
+    
     if not return_heat:
-        return ax.contourf(heat[0], heat[1], masked_z, n_levels, alpha=alpha, cmap=cmap)
+        return ax.contourf(heat[0], heat[1], norm_heat, levels, alpha=alpha, cmap=cmap)
     else:
-        return ax.contourf(heat[0], heat[1], masked_z, n_levels, alpha=alpha, cmap=cmap), heat
+        return ax.contourf(heat[0], heat[1], norm_heat, levels, alpha=alpha, cmap=cmap), heat
     
 
 def add_labels_from_dataframe(ax, geodf, use_index=True, column=None, font_size=11, font_weight='bold', color='white', outline=True, outline_color='black', outline_width=2):

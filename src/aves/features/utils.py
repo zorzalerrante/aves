@@ -11,3 +11,4 @@ def normalize_columns(df):
 
 def standardize_columns(df):
     return df.apply(lambda x: (x - x.mean()) / x.std(), axis=0)
+

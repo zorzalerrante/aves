@@ -1,10 +1,12 @@
 import pandas as pd
+import geopandas as gpd
 import numpy as np
 from pathlib import Path
 
 
-_DATA_PATH = Path(__file__).resolve().parent.parent.parent.parent / 'data' / 'external' / 'EOD_STGO'
-
+_DATA_PATH = Path(__file__).resolve().parent.parent.parent.parent / 'data'
+_EOD_PATH = _DATA_PATH / 'external' / 'EOD_STGO'
+_EOD_MAPS = _DATA_PATH / 'external' / 'Zonificacion_EOD2012'
 
 def decode_column(df, fname, col_name, index_col='Id', value_col=None, sep=';', encoding='utf-8', index_dtype=np.float64):
     '''
@@ -30,7 +32,7 @@ def decode_column(df, fname, col_name, index_col='Id', value_col=None, sep=';', 
 
 def read_trips(path=None):
     if path is None:
-        DATA_PATH = _DATA_PATH
+        DATA_PATH = _EOD_PATH
     else:
         DATA_PATH = path
         
@@ -63,7 +65,7 @@ def read_trips(path=None):
 
 def read_homes(path=None):
     if path is None:
-        DATA_PATH = _DATA_PATH
+        DATA_PATH = _EOD_PATH
     else:
         DATA_PATH = path
         
@@ -79,7 +81,7 @@ def read_homes(path=None):
 
 def read_people(path=None):
     if path is None:
-        DATA_PATH = _DATA_PATH
+        DATA_PATH = _EOD_PATH
     else:
         DATA_PATH = path
     
@@ -95,7 +97,7 @@ def read_people(path=None):
 
 def read_transantiago_usage(path=None):
     if path is None:
-        DATA_PATH = _DATA_PATH
+        DATA_PATH = _EOD_PATH
     else:
         DATA_PATH = path
     
@@ -111,3 +113,11 @@ def read_transantiago_usage(path=None):
     df['NoUsaTransantiago'] = decode_column(df, DATA_PATH / 'Tablas_parametros' / 'NoUsaTransantiago.csv', 'NoUsaTransantiago', index_dtype=str)
     
     return df
+
+def read_zone_design(path=None):
+    if path is None:
+        DATA_PATH = _EOD_MAPS
+    else:
+        DATA_PATH = path
+        
+    return gpd.read_file(_EOD_MAPS)

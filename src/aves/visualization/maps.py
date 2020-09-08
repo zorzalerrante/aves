@@ -150,7 +150,7 @@ def choropleth_map(ax, geodf, column, k=10, cmap=None, default_divergent='RdBu_r
                                 norm=cbar_norm,
                                 ticks=bins,
                                 spacing='proportional',
-                                orientation='horizontal')
+                                orientation=cbar_orientation)
         sns.despine(ax=cbar_ax, top=True, bottom=True, left=True, right=True)
     else:
         raise Exception('Invalid legend type')

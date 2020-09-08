@@ -2,11 +2,12 @@ import pandas as pd
 import seaborn as sns
 import numpy as np
 import matplotlib.colors as colors
-
+import matplotlib.patheffects as path_effects
 from mpl_toolkits.axes_grid.inset_locator import inset_axes
 from matplotlib.colors import from_levels_and_colors
 from matplotlib import colorbar
 from mapclassify import FisherJenks
+
 
 
 from aves.visualization.colors import MidpointNormalize, colormap_from_palette

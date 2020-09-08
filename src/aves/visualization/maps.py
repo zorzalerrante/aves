@@ -107,9 +107,9 @@ def choropleth_map(ax, geodf, column, k=10, cmap=None, default_divergent='RdBu_r
         if not isinstance(cmap, colors.Colormap):
             if colors.is_color_like(cmap):
                 if palette_type == 'light':
-                    cmap = sns.light_palette(cmap, n_colors=k, as_cmap=True)
+                    cmap = colors.ListedColormap(sns.light_palette(cmap, n_colors=k))
                 else:
-                    cmap = sns.dark_palette(cmap, n_colors=k, as_cmap=True)
+                    cmap = colors.ListedColormap(sns.dark_palette(cmap, n_colors=k))
             else:
                 cmap_name = cmap
                 cmap = None
@@ -123,15 +123,12 @@ def choropleth_map(ax, geodf, column, k=10, cmap=None, default_divergent='RdBu_r
     
     if cmap is None:
         cmap = colors.ListedColormap(sns.color_palette(palette=cmap_name, n_colors=k))
-        #cmap = plt.get_cmap(cmap_name, k)
     
     def pick_color(b1, b0):
-        #print(b1, b0)
         if not using_divergent or np.sign(b1) == np.sign(b0):
             res = float(norm(0.5 * (b1 + b0)))
         else:
             res = float(norm(midpoint))
-        #print(res)
         return res
     
     built_palette = [cmap(pick_color(b1, b0)) for b0, b1 in zip(bins[:-1], bins[1:])]
@@ -146,7 +143,7 @@ def choropleth_map(ax, geodf, column, k=10, cmap=None, default_divergent='RdBu_r
         sns.despine(ax=cbar_ax, top=True, bottom=True, left=True, right=True)
     elif legend_type == 'colorbar':
         cbar_norm = colors.BoundaryNorm(bins, k)
-        colorbar.ColorbarBase(cbar_ax, cmap=cmap, alpha=0.75,
+        colorbar.ColorbarBase(cbar_ax, cmap=cmap,
                                 norm=cbar_norm,
                                 ticks=bins,
                                 spacing='proportional',

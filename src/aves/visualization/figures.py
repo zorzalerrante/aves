@@ -16,7 +16,7 @@ def figure_from_geodataframe(geodf, height=5, bbox=None, remove_axes=False, set_
         
     return fig, ax
 
-def small_multiples_from_geodataframe(geodf, n_variables, height=5, col_wrap=5, bbox=None, sharex=True, sharey=True, remove_axes=False, set_limits=True):
+def small_multiples_from_geodataframe(geodf, n_variables, height=5, col_wrap=5, bbox=None, sharex=True, sharey=True, remove_axes=False, set_limits=True, flatten_axes=True):
     if n_variables <= 1:
         return figure_from_geodataframe(geodf, height=height, bbox=bbox, remove_axes=remove_axes, set_limits=set_limits)
     
@@ -31,21 +31,24 @@ def small_multiples_from_geodataframe(geodf, n_variables, height=5, col_wrap=5, 
         n_rows += 1
         
     fig, axes = plt.subplots(n_rows, n_columns, figsize=(n_columns * height * aspect, n_rows * height), sharex=sharex, sharey=sharey)
-    axes = axes.flatten()
+    flattened = axes.flatten()
     
     if set_limits:
-        for ax in axes:
+        for ax in flattened:
             ax.set_xlim([bbox[0], bbox[2]])
             ax.set_ylim([bbox[1], bbox[3]])
     
     if remove_axes:
-        for ax in axes:
+        for ax in flattened:
             ax.set_axis_off()
     
     else:
         # deactivate unneeded axes
         for i in range(n_variables, len(axes)):
-            axes[i].set_axis_off()
+            flattened[i].set_axis_off()
+    
+    if flatten_axes:
+        return fig, flattened
     
     return fig, axes
 

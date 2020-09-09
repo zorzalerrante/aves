@@ -60,7 +60,33 @@ def dot_map(ax, geodf, category=None, size=10, palette=None, add_legend=True, so
     return bubble_map(ax, geodf, category=category, size=float(size), palette=palette, add_legend=add_legend, sort_categories=sort_categories, edge_color='none')
     
 
-
+def color_legend(ax, color_list, bins, norm=None, sizes=None, orientation='horizontal'):
+    if bins is None or colors is None:
+        raise Exception('bins and colors are required if size is not None (histogram)')
+            
+    if sizes is not None:
+        bar_width = (bins[1:] - bins[0:-1])
+        if orientation == 'horizontal':
+            ax.bar(bins[:-1], sizes, width=bar_width, align='edge', color=color_list, edgecolor='none')
+            ax.set_xticks(bins)
+        else:
+            ax.barh(bins[:-1], sizes, height=bar_width, align='edge', color=color_list, edgecolor='none')
+            ax.set_yticks(bins)
+        sns.despine(ax=ax, top=True, bottom=True, left=True, right=True)
+    elif norm is not None:
+        cbar_norm = colors.BoundaryNorm(bins, len(bins) - 1)
+        cmap = colors.ListedColormap(color_list)
+        colorbar.ColorbarBase(ax, cmap=cmap,
+                                norm=cbar_norm,
+                                ticks=bins,
+                                spacing='proportional',
+                                orientation=orientation)
+        sns.despine(ax=ax, top=True, bottom=True, left=True, right=True)
+    else:
+        raise Exception('Invalid legend type. norm and size are None')    
+    
+    
+    
 def choropleth_map(ax, geodf, column, k=10, cmap=None, default_divergent='RdBu_r', default_negative='Blues_r', default_positive='Reds', palette_type='light',
                     cbar_label=None, cbar_width=2.4, cbar_height=0.15, cbar_location='upper left', cbar_orientation='horizontal',
                     cbar_bbox_to_anchor=(0.0, 0.0, 1.0, 1.0), cbar_bbox_transform=None, legend_type='colorbar', edgecolor='white',
@@ -133,26 +159,12 @@ def choropleth_map(ax, geodf, column, k=10, cmap=None, default_divergent='RdBu_r
         return res
     
     built_palette = [cmap(pick_color(b1, b0)) for b0, b1 in zip(bins[:-1], bins[1:])]
-        
-    if legend_type == 'hist':
-        if fisher_jenks:
-            bar_width = (bins[1:] - bins[0:-1])
-        else:
-            bar_width = (bins[1] - bins[0])
-        cbar_ax.bar(bins[:-1], np.histogram(geodf[column], bins=bins)[0], width=bar_width, align='edge', color=built_palette)
-        cbar_ax.set_xticks(bins)
-        sns.despine(ax=cbar_ax, top=True, bottom=True, left=True, right=True)
-    elif legend_type == 'colorbar':
-        cbar_norm = colors.BoundaryNorm(bins, k)
-        colorbar.ColorbarBase(cbar_ax, cmap=cmap,
-                                norm=cbar_norm,
-                                ticks=bins,
-                                spacing='proportional',
-                                orientation=cbar_orientation)
-        sns.despine(ax=cbar_ax, top=True, bottom=True, left=True, right=True)
-    else:
-        raise Exception('Invalid legend type')
     
+    if legend_type == 'hist':
+        color_legend(cbar_ax, built_palette, bins, sizes=np.histogram(geodf[column], bins=bins)[0], orientation=cbar_orientation)
+    elif legend_type == 'colorbar':
+        color_legend(cbar_ax, built_palette, bins, norm=colors.BoundaryNorm(bins, k), orientation=cbar_orientation)
+            
     for idx, group in geodf.groupby('__bin__'):
         group.plot(ax=ax, facecolor=built_palette[idx], edgecolor=edgecolor)
         

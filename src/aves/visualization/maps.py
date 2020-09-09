@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.colors as colors
 import matplotlib.patheffects as path_effects
 from mpl_toolkits.axes_grid.inset_locator import inset_axes
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.colors import from_levels_and_colors
 from matplotlib import colorbar
 from mapclassify import FisherJenks
@@ -88,7 +89,7 @@ def color_legend(ax, color_list, bins, norm=None, sizes=None, orientation='horiz
     
     
 def choropleth_map(ax, geodf, column, k=10, cmap=None, default_divergent='RdBu_r', default_negative='Blues_r', default_positive='Reds', palette_type='light',
-                    cbar_label=None, cbar_width=2.4, cbar_height=0.15, cbar_location='upper left', cbar_orientation='horizontal',
+                    cbar_label=None, cbar_width=2.4, cbar_height=0.15, cbar_location='upper left', cbar_orientation='horizontal', cbar_pad=0.05,
                     cbar_bbox_to_anchor=(0.0, 0.0, 1.0, 1.0), cbar_bbox_transform=None, legend_type='colorbar', edgecolor='white',
                     palette_center=None, fisher_jenks=False):
     
@@ -97,7 +98,15 @@ def choropleth_map(ax, geodf, column, k=10, cmap=None, default_divergent='RdBu_r
         
     geodf = geodf[pd.notnull(geodf[column])].copy()
         
-    cbar_ax = inset_axes(ax, width=cbar_width, height=cbar_height, loc=cbar_location, bbox_to_anchor=cbar_bbox_to_anchor, bbox_transform=cbar_bbox_transform, borderpad=0)
+    if cbar_location != 'out':
+        cbar_ax = inset_axes(ax, width=cbar_width, height=cbar_height, loc=cbar_location, bbox_to_anchor=cbar_bbox_to_anchor, bbox_transform=cbar_bbox_transform, borderpad=0)
+    else:
+        divider = make_axes_locatable(ax)
+        cbar_main = divider.append_axes('bottom' if cbar_orientation == 'horizontal' else 'right', 
+                                      size=cbar_height if cbar_orientation == 'horizontal' else cbar_width, 
+                                      pad=cbar_pad)
+        cbar_main.set_axis_off()
+        cbar_ax = inset_axes(cbar_main, width=cbar_width, height=cbar_height, loc='center', bbox_to_anchor=(0.0, 0.0, 1.0, 1.0), bbox_transform=cbar_main.transAxes, borderpad=0)
     
     min_value, max_value = geodf[column].min(), geodf[column].max()
     

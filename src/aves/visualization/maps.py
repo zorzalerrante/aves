@@ -83,6 +83,7 @@ def choropleth_map(ax, geodf, column, k=10, cmap=None, default_divergent='RdBu_r
     if fisher_jenks:
         binning = FisherJenks(geodf[column], k=k)
         bins = np.insert(binning.bins, 0, geodf[column].min())
+        print(binning.bins, bins)
         geodf = geodf.assign(__bin__=binning.yb)
     else:
         bins = np.linspace(min_value, max_value + (max_value - min_value) * 0.001, num=k + 1)
@@ -105,7 +106,6 @@ def choropleth_map(ax, geodf, column, k=10, cmap=None, default_divergent='RdBu_r
         elif min_value < 0:
             # sequential
             cmap_name = default_negative
-            
         else:
             # sequential
             cmap_name = default_positive
@@ -122,7 +122,8 @@ def choropleth_map(ax, geodf, column, k=10, cmap=None, default_divergent='RdBu_r
 
     if norm is None:
         if palette_center is None:
-            norm = colors.Normalize(vmin=min_value, vmax=max_value)
+            #norm = colors.Normalize(vmin=min_value, vmax=max_value)
+            norm = colors.BoundaryNorm(bins, k)
         else:
             norm = MidpointNormalize(vmin=min_value, vmax=max_value, midpoint=midpoint)
             using_divergent = True
@@ -131,13 +132,15 @@ def choropleth_map(ax, geodf, column, k=10, cmap=None, default_divergent='RdBu_r
         cmap = colors.ListedColormap(sns.color_palette(palette=cmap_name, n_colors=k))
     
     def pick_color(b1, b0):
-        if not using_divergent or np.sign(b1) == np.sign(b0):
-            res = float(norm(0.5 * (b1 + b0)))
+        if type(norm) == colors.BoundaryNorm:
+            res = cmap(norm(0.5 * (b0 + b1)))
+        elif b1 > midpoint and b0 < midpoint:
+            res = cmap(float(norm(midpoint)))
         else:
-            res = float(norm(midpoint))
+            res = cmap(float(norm(0.5 * (b0 + b1))))
         return res
     
-    built_palette = [cmap(pick_color(b1, b0)) for b0, b1 in zip(bins[:-1], bins[1:])]
+    built_palette = [pick_color(b1, b0) for b0, b1 in zip(bins[:-1], bins[1:])]
     
     if legend_type == 'hist':
         color_legend(cbar_ax, built_palette, bins, sizes=np.histogram(geodf[column], bins=bins)[0], orientation=cbar_orientation)

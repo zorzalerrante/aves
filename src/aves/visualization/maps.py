@@ -6,7 +6,6 @@ import matplotlib.patheffects as path_effects
 from mpl_toolkits.axes_grid.inset_locator import inset_axes
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.colors import from_levels_and_colors
-from matplotlib import colorbar
 from mapclassify import FisherJenks
 from aves.visualization.colors import color_legend, MidpointNormalize, colormap_from_palette
 from aves.features.geo import kde_from_points

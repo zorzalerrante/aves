@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.colors as colors
 import seaborn as sns
+import spectra
+from matplotlib import colorbar
 
 # from http://chris35wills.github.io/matplotlib_diverging_colorbar/
 
@@ -33,10 +35,10 @@ def color_legend(ax, color_list, bins, norm=None, sizes=None, orientation='horiz
     if sizes is not None:
         bar_width = (bins[1:] - bins[0:-1])
         if orientation == 'horizontal':
-            ax.bar(bins[:-1], sizes, width=bar_width, align='edge', color=color_list, edgecolor='none')
+            ax.bar(bins[:-1], sizes, width=bar_width, align='edge', color=color_list, edgecolor=color_list)
             ax.set_xticks(bins)
         else:
-            ax.barh(bins[:-1], sizes, height=bar_width, align='edge', color=color_list, edgecolor='none')
+            ax.barh(bins[:-1], sizes, height=bar_width, align='edge', color=color_list, edgecolor=color_list)
             ax.set_yticks(bins)
         sns.despine(ax=ax, top=True, bottom=True, left=True, right=True)
     elif norm is not None:
@@ -51,3 +53,36 @@ def color_legend(ax, color_list, bins, norm=None, sizes=None, orientation='horiz
     else:
         raise Exception('Invalid legend type. norm and size are None')    
     
+    
+def bivariate_matrix_from_palette(palette_name='PiYG', n_colors=3):
+    #full_palette = sns.diverging_palette(150, 275, s=80, l=40, n=(cmap_n_colors - 1) * 2 + 1)
+    full_palette = sns.color_palette(palette_name, n_colors=(n_colors - 1) * 2 + 1)
+
+    cmap_x = full_palette[n_colors - 1:]
+    cmap_y = list(reversed(full_palette))[n_colors - 1:]
+
+    cmap_xy = []
+
+    for j in range(n_colors):
+        for i in range(n_colors):
+            x = spectra.rgb(*cmap_x[i][0:3])
+            y = spectra.rgb(*cmap_y[j][0:3])
+
+            if i == j and i == 0:
+                cmap_xy.append(x.darken(1.5).rgb)
+            elif i == 0:
+                cmap_xy.append(y.rgb)
+            elif j == 0:
+                cmap_xy.append(x.rgb)
+            else: 
+                blended = x.blend(y, ratio=0.5)
+
+                if i == j:
+                    blended = blended.saturate(7.5 * (i + 1))
+                else:
+                    blended = blended.saturate(4.5 * (i + 1))
+
+                cmap_xy.append(blended.rgb)
+
+    cmap_xy = np.array(cmap_xy).reshape(n_colors, n_colors, 3)
+    return cmap_xy

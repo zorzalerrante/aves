@@ -83,7 +83,6 @@ def choropleth_map(ax, geodf, column, k=10, cmap=None, default_divergent='RdBu_r
     if fisher_jenks:
         binning = FisherJenks(geodf[column], k=k)
         bins = np.insert(binning.bins, 0, geodf[column].min())
-        print(binning.bins, bins)
         geodf = geodf.assign(__bin__=binning.yb)
     else:
         bins = np.linspace(min_value, max_value + (max_value - min_value) * 0.001, num=k + 1)

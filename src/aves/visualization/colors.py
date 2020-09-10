@@ -24,3 +24,30 @@ class MidpointNormalize(colors.Normalize):
     
 def colormap_from_palette(palette_name, n_colors=10):
     return colors.ListedColormap(sns.color_palette(palette_name, n_colors=n_colors))
+
+
+def color_legend(ax, color_list, bins, norm=None, sizes=None, orientation='horizontal'):
+    if bins is None or colors is None:
+        raise Exception('bins and colors are required if size is not None (histogram)')
+            
+    if sizes is not None:
+        bar_width = (bins[1:] - bins[0:-1])
+        if orientation == 'horizontal':
+            ax.bar(bins[:-1], sizes, width=bar_width, align='edge', color=color_list, edgecolor='none')
+            ax.set_xticks(bins)
+        else:
+            ax.barh(bins[:-1], sizes, height=bar_width, align='edge', color=color_list, edgecolor='none')
+            ax.set_yticks(bins)
+        sns.despine(ax=ax, top=True, bottom=True, left=True, right=True)
+    elif norm is not None:
+        cbar_norm = colors.BoundaryNorm(bins, len(bins) - 1)
+        cmap = colors.ListedColormap(color_list)
+        colorbar.ColorbarBase(ax, cmap=cmap,
+                                norm=cbar_norm,
+                                ticks=bins,
+                                spacing='proportional',
+                                orientation=orientation)
+        sns.despine(ax=ax, top=True, bottom=True, left=True, right=True)
+    else:
+        raise Exception('Invalid legend type. norm and size are None')    
+    

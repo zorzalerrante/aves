@@ -8,11 +8,9 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.colors import from_levels_and_colors
 from matplotlib import colorbar
 from mapclassify import FisherJenks
-
-
-
-from aves.visualization.colors import MidpointNormalize, colormap_from_palette
+from aves.visualization.colors import color_legend, MidpointNormalize, colormap_from_palette
 from aves.features.geo import kde_from_points
+
 
 def bubble_map(ax, geodf, category=None, size=None, scale=1, sort_categories=False, palette=None, color=None, add_legend=True, edge_color='white', alpha=1.0):
     if category is not None:
@@ -59,33 +57,6 @@ def bubble_map(ax, geodf, category=None, size=None, scale=1, sort_categories=Fal
 
 def dot_map(ax, geodf, category=None, size=10, palette=None, add_legend=True, sort_categories=False):
     return bubble_map(ax, geodf, category=category, size=float(size), palette=palette, add_legend=add_legend, sort_categories=sort_categories, edge_color='none')
-    
-
-def color_legend(ax, color_list, bins, norm=None, sizes=None, orientation='horizontal'):
-    if bins is None or colors is None:
-        raise Exception('bins and colors are required if size is not None (histogram)')
-            
-    if sizes is not None:
-        bar_width = (bins[1:] - bins[0:-1])
-        if orientation == 'horizontal':
-            ax.bar(bins[:-1], sizes, width=bar_width, align='edge', color=color_list, edgecolor='none')
-            ax.set_xticks(bins)
-        else:
-            ax.barh(bins[:-1], sizes, height=bar_width, align='edge', color=color_list, edgecolor='none')
-            ax.set_yticks(bins)
-        sns.despine(ax=ax, top=True, bottom=True, left=True, right=True)
-    elif norm is not None:
-        cbar_norm = colors.BoundaryNorm(bins, len(bins) - 1)
-        cmap = colors.ListedColormap(color_list)
-        colorbar.ColorbarBase(ax, cmap=cmap,
-                                norm=cbar_norm,
-                                ticks=bins,
-                                spacing='proportional',
-                                orientation=orientation)
-        sns.despine(ax=ax, top=True, bottom=True, left=True, right=True)
-    else:
-        raise Exception('Invalid legend type. norm and size are None')    
-    
     
     
 def choropleth_map(ax, geodf, column, k=10, cmap=None, default_divergent='RdBu_r', default_negative='Blues_r', default_positive='Reds', palette_type='light',

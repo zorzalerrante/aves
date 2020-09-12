@@ -2,6 +2,7 @@ import shapely
 import geopandas as gpd
 import numpy as np
 import KDEpy
+from cytoolz import valmap
 
 def clip_area_geodataframe(geodf, bounding_box):
     # bounding box should be in same crs
@@ -41,3 +42,8 @@ def kde_from_points(geodf, kernel='gaussian', norm=2, bandwidth=1e-2, grid_point
     x, y = np.unique(grid[:, 0]), np.unique(grid[:, 1])
     z = points.reshape(grid_points, grid_points).T
     return x, y, z
+
+
+def positions_from_geodataframe(geodf):
+    """to use with networkx"""
+    return valmap(lambda x: (x.x, x.y), geodf.centroid.to_dict())

@@ -92,6 +92,7 @@ def choropleth_map(ax, geodf, column, k=10, cmap=None, default_divergent='RdBu_r
     norm = None
     midpoint = 0.0
     using_divergent = False
+    built_palette = None
     
     if palette_center is not None:
         midpoint = palette_center
@@ -112,12 +113,11 @@ def choropleth_map(ax, geodf, column, k=10, cmap=None, default_divergent='RdBu_r
         if not isinstance(cmap, colors.Colormap):
             if colors.is_color_like(cmap):
                 if palette_type == 'light':
-                    cmap = colors.ListedColormap(sns.light_palette(cmap, n_colors=k))
+                    built_palette = sns.light_palette(cmap, n_colors=k)
                 else:
-                    cmap = colors.ListedColormap(sns.dark_palette(cmap, n_colors=k))
+                    built_palette = sns.dark_palette(cmap, n_colors=k)
             else:
-                cmap_name = cmap
-                cmap = None
+                built_palette = sns.color_palette(cmap_name, n_colors=k)
 
     if norm is None:
         if palette_center is None:
@@ -127,24 +127,19 @@ def choropleth_map(ax, geodf, column, k=10, cmap=None, default_divergent='RdBu_r
             norm = MidpointNormalize(vmin=min_value, vmax=max_value, midpoint=midpoint)
             using_divergent = True
     
-    if cmap is None:
-        cmap = colors.ListedColormap(sns.color_palette(palette=cmap_name, n_colors=k))
-    
-    def pick_color(b1, b0):
-        if type(norm) == colors.BoundaryNorm:
-            res = cmap(norm(0.5 * (b0 + b1)))
-        elif b1 > midpoint and b0 < midpoint:
-            res = cmap(float(norm(midpoint)))
+    if built_palette is None:
+        if not using_divergent:
+            built_palette = sns.color_palette(cmap_name, n_colors=k)
         else:
-            res = cmap(float(norm(0.5 * (b0 + b1))))
-        return res
-    
-    built_palette = [pick_color(b1, b0) for b0, b1 in zip(bins[:-1], bins[1:])]
+            middle_idx = np.where((bins[:-1] * bins[1:]) < 0)[0][0]
+            expanded_k = k + min(k - middle_idx, middle_idx) 
+            start_idx = min(k - middle_idx, middle_idx)
+            built_palette = sns.color_palette(cmap_name, n_colors=expanded_k)[start_idx:start_idx + k]
     
     if legend_type == 'hist':
         color_legend(cbar_ax, built_palette, bins, sizes=np.histogram(geodf[column], bins=bins)[0], orientation=cbar_orientation)
     elif legend_type == 'colorbar':
-        color_legend(cbar_ax, built_palette, bins, norm=colors.BoundaryNorm(bins, k), orientation=cbar_orientation)
+        color_legend(cbar_ax, built_palette, bins, orientation=cbar_orientation)
             
     for idx, group in geodf.groupby('__bin__'):
         group.plot(ax=ax, facecolor=built_palette[idx], edgecolor=edgecolor)

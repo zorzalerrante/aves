@@ -33,6 +33,7 @@ dependencies:
   - scikit-learn
   - wordcloud
   - pip
+  - graph-tool
   - pip:
     - scattertext
     - KDEpy

@@ -3,9 +3,8 @@ import seaborn as sns
 import numpy as np
 import matplotlib.colors as colors
 import matplotlib.patheffects as path_effects
-from mpl_toolkits.axes_grid.inset_locator import inset_axes
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from matplotlib.colors import from_levels_and_colors
 from mapclassify import FisherJenks
 from aves.visualization.colors import color_legend, MidpointNormalize, colormap_from_palette
 from aves.features.geo import kde_from_points
@@ -132,9 +131,15 @@ def choropleth_map(ax, geodf, column, k=10, cmap=None, default_divergent='RdBu_r
             built_palette = sns.color_palette(cmap_name, n_colors=k)
         else:
             middle_idx = np.where((bins[:-1] * bins[1:]) < 0)[0][0]
-            expanded_k = k + min(k - middle_idx, middle_idx) 
-            start_idx = min(k - middle_idx, middle_idx)
-            built_palette = sns.color_palette(cmap_name, n_colors=expanded_k)[start_idx:start_idx + k]
+            left = middle_idx
+            right = k - middle_idx - 1
+            if left == right:
+                built_palette = sns.color_palette(cmap_name, n_colors=k)
+            else:
+                delta = np.abs(left - right)
+                expanded_k = k + delta
+                start_idx = max(middle_idx - left, right - middle_idx)
+                built_palette = sns.color_palette(cmap_name, n_colors=expanded_k)[start_idx:start_idx + k]
     
     if legend_type == 'hist':
         color_legend(cbar_ax, built_palette, bins, sizes=np.histogram(geodf[column], bins=bins)[0], orientation=cbar_orientation)
@@ -176,3 +181,22 @@ def add_labels_from_dataframe(ax, geodf, use_index=True, column=None, font_size=
         labels.append(t)
         
     return labels
+
+
+from aves.visualization.networks import NodeLink
+from aves.features.geo import positions_to_array
+
+class GeographicalNodeLink(NodeLink):
+    def __init__(self, network, geodataframe, node_column=None, edge_weight=None):
+        super().__init__(network, edge_weight=edge_weight)
+        
+        if node_column is None:
+            self.geo_positions = geodataframe.sort_index().geometry.centroid
+        else:
+            self.geo_positions = geodataframe.sort_values(node_column).geometry.centroid
+            
+        if len(self.geo_positions) < network.num_vertices():
+            raise ValueError(f'Network and GeoDataFrame are not compatible ({len(self.geo_positions)} < {network.num_vertices()})')
+            
+        self.node_positions = positions_to_array(self.geo_positions)
+        self.node_positions_vector = self.node_positions

@@ -4,10 +4,10 @@ import numpy as np
 import KDEpy
 from cytoolz import valmap
 
-def clip_area_geodataframe(geodf, bounding_box):
+def clip_area_geodataframe(geodf, bounding_box, buffer=0):
     # bounding box should be in same crs
     
-    bounds = shapely.geometry.box(*bounding_box)
+    bounds = shapely.geometry.box(*bounding_box).buffer(buffer)
     
     try:
         return (geodf
@@ -47,3 +47,7 @@ def kde_from_points(geodf, kernel='gaussian', norm=2, bandwidth=1e-2, grid_point
 def positions_from_geodataframe(geodf):
     """to use with networkx"""
     return valmap(lambda x: (x.x, x.y), geodf.centroid.to_dict())
+
+
+def positions_to_array(geoseries):
+    return np.vstack([geoseries.x.values, geoseries.y.values]).T

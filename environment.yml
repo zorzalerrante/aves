@@ -20,6 +20,7 @@ dependencies:
   - ipykernel
   - nb_black
   - watermark
+  - jupyterlab
   # course libraries
   - matplotlib
   - seaborn
@@ -34,6 +35,7 @@ dependencies:
   - wordcloud
   - pip
   - graph-tool
+  - cytoolz
   - pip:
     - scattertext
     - KDEpy

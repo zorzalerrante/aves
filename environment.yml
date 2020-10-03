@@ -26,7 +26,8 @@ dependencies:
   - seaborn
   - pandas
   - geopandas
-  - pysal
+  - libpysal
+  - mapclassify
   - statsmodels
   - networkx
   - spectra

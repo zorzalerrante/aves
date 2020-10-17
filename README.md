@@ -7,24 +7,22 @@ Este repositorio contiene datos, código y notebooks relacionados con mi [curso 
 El repositorio incluye los siguientes datasets:
 
   * [Encuesta Origen-Destino, Santiago 2012](http://datos.gob.cl/dataset/31616) (por SECTRA).
+  * [Arenas' Jazz Network](http://konect.uni-koblenz.de/networks/arenas-jazz).
 
-Y las siguientes unidades de práctica en notebooks (en construcción):
+Y las siguientes unidades de práctica en notebooks:
 
-  1. [Los Datos y las Herramientas: Encuesta Origen-Destino + Python](notebooks/01-python-tools.ipynb)
-  1. Tablas (en EOD)
-  1. Mapas (en EOD)
-  1. Redes (básico)
-  1. Redes (en EOD)
-  1. Texto (en datos por determinar)
+  1. Los Datos y las Herramientas: Encuesta Origen-Destino + Python
+  1. Tablas: análisis de la EOD.
+  1. Mapas: uso de `geopandas` y análisis de la EOD.
+  1. Redes: uso de `graph-tool` y análisis de la EOD.
 
 ## Configuración y Requisitos
 
 Después de clonar el repositorio, debes instalar el entorno de conda:
 
 ```sh
-# Create conda environment, install dependencies on it and activate it
-conda create --name aves --file environment.yml
-conda activate aves
+make conda-create-env
+make install-package
 ```
 
 Es posible que ya tengas un entorno de conda en el que ejecutes Jupyter. En ese caso, puedes agregar este entorno como kernel ejecutando este comando desde el entorno que contiene Jupyter:

@@ -42,8 +42,8 @@ class NodeLink(object):
                 continue
 
             arrow = {
-                'src_pos': self.node_positions_vector[int(e.source())], 
-                'dst_pos': self.node_positions_vector[int(e.target())],
+                'src_pos': self.node_positions_dict[int(e.source())], 
+                'dst_pos': self.node_positions_dict[int(e.target())],
                 'weight': self.edge_weight[e] if self.edge_weight is not None else 1
             }
 
@@ -130,6 +130,7 @@ class SFDP(NodeLink):
     def estimate_positions(self, verbose=True):
         self.node_positions = graph_tool.draw.sfdp_layout(self.network, eweight=self.edge_weight, verbose=verbose)
         self.node_positions_vector = np.array(list(self.node_positions))
+        self.node_positions_dict = dict(zip(list(map(int, self.network.vertices())), list(self.node_positions_vector)))
 
 class ARF(NodeLink):
     def __init__(self, network, edge_weight=None):
@@ -138,14 +139,26 @@ class ARF(NodeLink):
     def estimate_positions(self, verbose=True):
         self.node_positions = graph_tool.draw.arf_layout(self.network, weight=self.edge_weight)
         self.node_positions_vector = np.array(list(self.node_positions))
+        self.node_positions_dict = dict(zip(list(map(int, self.network.vertices())), list(self.node_positions_vector)))
 
     
         
 
 class HierarchicalEdgeBundling(object):
-    def __init__(self, network, edge_weight=None):
+    def __init__(self, network, edge_weight=None, state=None, covariate_type=None):
         self.network = network
         self.edge_weight = edge_weight
+        self.state = state
+        if state is not None:
+            self.block_levels = self.state.get_bs()
+        else:
+            self.estimate_blockmodel(covariate_type=covariate_type)
+            
+        self.build_community_graph()
+        self.build_node_memberships()
+        self.build_edges()
+        self.set_community_level(0)
+
         
     def estimate_blockmodel(self, covariate_type='real-exponential'):
         if self.edge_weight is not None and covariate_type is not None:
@@ -161,10 +174,16 @@ class HierarchicalEdgeBundling(object):
 
         nested_vertex_list = self.nested_graph.add_vertex(self.network.num_vertices())
         self.level_dicts = {}
-        self.level_dicts[-1] = dict(zip(range(self.network.num_vertices()), self.nested_graph.vertices()))
+        self.level_dicts[-1] = dict(zip(
+            range(self.network.num_vertices()), 
+            map(int, self.nested_graph.vertices())
+        ))
         
-        self.network_to_nested = dict(zip(self.network.vertices(), self.nested_graph.vertices()))
-
+        self.network_to_nested = dict(zip(
+            map(int, self.network.vertices()), 
+            map(int, self.nested_graph.vertices())
+        ))
+        
         for i, level in enumerate(self.block_levels):
             print('level {}: {} nodes'.format(i, len(self.level_dicts[i - 1])))
     
@@ -176,7 +195,7 @@ class HierarchicalEdgeBundling(object):
             else:
                 group_nodes = [self.nested_graph.add_vertex()]
 
-            level_to_node = dict(zip(unique_values, group_nodes))
+            level_to_node = dict(zip(unique_values, map(int, group_nodes)))
             
             for node_id, membership in zip(self.level_dicts[-1].keys(), level):
                 self.nested_graph.add_edge(self.level_dicts[i - 1][node_id], level_to_node[membership])
@@ -188,33 +207,34 @@ class HierarchicalEdgeBundling(object):
         self.radial_positions = graph_tool.draw.radial_tree_layout(self.nested_graph, self.nested_graph.num_vertices() - 1)
         self.radial_positions_vector = np.array(list(self.radial_positions))
         
-        
-    def set_community_level(self, level=1):
-        self.community_level = level
-        self.node_to_community = dict(zip(range(self.network.num_vertices()), self.block_levels[0]))
-
-        current_level = 0
-        for i in range(1, level):
-            update_level = dict(zip(np.unique(self.block_levels[i - 1]), self.block_levels[i]))
-            self.node_to_community = valmap(lambda x: update_level[x], self.node_to_community)
-            current_level += 1
-        
-        self.node_to_community = valmap(lambda x: self.level_dicts[current_level][x], self.node_to_community)
-        self.community_ids = list(unique(map(int, self.node_to_community.values())))
-        
         self.node_angles = np.degrees(np.arctan2(self.radial_positions_vector[:,1], self.radial_positions_vector[:,0]))
+        self.node_angles_dict = dict(zip(map(int, self.network.vertices()), self.node_angles))
         self.node_ratio = np.sqrt(np.dot(self.radial_positions_vector[0], self.radial_positions_vector[0]))
         
+    def build_node_memberships(self):
+        self.membership_per_level = defaultdict(dict)
         
-    def set_community_colors(self, palette='cubehelix', colors=None):
-        if colors is None:
-            colors = sns.color_palette(palette, n_colors=len(self.community_ids))
-        else:
-            if len(colors) != len(self.community_ids):
-                raise ValueError('Number of colors and communities do not match')
-                
-        self.community_colors = dict(zip(self.community_ids, colors))
+        self.membership_per_level[0] = dict(zip(map(int, self.network.vertices()), self.block_levels[0]))
+            
+        for i, (l0, l1) in enumerate(sliding_window(2, self.block_levels), start=1):
+            update_level = dict(zip(np.unique(l0), l1))
+            self.membership_per_level[i] = valmap(lambda x: update_level[x], self.membership_per_level[i - 1])
         
+        
+    def set_community_level(self, level=0):        
+        self.community_ids = list(unique(map(int, self.membership_per_level[level].values())))
+        self.community_level = level
+        
+        self.prepare_segments()
+
+        
+
+        
+        
+    def check_status(self):
+        if getattr(self, 'community_level', None) is None:
+            self.set_community_level(0)
+
         
     def edge_to_spline(self, src, dst, n_points=100, smoothing_factor=0.8):
         if src == dst:
@@ -238,12 +258,9 @@ class HierarchicalEdgeBundling(object):
         
         
     def build_edges(self, n_points=50):
-        edges = []
-        community_pairs = []
-        weights = []
+        self.edges = []
         
         self.n_points = n_points
-
 
         for e in self.network.edges():
             if e.source() == e.target():
@@ -255,25 +272,48 @@ class HierarchicalEdgeBundling(object):
             edge = self.edge_to_spline(src, dst, n_points=n_points)
                         
             if edge is not None:
-                edges.append(edge)
-                community_pairs.append((self.node_to_community[int(src)], self.node_to_community[int(dst)]))
                 
                 if self.edge_weight is not None:
                     weight = self.edge_weight[e]
-                    weights.append(weight)
                 else:
-                    weights.append(1.0)
-                
+                    weight = 1.0
+                    
+                self.edges.append({
+                    'spline': edge,
+                    'source': int(e.source()),
+                    'target': int(e.target()),
+                    'weight': weight
+                })
+        
+    def prepare_segments(self, level=None):
         self.segments_per_pair = defaultdict(list)
-
-        for edge, pair, weight in zip(edges, community_pairs, weights):
-            segments = list(sliding_window(2, edge))
-            values = np.linspace(0, 1, num=n_points - 1)
-
-            self.segments_per_pair[pair].append((segments, values, weight))
+        
+        if level is None:
+            level = self.community_level
+        
+        for edge_data in self.edges:
+            segments = list(sliding_window(2, edge_data['spline']))
+            values = np.linspace(0, 1, num=self.n_points - 1)
+            pair = (self.membership_per_level[level][edge_data['source']],
+                    self.membership_per_level[level][edge_data['target']])
+            #print(pair)
+            #break
+            
+            self.segments_per_pair[pair].append((segments, values, edge_data['weight']))
             
             
-    def plot_edges(self, ax, linewidth=1, alpha=0.25, min_linewidth=None, linestyle='solid'):
+    def plot_edges(self, ax, linewidth=1, alpha=0.25, min_linewidth=None, linestyle='solid', level=None, palette='plasma'):
+        self.check_status()
+        
+        if level is None:
+            level = self.community_level if self.community_level else 0
+            
+        if level != self.community_level:
+            self.prepare_segments(level=level)
+            
+        community_ids = set(self.membership_per_level[level].values())
+        community_colors = sns.color_palette(palette, n_colors=len(community_ids))
+        
         if self.edge_weight is not None and min_linewidth is not None:
             width_scaler = MinMaxScaler(feature_range=(min_linewidth, linewidth))
             width_scaler.fit(np.sqrt(self.edge_weight.a).reshape(-1, 1))
@@ -281,7 +321,9 @@ class HierarchicalEdgeBundling(object):
             width_scaler = None
             
         for pair, seg_and_val in self.segments_per_pair.items():
-            cmap = colors.LinearSegmentedColormap.from_list("", [self.community_colors[int(pair[0])], self.community_colors[int(pair[1])]])
+            #print(self.community_colors)
+            #print(pair)
+            cmap = colors.LinearSegmentedColormap.from_list("", [community_colors[pair[0]], community_colors[pair[1]]])
 
             all_segments = np.concatenate([s[0] for s in seg_and_val])
             all_values = np.concatenate([s[1] for s in seg_and_val])
@@ -299,22 +341,32 @@ class HierarchicalEdgeBundling(object):
 
             
     def plot_nodes(self, ax, size=None, marker='.', alpha=1.0, color=None, edgecolor=None):
+        self.check_status()
+        
         n = self.network.num_vertices()
-        ax.scatter(self.radial_positions_vector[:n,0], self.radial_positions_vector[:n,1], s=size, marker=marker, alpha=alpha, color=None, edgecolor=None)
+        ax.scatter(self.radial_positions_vector[:n,0], self.radial_positions_vector[:n,1], s=size, marker=marker, alpha=alpha, color=color, edgecolor=None)
         
         
-    def plot_community_wedges(self, ax, wedge_width=0.5, wedge_ratio=None, wedge_offset=0.05, alpha=1.0, fill_gaps=False):
+    def plot_community_wedges(self, ax, level=None, wedge_width=0.5, wedge_ratio=None, wedge_offset=0.05, alpha=1.0, fill_gaps=False, palette='plasma'):
+        self.check_status()
+        
         if wedge_ratio is None:
             wedge_ratio = self.node_ratio + wedge_offset
+            
+        if level is None:
+            level = self.community_level
+            
+        community_ids = set(self.membership_per_level[level].values())
+        community_colors = sns.color_palette(palette, n_colors=len(community_ids))
 
         wedge_meta = []
         wedge_gap = 180 / self.network.num_vertices() if fill_gaps else 0
 
-        for c_id in self.community_ids:
+        for c_id in community_ids:
             
-            nodes_in_community = list(valfilter(lambda x: x == c_id, self.node_to_community).keys())
+            nodes_in_community = list(valfilter(lambda x: x == c_id, self.membership_per_level[level]).keys())
 
-            community_angles = [self.node_angles[n_id] for n_id in nodes_in_community]
+            community_angles = [self.node_angles_dict[n_id] for n_id in nodes_in_community]
             community_angles = [a if a >= 0 else a + 360 for a in community_angles]
             community_angle = self.node_angles[int(c_id)]
             
@@ -338,7 +390,7 @@ class HierarchicalEdgeBundling(object):
                                'extent_angle': extent_angle,
                                'min_angle': min_angle,
                                'max_angle': max_angle,
-                               'color': self.community_colors[c_id]})
+                               'color': community_colors[c_id]})
         
                     
         collection = [Wedge(0.0, wedge_ratio + wedge_width, w['min_angle'], w['max_angle'], width=wedge_width) for w in wedge_meta]
@@ -346,12 +398,15 @@ class HierarchicalEdgeBundling(object):
                                           color=[w['color'] for w in wedge_meta],
                                           alpha=alpha))
         
+        return wedge_meta, collection
+        
         
     def n_communities(self):
         return len(self.community_ids)
     
     
     def plot_node_labels(self, ax, labels, ratio=None, offset=0.1):
+        self.check_status()
         if ratio is None:
             ratio = self.node_ratio
             
@@ -359,7 +414,6 @@ class HierarchicalEdgeBundling(object):
             
         for label, angle_degrees, pos in zip(labels, self.node_angles, self.radial_positions_vector):
             angle = np.radians(angle_degrees)
-            va = 'center'
 
             if pos[0] >= 0:
                 ha = 'left'
@@ -376,5 +430,48 @@ class HierarchicalEdgeBundling(object):
             ax.annotate(label, 
                          (ratio * np.cos(angle), ratio * np.sin(angle)), 
                          rotation=text_rotation, ha=ha, va='center', rotation_mode='anchor',
-                         fontsize='small')            
+                         fontsize='small')    
+            
+    def plot_community_labels(self, ax, level=None, ratio=None, offset=0.05):
+        self.check_status()
+        
+        if ratio is None:
+            ratio = self.node_ratio + offset
+            
+        if level is None:
+            level = self.community_level if self.community_level else 0
+            
+        community_ids = set(self.membership_per_level[level].values())
+
+        for c_id in community_ids:
+            
+            nodes_in_community = list(valfilter(lambda x: x == c_id, self.membership_per_level[level]).keys())
+
+            community_angles = [self.node_angles_dict[n_id] for n_id in nodes_in_community]
+            community_angles = [a if a >= 0 else a + 360 for a in community_angles]
+            community_angle = self.node_angles[int(c_id)]
+            
+            if community_angle < 0:
+                community_angle += 360
+                
+            min_angle = min(community_angles)
+            max_angle = max(community_angles)
+                                    
+            mid_angle = 0.5 * (max_angle + min_angle)
+            mid_angle_radians = np.radians(mid_angle)
+            
+            pos_x, pos_y = ratio * np.cos(mid_angle_radians), ratio * np.sin(mid_angle_radians)
+            
+            ha = 'left' if pos_x >= 0 else 'right'
+            
+            if mid_angle > 90:
+                mid_angle = mid_angle - 180
+            elif mid_angle < -90:
+                mid_angle = mid_angle + 180
+
+            ax.annotate(f'{c_id}', 
+                         (pos_x, pos_y), 
+                         rotation=mid_angle, ha=ha, va='center', rotation_mode='anchor',
+                         fontsize='small')   
+
         

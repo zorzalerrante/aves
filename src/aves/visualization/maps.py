@@ -197,6 +197,6 @@ class GeographicalNodeLink(NodeLink):
             
         if len(self.geo_positions) < network.num_vertices():
             raise ValueError(f'Network and GeoDataFrame are not compatible ({len(self.geo_positions)} < {network.num_vertices()})')
-            
-        self.node_positions = positions_to_array(self.geo_positions)
-        self.node_positions_vector = self.node_positions
+                    
+        self.node_positions_vector = positions_to_array(self.geo_positions)
+        self.node_positions_dict = dict(zip(list(map(int, self.network.vertices())), list(self.node_positions_vector)))

@@ -3,6 +3,7 @@ import matplotlib.colors as colors
 import seaborn as sns
 import spectra
 from matplotlib import colorbar
+from matplotlib.patches import Patch
 
 # from http://chris35wills.github.io/matplotlib_diverging_colorbar/
 
@@ -84,3 +85,17 @@ def bivariate_matrix_from_palette(palette_name='PiYG', n_colors=3):
 
     cmap_xy = np.array(cmap_xy).reshape(n_colors, n_colors, 3)
     return cmap_xy
+
+def categorical_color_legend(ax, color_list, labels, loc='upper left', n_columns=None):
+    legend_elements = []
+
+    for label, color in zip(labels, color_list):
+        legend_elements.append(Patch(facecolor=color, edgecolor='none', label=label))
+
+    if n_columns is not None:
+        if type(n_columns) != int:
+            n_columns = len(color_list)
+    else:
+        n_columns = 1
+        
+    ax.legend(handles=legend_elements, loc=loc, frameon=False, ncol=n_columns)

@@ -121,3 +121,16 @@ def read_zone_design(path=None):
         DATA_PATH = path
         
     return gpd.read_file(_EOD_MAPS)
+
+def read_vehicles(path=None):
+    if path is None:
+        DATA_PATH = _EOD_PATH
+    else:
+        DATA_PATH = path
+    
+    df = (pd.read_csv(DATA_PATH / 'Vehiculo.csv', sep=';', decimal=',', encoding='iso-8859-1')
+    )
+    
+    df['TipoVeh'] = decode_column(df, DATA_PATH / 'Tablas_parametros' / 'TipoVeh.csv', value_col='vehiculo', col_name='TipoVeh', index_dtype=str, encoding='iso-8859-1')
+    
+    return df

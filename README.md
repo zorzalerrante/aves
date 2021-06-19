@@ -1,6 +1,6 @@
-# AVES: Analysis & Visualization -- Education & Support
+# `AVES`: Análisis y Visualización, Educación y Soporte
 
-Por **[Eduardo Graells-Garrido](http://datagramas.cl)**.
+Por [Eduardo Graells-Garrido](http://datagramas.cl).
 
 Este repositorio contiene datos, código y notebooks relacionados con mi [curso de Visualización de Información](http://datagramas.cl/courses/infovis) y mi trabajo diario. Lo he estructurado en un paquete llamado `aves`, sigla descrita en el título de este documento. El paquete tiene las siguientes funcionalidades:
 

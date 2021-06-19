@@ -29,10 +29,14 @@ def colormap_from_palette(palette_name, n_colors=10):
     return colors.ListedColormap(sns.color_palette(palette_name, n_colors=n_colors))
 
 
-def color_legend(ax, color_list, bins, sizes=None, orientation='horizontal'):
-    if bins is None or colors is None:
-        raise Exception('bins and colors are required if size is not None (histogram)')
-            
+def color_legend(ax, color_list, bins=None, sizes=None, orientation='horizontal', remove_axes=False):
+    if bins is None:
+        if type(color_list) == colors.ListedColormap:
+            N = color_list.N
+        else:
+            N = len(color_list)
+        bins = np.array(range(N))
+
     if sizes is not None:
         bar_width = (bins[1:] - bins[0:-1])
         if orientation == 'horizontal':
@@ -41,16 +45,24 @@ def color_legend(ax, color_list, bins, sizes=None, orientation='horizontal'):
         else:
             ax.barh(bins[:-1], sizes, height=bar_width, align='edge', color=color_list, edgecolor=color_list)
             ax.set_yticks(bins)
-        sns.despine(ax=ax, top=True, bottom=True, left=True, right=True)
     else:
         cbar_norm = colors.BoundaryNorm(bins, len(bins) - 1)
-        cmap = colors.ListedColormap(color_list)
+        if type(color_list) == colors.ListedColormap:
+            cmap = color_list
+        else:
+            cmap = colors.ListedColormap(color_list)
         colorbar.ColorbarBase(ax, cmap=cmap,
                                 norm=cbar_norm,
                                 ticks=bins,
                                 spacing='proportional',
                                 orientation=orientation)
-        sns.despine(ax=ax, top=True, bottom=True, left=True, right=True)   
+        
+    sns.despine(ax=ax, top=True, bottom=True, left=True, right=True) 
+
+    if remove_axes:
+        ax.set_axis_off()
+
+    return ax
     
     
 def bivariate_matrix_from_palette(palette_name='PiYG', n_colors=3):

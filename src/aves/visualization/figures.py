@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
+import contextily as cx
 
-def figure_from_geodataframe(geodf, height=5, bbox=None, remove_axes=False, set_limits=True):
+def figure_from_geodataframe(geodf, height=5, bbox=None, remove_axes=True, set_limits=True, basemap=None, basemap_interpolation='hanning'):
     if bbox is None:
         bbox = geodf.total_bounds
         
@@ -13,12 +14,19 @@ def figure_from_geodataframe(geodf, height=5, bbox=None, remove_axes=False, set_
     
     if remove_axes:
         ax.set_axis_off()
+
+    if basemap is not None:
+        cx.add_basemap(ax, 
+            crs=geodf.crs.to_string(), 
+            source=basemap, 
+            interpolation=basemap_interpolation, 
+            zorder=0)
         
     return fig, ax
 
-def small_multiples_from_geodataframe(geodf, n_variables, height=5, col_wrap=5, bbox=None, sharex=True, sharey=True, remove_axes=False, set_limits=True, flatten_axes=True):
+def small_multiples_from_geodataframe(geodf, n_variables, height=5, col_wrap=5, bbox=None, sharex=True, sharey=True, remove_axes=True, set_limits=True, flatten_axes=True, equal_aspect=True, basemap=None, basemap_interpolation='hanning'):
     if n_variables <= 1:
-        return figure_from_geodataframe(geodf, height=height, bbox=bbox, remove_axes=remove_axes, set_limits=set_limits)
+        return figure_from_geodataframe(geodf, height=height, bbox=bbox, remove_axes=remove_axes, set_limits=set_limits, basemap=basemap, basemap_interpolation=basemap_interpolation)
     
     if bbox is None:
         bbox = geodf.total_bounds
@@ -41,11 +49,22 @@ def small_multiples_from_geodataframe(geodf, n_variables, height=5, col_wrap=5, 
     if remove_axes:
         for ax in flattened:
             ax.set_axis_off()
-    
     else:
-        # deactivate unneeded axes
+        # deactivate only unneeded axes
         for i in range(n_variables, len(axes)):
             flattened[i].set_axis_off()
+    
+    if equal_aspect:
+        for ax in flattened:
+            ax.set_aspect('equal')
+        
+    if basemap is not None:
+        for ax in flattened:
+            cx.add_basemap(ax, 
+                crs=geodf.crs.to_string(), 
+                source=basemap, 
+                interpolation=basemap_interpolation, 
+                zorder=0)
     
     if flatten_axes:
         return fig, flattened

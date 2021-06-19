@@ -41,3 +41,5 @@ dependencies:
     - scattertext
     - KDEpy
     - adjustText
+    - contextily
+    - matplotlib-scalebar

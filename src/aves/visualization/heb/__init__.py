@@ -32,8 +32,8 @@ class HierarchicalEdgeBundling(object):
             
         self.build_community_graph()
         self.build_node_memberships()
-        #self.build_edges()
-        #self.set_community_level(0)
+        self.build_edges()
+        self.set_community_level(0)
 
         
     def estimate_blockmodel(self, covariate_type='real-exponential'):
@@ -145,7 +145,6 @@ class HierarchicalEdgeBundling(object):
             edge = self.edge_to_spline(src, dst, n_points=n_points)
                         
             if edge is not None:
-                
                 if self.nodelink.edge_weight is not None:
                     weight = self.nodelink.edge_weight[e.handle]
                 else:

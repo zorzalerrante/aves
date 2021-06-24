@@ -23,9 +23,10 @@ from sklearn.preprocessing import MinMaxScaler, minmax_scale
 EPS = 1e-6
 
 class Edge(object):
-    def __init__(self, source, target, source_idx, target_idx, weight=None, index=-1):
+    def __init__(self, source, target, source_idx, target_idx, weight=None, index=-1, handle=None):
         self.source = source
         self.target = target
+        self.handle = handle
 
         self._vector = self.target - self.source 
 
@@ -126,7 +127,7 @@ class NodeLink(object):
             dst = self.node_positions_dict[dst_idx]
             weight = self.edge_weight[e] if self.edge_weight is not None else 1
 
-            edge = Edge(src, dst, src_idx, dst_idx, weight=weight, index=i)
+            edge = Edge(src, dst, src_idx, dst_idx, weight=weight, index=i, handle=e)
             self.edge_data.append(edge)
     
     def plot_edges(self, ax, color='grey', linewidth=1, alpha=1.0, zorder=0, network: typing.Optional[graph_tool.GraphView]=None):
@@ -270,8 +271,12 @@ class NodeLink(object):
 
     def set_node_positions(self, layout_vector):
         '''
-        @param layout_vector outcome from a layout method from graphtool
+        @param layout_vector outcome from a layout method from graphtool or an array with positions, in vertex order
         '''
+
+        if type(layout_vector) == pd.DataFrame:
+            layout_vector = layout_vector.values
+
         self.node_positions = layout_vector
         self.node_positions_vector = np.array(list(layout_vector))
         self.node_positions_dict = dict(zip(list(map(int, self.network.vertices())), list(self.node_positions_vector)))

@@ -24,10 +24,11 @@ def read(filename):
 
 
 # Metadata
+exec(open('src/aves/version.py').read())
+
 PACKAGENAME = metadata.get("package_name", "aves")
-VERSION = metadata.get("version", "0.1.0")
-URL = metadata.get("url", "https://github.com/carnby/aves")
-LICENSE = metadata.get("license", "MIT")
+URL = metadata.get("url", "https://github.com/zorzalerrante/aves")
+LICENSE = metadata.get("license", "GPL3")
 AUTHOR = metadata.get("author_name", "Eduardo Graells-Garrido")
 AUTHOR_EMAIL = metadata.get("author_email", "eduardo.graells@bsc.es")
 DESCRIPTION = metadata.get("description", "Module to support my Information Visualization course.")
@@ -35,7 +36,7 @@ DESCRIPTION = metadata.get("description", "Module to support my Information Visu
 
 setup(
     name=PACKAGENAME,
-    version=VERSION,
+    version=__version__,
     url=URL,
     license=LICENSE,
     author=AUTHOR,
@@ -48,6 +49,7 @@ setup(
     classifiers=[
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
 )

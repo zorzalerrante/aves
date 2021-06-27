@@ -130,9 +130,9 @@ class NodeLink(object):
             edge = Edge(src, dst, src_idx, dst_idx, weight=weight, index=i, handle=e)
             self.edge_data.append(edge)
     
-    def plot_edges(self, ax, color='grey', linewidth=1, alpha=1.0, zorder=0, network: typing.Optional[graph_tool.GraphView]=None):
+    def plot_edges(self, ax, color='grey', linewidth=1, alpha=1.0, zorder=0, network: typing.Optional[graph_tool.GraphView]=None, with_arrows=False):
         palette = sns.light_palette(color, reverse=True, n_colors=1)
-        return self.plot_weighted_edges(ax, palette=palette, weight_bins=1, alpha=alpha, zorder=zorder, network=network)
+        return self.plot_weighted_edges(ax, palette=palette, weight_bins=1, alpha=alpha, zorder=zorder, network=network, with_arrows=with_arrows)
 
         
     def plot_weighted_edges(self, ax, palette='plasma', linewidth=1, alpha=1.0, weight_bins=10, zorder=1, with_arrows=False, min_linewidth=None, min_alpha=None, arrow_shrink=1, arrow_scale=10, log_transform=True, network: typing.Optional[graph_tool.GraphView]=None):

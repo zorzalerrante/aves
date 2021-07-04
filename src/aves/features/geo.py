@@ -3,6 +3,7 @@ import geopandas as gpd
 import numpy as np
 import KDEpy
 from cytoolz import valmap
+from scipy.spatial.distance import pdist, squareform
 
 def clip_area_geodataframe(geodf, bounding_box, buffer=0):
     # bounding box should be in same crs
@@ -51,3 +52,10 @@ def positions_from_geodataframe(geodf):
 
 def positions_to_array(geoseries):
     return np.vstack([geoseries.x.values, geoseries.y.values]).T
+
+
+def calculate_distance_matrix(geodf):
+    centroids = geodf.centroid
+    positions = positions_to_array(centroids.geometry)
+    distance_matrix = squareform(pdist(positions)) / 1000
+    return distance_matrix

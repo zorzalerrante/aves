@@ -1,7 +1,8 @@
 import numpy as np
 import math
 from aves.features.geometry import euclidean_distance as point_distance
-from aves.visualization.networks import Edge, NodeLink, EPS
+from aves.models.network import Edge, EPS
+from aves.visualization.networks import NodeLink
 from collections import defaultdict
 from itertools import combinations
 from cytoolz import keyfilter, valfilter, sliding_window
@@ -84,7 +85,7 @@ class FDB:
         self.compatibility_threshold = compatibility_threshold
         self.eps = EPS
 
-        for base_edge in nodelink.edge_data:
+        for base_edge in nodelink.network.edge_data:
             edge = FDB_Edge(base_edge)
 
             if self.is_long_enough(edge):

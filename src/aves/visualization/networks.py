@@ -14,122 +14,26 @@ from aves.features.geometry import bspline
 from cytoolz import keyfilter, valfilter, unique, valmap, sliding_window, groupby, pluck
 from collections import defaultdict
 
-from matplotlib.collections import LineCollection
 import matplotlib.colors as colors
 from matplotlib.patches import FancyArrowPatch, Wedge
 from matplotlib.collections import PatchCollection, LineCollection
 from sklearn.preprocessing import MinMaxScaler, minmax_scale
 
-EPS = 1e-6
 
-class Edge(object):
-    def __init__(self, source, target, source_idx, target_idx, weight=None, index=-1, handle=None):
-        self.source = source
-        self.target = target
-        self.handle = handle
-
-        self._vector = self.target - self.source 
-
-        if np.allclose(self.source, self.target, atol=EPS):
-            self._length = EPS
-        else:
-            self._length = np.sqrt(np.dot(self._vector, self._vector))
-
-        self._unit_vector = self._vector / self._length
-        self._mid_point = (self.source + self.target) * 0.5
-
-        if weight is None:
-            self.weight = 1
-        else:
-            self.weight = weight
-
-        self.index = index
-        # this is filled by external algorithms
-        self.polyline = None
-        self.index_pair = (source_idx, target_idx)
-
-
-    def as_vector(self):
-        return self._vector
-
-    def length(self):
-        return self._length
-
-    def project(self, point):
-        L = self._length
-        p_vec = point - self.source
-        return self.source + np.dot(p_vec, self._unit_vector)  * self._unit_vector
 
 
 class NodeLink(object):
-    def __init__(self, network, edge_weight=None):
+    def __init__(self, network):
         self.network = network
-        self.edge_weight = edge_weight
-        self.edge_data = None
-        self.node_positions = None
-        self.node_positions_dict = None
-        self.node_positions_vector = None
-        self.node_map = None
         
-    def layout_nodes(self, method='sfdp', verbose=True):
-        # this should define at least
-        # self.node_positions
-        # self.node_positions_vector
-        # self.edge_data
-        
+    def layout_nodes(self, method='sfdp', verbose=True):        
         if method == 'sfdp':
-            self.set_node_positions(graph_tool.draw.sfdp_layout(self.network, eweight=self.edge_weight, verbose=verbose))
+            self.network.set_node_positions(graph_tool.draw.sfdp_layout(self.network.network, eweight=self.network.edge_weight, verbose=verbose))
         elif method == 'arf':        
-            self.set_node_positions(graph_tool.draw.arf_layout(self.network, weight=self.edge_weight))
+            self.network.set_node_positions(graph_tool.draw.arf_layout(self.network.network, weight=self.network.edge_weight))
         else:
             raise ValueError('non supported layout')
 
-    @classmethod
-    def from_dataframe_edgelist(cls, df, source='source', target='target', directed=True, weight=None, map_nodes=True):
-        if map_nodes:
-            source_attr = f'{source}__mapped__'
-            target_attr = f'{target}__mapped__'
-
-            node_values = set(df[source].unique())
-            node_values = node_values | set(df[target].unique())
-            node_map = dict(zip(sorted(node_values), range(len(node_values))))
-
-            df_mapped = df.assign(**{
-                source_attr: df[source].map(node_map),
-                target_attr: df[target].map(node_map)
-            })
-        else:
-            source_attr = source
-            target_attr = target
-            df_mapped = df
-            node_map = None
-
-        if weight is not None:
-            network, edge_weight = graph_from_pandas_edgelist(df_mapped, source=source_attr, target=target_attr, weight=weight, directed=directed)
-        else:
-            network = graph_from_pandas_edgelist(df_mapped, source=source_attr, target=target_attr, weight=None, directed=directed)
-            edge_weight = None
-        result = cls(network, edge_weight=edge_weight)
-        result.node_map = node_map
-        return result
-
-    def build_edge_data(self):
-        self.edge_data = []
-
-        for i, e in enumerate(self.network.edges()):
-            src_idx = int(e.source())
-            dst_idx = int(e.target())
-            if src_idx == dst_idx:
-                # no support for self connections yet                    
-                continue
-
-            src = self.node_positions_dict[src_idx]
-            dst = self.node_positions_dict[dst_idx]
-            weight = self.edge_weight[e] if self.edge_weight is not None else 1
-
-            edge = Edge(src, dst, src_idx, dst_idx, weight=weight, index=i, handle=e)
-            self.edge_data.append(edge)
-    
     def plot_edges(self, ax, color='grey', linewidth=1, alpha=1.0, zorder=0, network: typing.Optional[graph_tool.GraphView]=None, with_arrows=False):
         palette = sns.light_palette(color, reverse=True, n_colors=1)
         return self.plot_weighted_edges(ax, palette=palette, weight_bins=1, alpha=alpha, zorder=zorder, network=network, with_arrows=with_arrows)
@@ -138,12 +42,11 @@ class NodeLink(object):
     def plot_weighted_edges(self, ax, palette='plasma', linewidth=1, alpha=1.0, weight_bins=10, zorder=1, with_arrows=False, min_linewidth=None, min_alpha=None, arrow_shrink=1, arrow_scale=10, log_transform=True, network: typing.Optional[graph_tool.GraphView]=None):
         if network is None:
             network = self.network
-            edge_data = self.edge_data
-            edge_arrow_data = pd.Series([e.weight for e in self.edge_data])
+            edge_data = self.network.edge_data
         else:
             edge_pairs = set((int(e.source()), int(e.target())) for e in network.edges())
-            edge_data = [e for e in self.edge_data if e.index_pair in edge_pairs]
-            edge_arrow_data = pd.Series([e.weight for e in edge_data])
+            edge_data = [e for e in self.network.edge_data if e.index_pair in edge_pairs]
+        edge_arrow_data = pd.Series([e.weight for e in edge_data])
 
         if log_transform:
             transform_fn = lambda x: np.log(x + 1)
@@ -221,7 +124,7 @@ class NodeLink(object):
             network = self.network
 
         vertex_idx = list(map(int, network.vertices()))
-        pos = np.array([self.node_positions_dict[idx] for idx in vertex_idx])
+        pos = np.array([network.node_position(idx) for idx in vertex_idx])
 
         if use_weights == 'in-degree':
             in_degree = network.get_in_degrees(vertex_idx)
@@ -269,17 +172,10 @@ class NodeLink(object):
             
         return ax
 
-    def set_node_positions(self, layout_vector):
-        '''
-        @param layout_vector outcome from a layout method from graphtool or an array with positions, in vertex order
-        '''
+    def plot(self, ax):
+        self.plot_edges(ax)
+        self.plot_nodes(ax)
 
-        if type(layout_vector) == pd.DataFrame:
-            layout_vector = layout_vector.values
 
-        self.node_positions = layout_vector
-        self.node_positions_vector = np.array(list(layout_vector))
-        self.node_positions_dict = dict(zip(list(map(int, self.network.vertices())), list(self.node_positions_vector)))
-        self.build_edge_data()
         
         

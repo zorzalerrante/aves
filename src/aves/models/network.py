@@ -1,6 +1,7 @@
 import graph_tool
 import graph_tool.topology
 import graph_tool.inference
+import graph_tool.centrality
 import numpy as np
 import pandas as pd
 
@@ -28,8 +29,8 @@ class Edge(object):
             self.weight = weight
 
         self.index = index
-        # this is filled by external algorithms
-        self.polyline = None
+        # this can be filled by y external algorithms
+        self.points = [self.source, self.target]
         self.index_pair = (source_idx, target_idx)
 
 
@@ -48,6 +49,7 @@ class Network(object):
     def __init__(self, graph: graph_tool.Graph, edge_weight=None):
         self.network = graph
         self.edge_weight = edge_weight
+        self.node_weight = None
         self.edge_data = None
         self.node_positions = None
         self.node_positions_dict = None
@@ -102,21 +104,35 @@ class Network(object):
             return network
 
     def build_edge_data(self):
-        self.edge_data = []
+        if self.edge_data is None:
+            # first time?
+            self.edge_data = []
 
-        for i, e in enumerate(self.network.edges()):
-            src_idx = int(e.source())
-            dst_idx = int(e.target())
-            if src_idx == dst_idx:
-                # no support for self connections yet                    
-                continue
+            for i, e in enumerate(self.network.edges()):
+                src_idx = int(e.source())
+                dst_idx = int(e.target())
+                if src_idx == dst_idx:
+                    # no support for self connections yet                    
+                    continue
 
-            src = self.node_positions_dict[src_idx]
-            dst = self.node_positions_dict[dst_idx]
-            weight = self.edge_weight[e] if self.edge_weight is not None else 1
+                src = self.node_positions_dict[src_idx]
+                dst = self.node_positions_dict[dst_idx]
+                weight = self.edge_weight[e] if self.edge_weight is not None else 1
 
-            edge = Edge(src, dst, src_idx, dst_idx, weight=weight, index=i, handle=e)
-            self.edge_data.append(edge)
+                edge = Edge(src, dst, src_idx, dst_idx, weight=weight, index=i, handle=e)
+                self.edge_data.append(edge)
+        else:
+            # update positions only! the rest may have been changed manually.
+            edges = self.network.edges()
+            for data in self.edge_data:
+                src_idx = data.handle.source()
+                dst_idx = data.handle.target()
+                src = self.node_positions_dict[src_idx]
+                dst = self.node_positions_dict[dst_idx]
+                data.source = src
+                data.target = dst
+                data.points = [src, dst]
+
     
 
     def set_node_positions(self, layout_vector):
@@ -161,3 +177,15 @@ class Network(object):
         vertex_positions = [self.node_positions[v_id] for v_id in result.network.vertices()]
         result.set_node_positions(vertex_positions)
         return result
+    
+    def weight_nodes(self):
+        self.node_weight = self.network.get_in_degrees(list(self.network.vertices()), eweight=self.edge_weight)
+
+    def weight_edges_with_betweenness(self, update_nodes=False):
+        node_centrality, edge_centrality = graph_tool.centrality.betweenness(self.network)
+
+        for edge in self.edge_data:
+            edge.weight = edge_centrality[edge.handle]
+
+        if update_nodes:
+            self.node_weight = node_centrality

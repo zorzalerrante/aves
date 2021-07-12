@@ -1,11 +1,11 @@
 import numpy as np
 import math
 from aves.features.geometry import euclidean_distance as point_distance
-from aves.models.network import Edge, EPS
-from aves.visualization.networks import NodeLink
+from aves.models.network import Edge, Network, EPS
+
 from collections import defaultdict
 from itertools import combinations
-from cytoolz import keyfilter, valfilter, sliding_window
+from cytoolz import sliding_window
 
 
 class FDB_Edge(object):
@@ -61,7 +61,7 @@ class FDB_Edge(object):
 
 
 class FDB:
-    def __init__(self, nodelink: NodeLink, K=1, S=0.01, P=1, P_rate=2, C=6, I=70, I_rate=0.6666667, compatibility_threshold=0.7, eps=EPS):
+    def __init__(self, network: Network, K=1, S=0.01, P=1, P_rate=2, C=6, I=70, I_rate=0.6666667, compatibility_threshold=0.7, eps=EPS):
         '''
         @param K global bundling constant controlling edge stiffness
         @param S initial distance to move points
@@ -71,7 +71,7 @@ class FDB:
         @param I initial number of iterations for cycle
         @param I_rate rate at which iteration numbers decreases i.e. 2/3
         '''
-        self.network = nodelink.network
+        self.network = network
         self.edges = {}
 
         # Hyper-parameters
@@ -85,7 +85,7 @@ class FDB:
         self.compatibility_threshold = compatibility_threshold
         self.eps = EPS
 
-        for base_edge in nodelink.network.edge_data:
+        for base_edge in network.edge_data:
             edge = FDB_Edge(base_edge)
 
             if self.is_long_enough(edge):
@@ -98,9 +98,9 @@ class FDB:
         # let's go
         self.bundle_edges()
 
-        for base_edge in nodelink.edge_data:
+        for base_edge in network.edge_data:
             if base_edge.index in self.subdivision_points:
-                base_edge.polyline = self.subdivision_points[base_edge.index]
+                base_edge.points = np.array(self.subdivision_points[base_edge.index])
 
 
     def is_long_enough(self, edge):
@@ -230,26 +230,19 @@ class FDB:
         self.update_edge_divisions(P)
 
         for _cycle in range(self.C):
-            S, P, I = self.apply_forces_cycle(self.K, P, I, S)
+            for _iteration in range(math.ceil(I)):
+                forces = {}
+                for edge_idx in self.edges.keys():
+                    forces[edge_idx] = self.apply_resulting_forces_on_subdivision_points(edge_idx, self.K, P, S)
 
+                for edge_idx in self.edges.keys():
+                    for i in range(P + 1): # We want from 0 to P
+                        self.subdivision_points[edge_idx][i] = self.subdivision_points[edge_idx][i] + forces[edge_idx][i]
 
+            # prepare for next cycle
+            S = S / 2
+            P = P * self.P_rate
+            I = I * self.I_rate
 
-    def apply_forces_cycle(self, K, P, I, S):
-        for _iteration in range(math.ceil(I)):
-            forces = {}
-            for edge_idx in self.edges.keys():
-                forces[edge_idx] = self.apply_resulting_forces_on_subdivision_points(edge_idx, K, P, S)
-
-            for edge_idx in self.edges.keys():
-                for i in range(P + 1): # We want from 0 to P
-                    self.subdivision_points[edge_idx][i] = self.subdivision_points[edge_idx][i] + forces[edge_idx][i]
-
-        # prepare for next cycle
-        S = S / 2
-        P = P * self.P_rate
-        I = I * self.I_rate
-
-        self.update_edge_divisions(P)
-
-        return S, P, I
+            self.update_edge_divisions(P)
 

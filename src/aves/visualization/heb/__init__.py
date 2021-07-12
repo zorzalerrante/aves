@@ -12,21 +12,21 @@ import typing
 
 from aves.features.geometry import bspline
 from aves.models.network import Network
-from aves.visualization.networks import NodeLink
-from cytoolz import keyfilter, valfilter, unique, valmap, sliding_window, groupby, pluck
+from cytoolz import valfilter, unique, sliding_window
 from collections import defaultdict
 
 from matplotlib.collections import LineCollection
 import matplotlib.colors as colors
-from matplotlib.patches import FancyArrowPatch, Wedge
+from matplotlib.patches import Wedge
 from matplotlib.collections import PatchCollection, LineCollection
 from sklearn.preprocessing import MinMaxScaler
 
+from aves.visualization.lines import ColoredCurveCollection
+
 
 class HierarchicalEdgeBundling(object):
-    def __init__(self, nodelink: NodeLink, state=None, covariate_type=None):
-        self.nodelink = nodelink
-        self.network = nodelink.network
+    def __init__(self, network: Network, state=None, covariate_type=None, points_per_edge=50, path_smoothing_factor=0.8):
+        self.network = network
         self.state = state
         if state is not None:
             self.block_levels = self.state.get_bs()
@@ -35,7 +35,7 @@ class HierarchicalEdgeBundling(object):
             
         self.build_community_graph()
         self.build_node_memberships()
-        self.build_edges()
+        self.build_edges(n_points=points_per_edge, smoothing_factor=path_smoothing_factor)
         self.set_community_level(0)
 
         
@@ -52,6 +52,8 @@ class HierarchicalEdgeBundling(object):
         return [self.membership_per_level[level][int(node_id)] for node_id in self.network.vertices()]
       
     def build_community_graph(self):
+        from aves.visualization.networks import NodeLink
+
         tree, membership, order = graph_tool.inference.nested_blockmodel.get_hierarchy_tree(self.state, empty_branches=False)
         self.nested_graph = tree
         self.nested_graph.set_directed(False)
@@ -66,6 +68,7 @@ class HierarchicalEdgeBundling(object):
         self.community_graph = Network(graph_tool.GraphView(self.nested_graph, directed=True, vfilt=lambda x: x >= self.network.num_vertices()))
         self.community_nodelink = NodeLink(self.community_graph)
         self.community_nodelink.network.set_node_positions(self.radial_positions[self.network.num_vertices():])
+        self.community_nodelink.colorize_edges(method='plain')
 
     def build_node_memberships(self):
         self.nested_graph.set_directed(True)
@@ -105,7 +108,7 @@ class HierarchicalEdgeBundling(object):
         if getattr(self, 'community_level', None) is None:
             self.set_community_level(0)
 
-    def edge_to_spline(self, src, dst, n_points=100, smoothing_factor=0.8):
+    def edge_to_spline(self, src, dst, n_points, smoothing_factor):
         if src == dst:
             raise Exception('Self-pointing edges are not supported')
 
@@ -126,88 +129,43 @@ class HierarchicalEdgeBundling(object):
             return None
         
         
-    def build_edges(self, n_points=50):
-        self.edges = []
-        
-        self.n_points = n_points
+    def build_edges(self, n_points=50, smoothing_factor=0.8):
+        self.bundled_edges = []
 
-        for e in self.nodelink.network.edge_data:                
+        for e in self.network.edge_data:                
             src = e.index_pair[0]
             dst = e.index_pair[1]
 
-            edge = self.edge_to_spline(src, dst, n_points=n_points)
+            curve = self.edge_to_spline(src, dst, n_points, smoothing_factor)
                         
-            if edge is not None:
-                if self.nodelink.network.edge_weight is not None:
-                    weight = self.nodelink.network.edge_weight[e.handle]
+            if curve is not None:
+                e.points = curve
+
+                if self.network.edge_weight is not None:
+                    weight = self.network.edge_weight[e.handle]
                 else:
                     weight = 1.0
-                    
-                e.polyline = edge
 
-                self.edges.append({
-                    'spline': edge,
+                self.bundled_edges.append({
+                    'spline': curve,
                     'source': e.index_pair[0],
                     'target': e.index_pair[1],
-                    'weight': weight
+                    'weight': weight,
+                    'handle': e.handle
                 })
         
     def prepare_segments(self, level=None):
-        self.segments_per_pair = defaultdict(list)
-        
+        self.colored_lines_per_pair = defaultdict(ColoredCurveCollection)
+
         if level is None:
             level = self.community_level
-        
-        for edge_data in self.edges:
-            segments = list(sliding_window(2, edge_data['spline']))
-            values = np.linspace(0, 1, num=self.n_points - 1)
+            
+        for edge_data in self.bundled_edges:
             pair = (self.membership_per_level[level][edge_data['source']],
                     self.membership_per_level[level][edge_data['target']])
-            #print(pair)
-            #break
             
-            self.segments_per_pair[pair].append((segments, values, edge_data['weight']))
+            self.colored_lines_per_pair[pair].add_curve(edge_data['spline'], edge_data['weight'])
             
-            
-    def plot_edges(self, ax, linewidth=1, alpha=0.25, min_linewidth=None, linestyle='solid', level=None, palette='plasma'):
-        self.check_status()
-        
-        if level is None:
-            level = self.community_level if self.community_level else 0
-            
-        if level != self.community_level:
-            self.prepare_segments(level=level)
-            
-        community_ids = sorted(set(self.membership_per_level[level].values()))
-        community_colors = dict(zip(community_ids, sns.color_palette(palette, n_colors=len(community_ids))))
-        
-        if self.nodelink.network.edge_weight is not None and min_linewidth is not None:
-            width_scaler = MinMaxScaler(feature_range=(min_linewidth, linewidth))
-            width_scaler.fit(np.sqrt(self.nodelink.network.edge_weight.a).reshape(-1, 1))
-        else:
-            width_scaler = None
-            
-        for pair, seg_and_val in self.segments_per_pair.items():
-            #print(self.community_colors)
-            #print(pair)
-            cmap = colors.LinearSegmentedColormap.from_list("", [community_colors[pair[0]], community_colors[pair[1]]])
-
-            all_segments = np.concatenate([s[0] for s in seg_and_val])
-            all_values = np.concatenate([s[1] for s in seg_and_val])
-            all_weights = np.concatenate([np.repeat(s[2], self.n_points) for s in seg_and_val])
-            
-            if width_scaler is not None:
-                linewidths = np.squeeze(width_scaler.transform(np.sqrt(np.array(all_weights)).reshape(-1, 1)))
-            else:
-                linewidths = linewidth
-
-            edge_collection = LineCollection(all_segments, cmap=cmap, linewidths=linewidths, linestyle=linestyle, alpha=alpha)
-            edge_collection.set_array(all_values)
-            ax.add_collection(edge_collection)
-
-    def plot_nodes(self, *args, **kwargs):
-        self.check_status()
-        self.nodelink.plot_nodes(*args, **kwargs)
         
     def plot_community_wedges(self, ax, level=None, wedge_width=0.5, wedge_ratio=None, wedge_offset=0.05, alpha=1.0, fill_gaps=False, palette='plasma', label_func=None):
         self.check_status()
@@ -364,5 +322,9 @@ class HierarchicalEdgeBundling(object):
                          fontsize='small')   
 
     def plot_community_network(self, ax):
-        self.community_nodelink.plot_nodes(ax, marker='s')
-        self.community_nodelink.plot_edges(ax, with_arrows=True)
+        self.community_nodelink.plot_nodes(ax, color='blue', marker='s')
+        self.community_nodelink.plot_edges(ax, color='black', linewidth=2, alpha=0.8)
+
+    def set_linewidth(self, linewidth, min_linewidth=None):
+        for colored_lines in self.colored_lines_per_pair.values():
+            colored_lines.set_linewidth(linewidth, min_linewidth=min_linewidth)

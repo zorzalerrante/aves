@@ -4,6 +4,7 @@ import graph_tool.inference
 import graph_tool.centrality
 import numpy as np
 import pandas as pd
+from cytoolz import valfilter
 
 EPS = 1e-6
 
@@ -123,7 +124,6 @@ class Network(object):
                 self.edge_data.append(edge)
         else:
             # update positions only! the rest may have been changed manually.
-            edges = self.network.edges()
             for data in self.edge_data:
                 src_idx = data.handle.source()
                 dst_idx = data.handle.target()
@@ -172,9 +172,25 @@ class Network(object):
     def shortest_path(self, src, dst):
         return list(graph_tool.topology.all_shortest_paths(self.network, src, dst))
 
-    def view(self, vertex_filter=None, edge_filter=None):
-        result = Network(graph_tool.GraphView(self.network, vfilt=vertex_filter, efilt=edge_filter))
-        vertex_positions = [self.node_positions[v_id] for v_id in result.network.vertices()]
+    def subgraph(self, vertex_filter=None, edge_filter=None):
+        view = graph_tool.GraphView(self.network, vfilt=vertex_filter, efilt=edge_filter).copy()
+        
+        vertex_positions = [self.node_positions[v_id] for v_id in view.vertices()]
+        if self.edge_weight is not None:
+            edge_weight = [self.edge_weight[e_id] for e_id in view.edges()]
+        else:
+            edge_weight = None
+        
+        view.purge_vertices()
+        view.purge_edges()
+
+        if edge_weight is not None:
+            weight_prop = view.new_edge_property('double')
+            weight_prop.a = edge_weight
+        else:
+            weight_prop = None
+
+        result = Network(view, edge_weight=weight_prop)
         result.set_node_positions(vertex_positions)
         return result
     
@@ -189,3 +205,13 @@ class Network(object):
 
         if update_nodes:
             self.node_weight = node_centrality
+
+    def connected_components(self, directed=True):
+        return graph_tool.topology.label_components(self.network, directed=directed)
+
+    def largest_connected_component(self, directed=True):
+        components = self.connected_components(directed=directed)[0]
+        view = self.subgraph(vertex_filter=lambda x: components[x] == 0)
+        return view
+
+

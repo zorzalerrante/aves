@@ -1,107 +1,104 @@
+from typing import Dict, Optional
+
 import graph_tool
-import graph_tool.topology
-import graph_tool.inference
 import graph_tool.centrality
+import graph_tool.inference
+import graph_tool.topology
 import numpy as np
 import pandas as pd
-from cytoolz import valfilter
+from cytoolz import itemmap, keyfilter, valfilter
 
-EPS = 1e-6
+from .edge import Edge
 
-class Edge(object):
-    def __init__(self, source, target, source_idx, target_idx, weight=None, index=-1, handle=None):
-        self.source = source
-        self.target = target
-        self.handle = handle
-
-        self._vector = self.target - self.source 
-
-        if np.allclose(self.source, self.target, atol=EPS):
-            self._length = EPS
-        else:
-            self._length = np.sqrt(np.dot(self._vector, self._vector))
-
-        self._unit_vector = self._vector / self._length
-        self._mid_point = (self.source + self.target) * 0.5
-
-        if weight is None:
-            self.weight = 1
-        else:
-            self.weight = weight
-
-        self.index = index
-        # this can be filled by y external algorithms
-        self.points = [self.source, self.target]
-        self.index_pair = (source_idx, target_idx)
-
-
-    def as_vector(self):
-        return self._vector
-
-    def length(self):
-        return self._length
-
-    def project(self, point):
-        L = self._length
-        p_vec = point - self.source
-        return self.source + np.dot(p_vec, self._unit_vector)  * self._unit_vector
 
 class Network(object):
     def __init__(self, graph: graph_tool.Graph, edge_weight=None):
-        self.network = graph
+        self.network: graph_tool.Graph = graph
         self.edge_weight = edge_weight
         self.node_weight = None
         self.edge_data = None
-        self.node_positions = None
-        self.node_positions_dict = None
-        self.node_positions_vector = None
-        self.node_map = None
-        
+
+        self.node_map: dict = None
+        self.node_layout: LayoutStrategy = None
+
+        self.id_to_label: dict = None
+
     @classmethod
-    def from_edgelist(cls, df: pd.DataFrame, source='source', target='target', directed=True, weight=None, map_nodes=True):
-        if map_nodes:
-            source_attr = f'{source}__mapped__'
-            target_attr = f'{target}__mapped__'
+    def from_edgelist(
+        cls,
+        df: pd.DataFrame,
+        source="source",
+        target="target",
+        directed=True,
+        weight=None,
+    ):
 
-            node_values = set(df[source].unique())
-            node_values = node_values | set(df[target].unique())
-            node_map = dict(zip(sorted(node_values), range(len(node_values))))
+        source_attr = f"{source}__mapped__"
+        target_attr = f"{target}__mapped__"
 
-            df_mapped = df.assign(**{
+        node_values = set(df[source].unique())
+        node_values = node_values | set(df[target].unique())
+        node_map = dict(zip(sorted(node_values), range(len(node_values))))
+
+        df_mapped = df.assign(
+            **{
                 source_attr: df[source].map(node_map),
-                target_attr: df[target].map(node_map)
-            })
-        else:
-            source_attr = source
-            target_attr = target
-            df_mapped = df
-            node_map = None
+                target_attr: df[target].map(node_map),
+            }
+        )
 
         if weight is not None:
-            network, edge_weight = cls._parse_edgelist(df_mapped, source=source_attr, target=target_attr, weight=weight, directed=directed)
+            network, edge_weight = cls._parse_edgelist(
+                df_mapped,
+                source=source_attr,
+                target=target_attr,
+                weight=weight,
+                directed=directed,
+            )
         else:
-            network = cls._parse_edgelist(df_mapped, source=source_attr, target=target_attr, weight=None, directed=directed)
+            network = cls._parse_edgelist(
+                df_mapped,
+                source=source_attr,
+                target=target_attr,
+                weight=None,
+                directed=directed,
+            )
             edge_weight = None
+
         result = cls(network, edge_weight=edge_weight)
         result.node_map = node_map
+        result.id_to_label = itemmap(reversed, node_map)
         return result
 
     @classmethod
-    def _parse_edgelist(cls, df, source='source', target='target', weight='weight', directed=True, remove_empty=True):
+    def _parse_edgelist(
+        cls,
+        df,
+        source="source",
+        target="target",
+        weight="weight",
+        directed=True,
+        remove_empty=True,
+    ):
         network = graph_tool.Graph(directed=directed)
         n_vertices = max(df[source].max(), df[target].max()) + 1
         vertex_list = network.add_vertex(n_vertices)
-        
+
         if weight is not None and weight in df.columns:
             if remove_empty:
                 df = df[df[weight] > 0]
-            weight_prop = network.new_edge_property('double')
-            network.add_edge_list(df.assign(**{weight: df[weight].astype(np.float64)})[[source, target, weight]].values, eprops=[weight_prop])
-            #network.shrink_to_fit()
+            weight_prop = network.new_edge_property("double")
+            network.add_edge_list(
+                df.assign(**{weight: df[weight].astype(np.float64)})[
+                    [source, target, weight]
+                ].values,
+                eprops=[weight_prop],
+            )
+            # network.shrink_to_fit()
             return network, weight_prop
         else:
             network.add_edge_list(df[[source, target]].values)
-            #network.shrink_to_fit()
+            # network.shrink_to_fit()
             return network
 
     def build_edge_data(self):
@@ -113,39 +110,52 @@ class Network(object):
                 src_idx = int(e.source())
                 dst_idx = int(e.target())
                 if src_idx == dst_idx:
-                    # no support for self connections yet                    
+                    # no support for self connections yet
                     continue
 
-                src = self.node_positions_dict[src_idx]
-                dst = self.node_positions_dict[dst_idx]
+                src = self.node_layout.get_position(src_idx)
+                dst = self.node_layout.get_position(dst_idx)
                 weight = self.edge_weight[e] if self.edge_weight is not None else 1
 
-                edge = Edge(src, dst, src_idx, dst_idx, weight=weight, index=i, handle=e)
+                edge = Edge(
+                    src, dst, src_idx, dst_idx, weight=weight, index=i, handle=e
+                )
                 self.edge_data.append(edge)
         else:
             # update positions only! the rest may have been changed manually.
             for data in self.edge_data:
                 src_idx = data.handle.source()
                 dst_idx = data.handle.target()
-                src = self.node_positions_dict[src_idx]
-                dst = self.node_positions_dict[dst_idx]
+                src = self.node_layout.get_position(src_idx)
+                dst = self.node_layout.get_position(dst_idx)
                 data.source = src
                 data.target = dst
                 data.points = [src, dst]
 
-    
+    def layout_nodes(self, *args, **kwargs):
+        from .layouts import (
+            ForceDirectedLayout,
+            GeographicalLayout,
+            PrecomputedLayout,
+            RadialLayout,
+        )
 
-    def set_node_positions(self, layout_vector):
-        '''
-        @param layout_vector outcome from a layout method from graphtool or an array with positions, in vertex order
-        '''
+        method = kwargs.pop("method", "force-directed")
 
-        if type(layout_vector) in (pd.DataFrame, pd.Series):
-            layout_vector = layout_vector.values
+        if method == "force-directed":
+            self.node_layout = ForceDirectedLayout(self)
+        elif method == "precomputed":
+            self.node_layout = PrecomputedLayout(self)
+        elif method == "geographical":
+            geodf = kwargs.pop("geodataframe")
+            node_column = kwargs.pop("node_column", None)
+            self.node_layout = GeographicalLayout(self, geodf, node_column=node_column)
+        elif method == "radial":
+            self.node_layout = RadialLayout(self)
+        else:
+            raise NotImplementedError(f"unknown layout method {method}")
 
-        self.node_positions = layout_vector
-        self.node_positions_vector = np.array(list(layout_vector))
-        self.node_positions_dict = dict(zip(list(map(int, self.network.vertices())), list(self.node_positions_vector)))
+        self.node_layout.layout_nodes(*args, **kwargs)
         self.build_edge_data()
 
     def num_vertices(self):
@@ -163,48 +173,75 @@ class Network(object):
     def is_directed(self):
         return self.network.is_directed()
 
-    def node_position(self, node_idx):
-        return self.node_positions_dict[node_idx]
-
     def graph(self):
         return self.network
 
     def shortest_path(self, src, dst):
         return list(graph_tool.topology.all_shortest_paths(self.network, src, dst))
 
-    def subgraph(self, vertex_filter=None, edge_filter=None):
-        view = graph_tool.GraphView(self.network, vfilt=vertex_filter, efilt=edge_filter).copy()
-        
-        vertex_positions = [self.node_positions[v_id] for v_id in view.vertices()]
+    def subgraph(self, vertex_filter=None, edge_filter=None, copy_positions=True):
+        view = graph_tool.GraphView(
+            self.network, vfilt=vertex_filter, efilt=edge_filter
+        ).copy()
+
+        old_vertex_ids = set(map(int, view.vertices()))
+
+        if copy_positions:
+            vertex_positions = [
+                self.node_layout.get_position(v_id) for v_id in view.vertices()
+            ]
+        else:
+            vertex_positions = None
+
+        node_map_keys = valfilter(lambda x: x in old_vertex_ids, self.node_map).keys()
+
+        # TODO: vertex ids also change
+        # TODO: vertex weights
+
         if self.edge_weight is not None:
             edge_weight = [self.edge_weight[e_id] for e_id in view.edges()]
         else:
             edge_weight = None
-        
+
         view.purge_vertices()
         view.purge_edges()
 
         if edge_weight is not None:
-            weight_prop = view.new_edge_property('double')
+            weight_prop = view.new_edge_property("double")
             weight_prop.a = edge_weight
         else:
             weight_prop = None
 
         result = Network(view, edge_weight=weight_prop)
-        result.set_node_positions(vertex_positions)
+        result.node_map = dict(zip(node_map_keys, map(int, view.vertices())))
+        print(result.node_map)
+        result.id_to_label = itemmap(reversed, result.node_map)
+
+        if vertex_positions:
+            result.layout_nodes(method="precomputed", positions=vertex_positions)
         return result
-    
-    def weight_nodes(self):
-        self.node_weight = self.network.get_in_degrees(list(self.network.vertices()), eweight=self.edge_weight)
 
-    def weight_edges_with_betweenness(self, update_nodes=False):
-        node_centrality, edge_centrality = graph_tool.centrality.betweenness(self.network)
+    def node_degree(self, degree_type="in"):
+        if not degree_type in ("in", "out", "total"):
+            raise ValueError("Unsupported node degree")
 
-        for edge in self.edge_data:
-            edge.weight = edge_centrality[edge.handle]
+        return getattr(self.network, f"get_{degree_type}_degrees")(
+            list(self.network.vertices()), eweight=self.edge_weight
+        )
+
+    def get_betweenness(self, update_nodes=False, update_edges=False):
+        node_centrality, edge_centrality = graph_tool.centrality.betweenness(
+            self.network
+        )
+
+        if update_edges:
+            for edge in self.edge_data:
+                edge.weight = edge_centrality[edge.handle]
 
         if update_nodes:
             self.node_weight = node_centrality
+
+        return node_centrality, edge_centrality
 
     def connected_components(self, directed=True):
         return graph_tool.topology.label_components(self.network, directed=directed)
@@ -213,5 +250,3 @@ class Network(object):
         components = self.connected_components(directed=directed)[0]
         view = self.subgraph(vertex_filter=lambda x: components[x] == 0)
         return view
-
-

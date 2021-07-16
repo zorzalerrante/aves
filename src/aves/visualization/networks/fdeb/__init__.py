@@ -1,7 +1,8 @@
 import numpy as np
 import math
 from aves.features.geometry import euclidean_distance as point_distance
-from aves.models.network import Edge, Network, EPS
+from aves.models.network import Network
+from aves.models.network.edge import Edge, EPS
 
 from collections import defaultdict
 from itertools import combinations

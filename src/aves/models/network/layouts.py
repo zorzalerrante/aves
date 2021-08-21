@@ -60,7 +60,7 @@ class ForceDirectedLayout(LayoutStrategy):
         super().__init__(network, "force-directed")
 
     def layout(self, *args, **kwargs):
-        method = kwargs.get("algorithm", "sfdp")
+        method = kwargs.pop("algorithm", "sfdp")
 
         if not method in ("sfdp", "arf"):
             raise ValueError(f"unsupported method: {method}")
@@ -69,7 +69,8 @@ class ForceDirectedLayout(LayoutStrategy):
             self.node_positions = graph_tool.draw.sfdp_layout(
                 self.network.graph(),
                 eweight=self.network.edge_weight,
-                verbose=kwargs.get("verbose", False),
+                verbose=kwargs.pop("verbose", False),
+                **kwargs,
             )
         else:
             self.node_positions = graph_tool.draw.arf_layout(self.network.graph())

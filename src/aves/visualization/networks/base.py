@@ -1,16 +1,7 @@
-import typing
-from collections import defaultdict
-
 import graph_tool
 import graph_tool.draw
 import graph_tool.inference
 import graph_tool.topology
-import matplotlib.colors as colors
-import numpy as np
-import pandas as pd
-import seaborn as sns
-from cytoolz import unique
-from sklearn.preprocessing import minmax_scale
 
 from aves.models.network import Network
 
@@ -34,6 +25,7 @@ class NodeLink(object):
 
     def layout_nodes(self, *args, **kwargs):
         self.network.layout_nodes(*args, **kwargs)
+        self._maybe_update_strategies()
 
     def _maybe_update_strategies(self, nodes=True, edges=True):
         if edges and self.edge_strategy is not None:
@@ -58,9 +50,12 @@ class NodeLink(object):
 
         self.node_strategy.plot(ax, *args, **kwargs)
 
-    def plot(self, ax, edges={}, nodes={}):
-        self.plot_edges(ax, **edges)
-        self.plot_nodes(ax, **nodes)
+    def plot(self, ax, *args, **kwargs):
+        nodes = kwargs.get("nodes", {})
+        edges = kwargs.get("edges", {})
+        zorder = kwargs.get("zorder", None)
+        self.plot_edges(ax, zorder=zorder, **edges)
+        self.plot_nodes(ax, zorder=zorder, **nodes)
 
     def bundle_edges(self, method: str, *args, **kwargs):
         if method == "force-directed":

@@ -186,7 +186,7 @@ class Network(object):
 
         old_vertex_ids = set(map(int, view.vertices()))
 
-        if copy_positions:
+        if copy_positions and self.node_layout is not None:
             vertex_positions = [
                 self.node_layout.get_position(v_id) for v_id in view.vertices()
             ]
@@ -214,7 +214,7 @@ class Network(object):
 
         result = Network(view, edge_weight=weight_prop)
         result.node_map = dict(zip(node_map_keys, map(int, view.vertices())))
-        print(result.node_map)
+        # print(result.node_map)
         result.id_to_label = itemmap(reversed, result.node_map)
 
         if vertex_positions:

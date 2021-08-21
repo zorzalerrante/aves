@@ -22,22 +22,29 @@ Ported to Python by Myle Ott <myleott@gmail.com>.
 Updated by Eduardo Graells-Garrido <zorzalerrante@github> to use an updated set of emoji and to split a wider set of whitespace.
 """
 
+import html.parser as HTMLParser
 import operator
 import re
-import html.parser as HTMLParser
 
 from emoji.unicode_codes import EMOJI_UNICODE
 
-def regex_or(*items):
-    return '(?:' + str('|'.join(items)) + ')'
 
-Contractions = re.compile("(?i)(\w+)(n['’′]t|['’′]ve|['’′]ll|['’′]d|['’′]re|['’′]s|['’′]m)$", re.UNICODE)
-Whitespace = re.compile("[\s\u0009\u000a-\u000d\u0020\u0085\u00a0\u1680\u180e\u202f\u205f\u3000\u2000-\u200a\u2028\u2029]+", re.UNICODE)
+def regex_or(*items):
+    return "(?:" + str("|".join(items)) + ")"
+
+
+Contractions = re.compile(
+    "(?i)(\w+)(n['’′]t|['’′]ve|['’′]ll|['’′]d|['’′]re|['’′]s|['’′]m)$", re.UNICODE
+)
+Whitespace = re.compile(
+    "[\s\u0009\u000a-\u000d\u0020\u0085\u00a0\u1680\u180e\u202f\u205f\u3000\u2000-\u200a\u2028\u2029]+",
+    re.UNICODE,
+)
 
 punctChars = r"['\"“”‘’.¿?¡!…,:;]"
-#punctSeq   = punctChars+"+"	#'anthem'. => ' anthem '.
-punctSeq   = r"['\"“”‘’]+|[.¿?¡!,…]+|[:;]+"	#'anthem'. => ' anthem ' .
-entity     = r"&(?:amp|lt|gt|quot);"
+# punctSeq   = punctChars+"+"	#'anthem'. => ' anthem '.
+punctSeq = r"['\"“”‘’]+|[.¿?¡!,…]+|[:;]+"  #'anthem'. => ' anthem ' .
+entity = r"&(?:amp|lt|gt|quot);"
 #  URLs
 
 
@@ -45,53 +52,76 @@ entity     = r"&(?:amp|lt|gt|quot);"
 # If you actually empirically test it the results are bad.
 # Please see https://github.com/brendano/ark-tweet-nlp/pull/9
 
-urlStart1  = r"(?:https?://|\bwww\.)"
+urlStart1 = r"(?:https?://|\bwww\.)"
 commonTLDs = r"(?:com|org|edu|gov|net|mil|aero|asia|biz|cat|coop|info|int|jobs|mobi|museum|name|pro|tel|travel|xxx)"
-ccTLDs	 = r"(?:ac|ad|ae|af|ag|ai|al|am|an|ao|aq|ar|as|at|au|aw|ax|az|ba|bb|bd|be|bf|bg|bh|bi|bj|bm|bn|bo|br|bs|bt|" + \
-r"bv|bw|by|bz|ca|cc|cd|cf|cg|ch|ci|ck|cl|cm|cn|co|cr|cs|cu|cv|cx|cy|cz|dd|de|dj|dk|dm|do|dz|ec|ee|eg|eh|" + \
-r"er|es|et|eu|fi|fj|fk|fm|fo|fr|ga|gb|gd|ge|gf|gg|gh|gi|gl|gm|gn|gp|gq|gr|gs|gt|gu|gw|gy|hk|hm|hn|hr|ht|" + \
-r"hu|id|ie|il|im|in|io|iq|ir|is|it|je|jm|jo|jp|ke|kg|kh|ki|km|kn|kp|kr|kw|ky|kz|la|lb|lc|li|lk|lr|ls|lt|" + \
-r"lu|lv|ly|ma|mc|md|me|mg|mh|mk|ml|mm|mn|mo|mp|mq|mr|ms|mt|mu|mv|mw|mx|my|mz|na|nc|ne|nf|ng|ni|nl|no|np|" + \
-r"nr|nu|nz|om|pa|pe|pf|pg|ph|pk|pl|pm|pn|pr|ps|pt|pw|py|qa|re|ro|rs|ru|rw|sa|sb|sc|sd|se|sg|sh|si|sj|sk|" + \
-r"sl|sm|sn|so|sr|ss|st|su|sv|sy|sz|tc|td|tf|tg|th|tj|tk|tl|tm|tn|to|tp|tr|tt|tv|tw|tz|ua|ug|uk|us|uy|uz|" + \
-r"va|vc|ve|vg|vi|vn|vu|wf|ws|ye|yt|za|zm|zw)"	#TODO: remove obscure country domains?
-urlStart2  = r"\b(?:[A-Za-z\d-])+(?:\.[A-Za-z0-9]+){0,3}\." + regex_or(commonTLDs, ccTLDs) + r"(?:\."+ccTLDs+r")?(?=\W|$)"
-urlBody    = r"(?:[^\.\s<>][^\s<>]*?)?"
+ccTLDs = (
+    r"(?:ac|ad|ae|af|ag|ai|al|am|an|ao|aq|ar|as|at|au|aw|ax|az|ba|bb|bd|be|bf|bg|bh|bi|bj|bm|bn|bo|br|bs|bt|"
+    + r"bv|bw|by|bz|ca|cc|cd|cf|cg|ch|ci|ck|cl|cm|cn|co|cr|cs|cu|cv|cx|cy|cz|dd|de|dj|dk|dm|do|dz|ec|ee|eg|eh|"
+    + r"er|es|et|eu|fi|fj|fk|fm|fo|fr|ga|gb|gd|ge|gf|gg|gh|gi|gl|gm|gn|gp|gq|gr|gs|gt|gu|gw|gy|hk|hm|hn|hr|ht|"
+    + r"hu|id|ie|il|im|in|io|iq|ir|is|it|je|jm|jo|jp|ke|kg|kh|ki|km|kn|kp|kr|kw|ky|kz|la|lb|lc|li|lk|lr|ls|lt|"
+    + r"lu|lv|ly|ma|mc|md|me|mg|mh|mk|ml|mm|mn|mo|mp|mq|mr|ms|mt|mu|mv|mw|mx|my|mz|na|nc|ne|nf|ng|ni|nl|no|np|"
+    + r"nr|nu|nz|om|pa|pe|pf|pg|ph|pk|pl|pm|pn|pr|ps|pt|pw|py|qa|re|ro|rs|ru|rw|sa|sb|sc|sd|se|sg|sh|si|sj|sk|"
+    + r"sl|sm|sn|so|sr|ss|st|su|sv|sy|sz|tc|td|tf|tg|th|tj|tk|tl|tm|tn|to|tp|tr|tt|tv|tw|tz|ua|ug|uk|us|uy|uz|"
+    + r"va|vc|ve|vg|vi|vn|vu|wf|ws|ye|yt|za|zm|zw)"
+)  # TODO: remove obscure country domains?
+urlStart2 = (
+    r"\b(?:[A-Za-z\d-])+(?:\.[A-Za-z0-9]+){0,3}\."
+    + regex_or(commonTLDs, ccTLDs)
+    + r"(?:\."
+    + ccTLDs
+    + r")?(?=\W|$)"
+)
+urlBody = r"(?:[^\.\s<>][^\s<>]*?)?"
 urlExtraCrapBeforeEnd = regex_or(punctChars, entity) + "+?"
-urlEnd     = r"(?:\.\.+|[<>]|\s|$)"
-url        = regex_or(urlStart1, urlStart2) + urlBody + "(?=(?:"+urlExtraCrapBeforeEnd+")?"+urlEnd+")"
+urlEnd = r"(?:\.\.+|[<>]|\s|$)"
+url = (
+    regex_or(urlStart1, urlStart2)
+    + urlBody
+    + "(?=(?:"
+    + urlExtraCrapBeforeEnd
+    + ")?"
+    + urlEnd
+    + ")"
+)
 
 
 # Numeric
-timeLike   = r"(?:^|\s|\W|\D)[\d]{1,2}[:][\d]{1,2}"
-numNum     = r"\d+(?:\.\d+)?"
+timeLike = r"(?:^|\s|\W|\D)[\d]{1,2}[:][\d]{1,2}"
+numNum = r"\d+(?:\.\d+)?"
 numberWithCommas = r"(?:(?<!\d)\d{1,3},)+?\d{3}" + r"(?=(?:[^,\d]|$))"
-numComb	 = "[\u0024\u058f\u060b\u09f2\u09f3\u09fb\u0af1\u0bf9\u0e3f\u17db\ua838\ufdfc\ufe69\uff04\uffe0\uffe1\uffe5\uffe6\u00a2-\u00a5\u20a0-\u20b9]?\d+(?:\\.\\d+)+%?"
+numComb = "[\u0024\u058f\u060b\u09f2\u09f3\u09fb\u0af1\u0bf9\u0e3f\u17db\ua838\ufdfc\ufe69\uff04\uffe0\uffe1\uffe5\uffe6\u00a2-\u00a5\u20a0-\u20b9]?\d+(?:\\.\\d+)+%?"
 
 # Abbreviations
 boundaryNotDot = regex_or("$", r"\s", r"[“\"?!,:;]", entity)
-aa1  = r"(?:[A-Za-z]\.){2,}(?=" + boundaryNotDot + ")"
-aa2  = r"[^A-Za-z](?:[A-Za-z]\.){1,}[A-Za-z](?=" + boundaryNotDot + ")"
+aa1 = r"(?:[A-Za-z]\.){2,}(?=" + boundaryNotDot + ")"
+aa2 = r"[^A-Za-z](?:[A-Za-z]\.){1,}[A-Za-z](?=" + boundaryNotDot + ")"
 standardAbbreviations = r"\b(?:[Mm]r|[Mm]rs|[Mm]s|[Dd]r|[Ss]r|[Jj]r|[Rr]ep|[Ss]en|[Ss]t|[Ss]ta|[Kk][Mm]|[Uu]d|[Pp]dt[ea]|[Dd]ip])\."
 arbitraryAbbrev = regex_or(aa1, aa2, standardAbbreviations)
-separators  = "(?:--+|―|—|~|–|=)"
-decorations = "(?:[♫♪]+|[★☆]+|[♥❤♡]+|[\u2639-\u263b]+|[\ue001-\uebbb]+)"#.encode('utf-8')
+separators = "(?:--+|―|—|~|–|=)"
+decorations = (
+    "(?:[♫♪]+|[★☆]+|[♥❤♡]+|[\u2639-\u263b]+|[\ue001-\uebbb]+)"  # .encode('utf-8')
+)
 thingsThatSplitWords = r"[^\s\.,?\"]"
-embeddedApostrophe = thingsThatSplitWords+r"+['’′]" + thingsThatSplitWords + "*"
+embeddedApostrophe = thingsThatSplitWords + r"+['’′]" + thingsThatSplitWords + "*"
 
 #  Emoticons
 # myleott: in Python the (?iu) flags affect the whole expression
-#normalEyes = "(?iu)[:=]" # 8 and x are eyes but cause problems
-normalEyes = "[:=]" # 8 and x are eyes but cause problems
+# normalEyes = "(?iu)[:=]" # 8 and x are eyes but cause problems
+normalEyes = "[:=]"  # 8 and x are eyes but cause problems
 wink = "[;]"
-noseArea = "(?:|-|[^a-zA-Z0-9 ])" # doesn't get :'-(
+noseArea = "(?:|-|[^a-zA-Z0-9 ])"  # doesn't get :'-(
 happyMouths = r"[D\)\]\}]+"
 sadMouths = r"[\(\[\{]+"
 tongue = "[pPd3]+"
-otherMouths = r"(?:[oO]+|[/\\]+|[vV]+|[Ss]+|[|]+)" # remove forward slash if http://'s aren't cleaned
+otherMouths = r"(?:[oO]+|[/\\]+|[vV]+|[Ss]+|[|]+)"  # remove forward slash if http://'s aren't cleaned
 
 # this considers all current emoji in the standard
-Emojis = regex_or(*map(lambda x: re.escape(x) + '[\U0001F3Fb-\U0001F3FF]?', sorted(EMOJI_UNICODE['en'].values(), key=len, reverse=True)))
+Emojis = regex_or(
+    *map(
+        lambda x: re.escape(x) + "[\U0001F3Fb-\U0001F3FF]?",
+        sorted(EMOJI_UNICODE["en"].values(), key=len, reverse=True),
+    )
+)
 EmojiPat = re.compile(Emojis, re.UNICODE)
 
 # mouth repetition examples:
@@ -105,36 +135,46 @@ s3 = r"(?:--['\"])"
 s4 = r"(?:<|&lt;|>|&gt;)[\._-]+(?:<|&lt;|>|&gt;)"
 s5 = "(?:[.][_]+[.])"
 # myleott: in Python the (?i) flag affects the whole expression
-#basicface = "(?:(?i)" +bfLeft+bfCenter+bfRight+ ")|" +s3+ "|" +s4+ "|" + s5
-basicface = "(?:" +bfLeft+bfCenter+bfRight+ ")|" +s3+ "|" +s4+ "|" + s5
+# basicface = "(?:(?i)" +bfLeft+bfCenter+bfRight+ ")|" +s3+ "|" +s4+ "|" + s5
+basicface = "(?:" + bfLeft + bfCenter + bfRight + ")|" + s3 + "|" + s4 + "|" + s5
 
 eeLeft = r"[＼\\ƪԄ\(（<>;ヽ\-=~\*]+"
-eeRight= "[\\-=\\);'\u0022<>ʃ）/／ノﾉ丿╯σっµ~\\*]+"#.encode('utf-8')
+eeRight = "[\\-=\\);'\u0022<>ʃ）/／ノﾉ丿╯σっµ~\\*]+"  # .encode('utf-8')
 eeSymbol = r"[^A-Za-z0-9\s\(\)\*:=-]"
-eastEmote = eeLeft + "(?:"+basicface+"|" +eeSymbol+")+" + eeRight
+eastEmote = eeLeft + "(?:" + basicface + "|" + eeSymbol + ")+" + eeRight
 
 oOEmote = r"(?:[oO]" + bfCenter + r"[oO])"
 
 
 emoticon = regex_or(
-        # Standard version  :) :( :] :D :P
-        "(?:>|&gt;)?" + regex_or(normalEyes, wink) + regex_or(noseArea,"[Oo]") + regex_or(tongue+r"(?=\W|$|RT|rt|Rt)", otherMouths+r"(?=\W|$|RT|rt|Rt)", sadMouths, happyMouths),
-
-        # reversed version (: D:  use positive lookbehind to remove "(word):"
-        # because eyes on the right side is more ambiguous with the standard usage of : ;
-        regex_or("(?<=(?: ))", "(?<=(?:^))") + regex_or(sadMouths,happyMouths,otherMouths) + noseArea + regex_or(normalEyes, wink) + "(?:<|&lt;)?",
-
-        #inspired by http://en.wikipedia.org/wiki/User:Scapler/emoticons#East_Asian_style
-        eastEmote.replace("2", "1", 1), basicface,
-        # iOS 'emoji' characters (some smileys, some symbols) [\ue001-\uebbb]
-        # TODO should try a big precompiled lexicon from Wikipedia, Dan Ramage told me (BTO) he does this
-
-        # myleott: o.O and O.o are two of the biggest sources of differences
-        #          between this and the Java version. One little hack won't hurt...
-        oOEmote
+    # Standard version  :) :( :] :D :P
+    "(?:>|&gt;)?"
+    + regex_or(normalEyes, wink)
+    + regex_or(noseArea, "[Oo]")
+    + regex_or(
+        tongue + r"(?=\W|$|RT|rt|Rt)",
+        otherMouths + r"(?=\W|$|RT|rt|Rt)",
+        sadMouths,
+        happyMouths,
+    ),
+    # reversed version (: D:  use positive lookbehind to remove "(word):"
+    # because eyes on the right side is more ambiguous with the standard usage of : ;
+    regex_or("(?<=(?: ))", "(?<=(?:^))")
+    + regex_or(sadMouths, happyMouths, otherMouths)
+    + noseArea
+    + regex_or(normalEyes, wink)
+    + "(?:<|&lt;)?",
+    # inspired by http://en.wikipedia.org/wiki/User:Scapler/emoticons#East_Asian_style
+    eastEmote.replace("2", "1", 1),
+    basicface,
+    # iOS 'emoji' characters (some smileys, some symbols) [\ue001-\uebbb]
+    # TODO should try a big precompiled lexicon from Wikipedia, Dan Ramage told me (BTO) he does this
+    # myleott: o.O and O.o are two of the biggest sources of differences
+    #          between this and the Java version. One little hack won't hurt...
+    oOEmote,
 )
 
-Hearts = "(?:<+/?3+)+" #the other hearts are in decorations
+Hearts = "(?:<+/?3+)+"  # the other hearts are in decorations
 
 Arrows = regex_or(r"(?:<*[-―—=]*>+|<+[-―—=]*>*)", "[\u2190-\u21ff]+")
 
@@ -148,42 +188,48 @@ Arrows = regex_or(r"(?:<*[-―—=]*>+|<+[-―—=]*>*)", "[\u2190-\u21ff]+")
 
 # This also gets #1 #40 which probably aren't hashtags .. but good as tokens.
 # If you want good hashtag identification, use a different regex.
-#Hashtag = "#[a-zA-Z0-9_]+"  #optional: lookbehind for \b
-#Hashtag = "(?:\#+[\w_]+[\w\'_\-]*[\w_]+)"
+# Hashtag = "#[a-zA-Z0-9_]+"  #optional: lookbehind for \b
+# Hashtag = "(?:\#+[\w_]+[\w\'_\-]*[\w_]+)"
 # Got this from here: https://gist.github.com/mahmoud/237eb20108b5805aed5f
 Hashtag = "(?:^|\s)[＃#]{1}(\w+)"
-#optional: lookbehind for \b, max length 15
+# optional: lookbehind for \b, max length 15
 AtMention = "(?:^|\s|\W)[@＠][a-zA-Z0-9_]+"
 
 # I was worried this would conflict with at-mentions
 # but seems ok in sample of 5800: 7 changes all email fixes
 # http://www.regular-expressions.info/email.html
 Bound = r"(?:\W|^|$)"
-Email = regex_or("(?<=(?:\W))", "(?<=(?:^))") + r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}(?=" +Bound+")"
+Email = (
+    regex_or("(?<=(?:\W))", "(?<=(?:^))")
+    + r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}(?="
+    + Bound
+    + ")"
+)
 
 # We will be tokenizing using these regexps as delimiters
 # Additionally, these things are "protected", meaning they shouldn't be further split themselves.
 protected_patterns = [
-            url,
-            Hashtag,
-            Emojis,
-            Hearts,
-            Email,
-            timeLike,
-            #numNum,
-            numberWithCommas,
-            numComb,
-            emoticon,
-            Arrows,
-            entity,
-            punctSeq,
-            arbitraryAbbrev,
-            separators,
-            decorations,
-            embeddedApostrophe,
-            AtMention]
-    
-Protected  = re.compile(regex_or(*protected_patterns), re.UNICODE)        
+    url,
+    Hashtag,
+    Emojis,
+    Hearts,
+    Email,
+    timeLike,
+    # numNum,
+    numberWithCommas,
+    numComb,
+    emoticon,
+    Arrows,
+    entity,
+    punctSeq,
+    arbitraryAbbrev,
+    separators,
+    decorations,
+    embeddedApostrophe,
+    AtMention,
+]
+
+Protected = re.compile(regex_or(*protected_patterns), re.UNICODE)
 
 # Edge punctuation
 # Want: 'foo' => ' foo '
@@ -194,18 +240,24 @@ Protected  = re.compile(regex_or(*protected_patterns), re.UNICODE)
 # I remember it causing lots of trouble in the past as well.  Would be good to revisit or eliminate.
 
 # Note the 'smart quotes' (http://en.wikipedia.org/wiki/Smart_quotes)
-#edgePunctChars    = r"'\"“”‘’«»{}\(\)\[\]\*&" #add \\p{So}? (symbols)
-edgePunctChars    = u"'\"“”‘’«»{}\\(\\)\\[\\]\\*&" #add \\p{So}? (symbols)
-edgePunct    = "[" + edgePunctChars + "]"
-notEdgePunct = "[a-zA-Z0-9]" # content characters
+# edgePunctChars    = r"'\"“”‘’«»{}\(\)\[\]\*&" #add \\p{So}? (symbols)
+edgePunctChars = u"'\"“”‘’«»{}\\(\\)\\[\\]\\*&"  # add \\p{So}? (symbols)
+edgePunct = "[" + edgePunctChars + "]"
+notEdgePunct = "[a-zA-Z0-9]"  # content characters
 offEdge = r"(^|$|:|;|\s|\.|,)"  # colon here gets "(hello):" ==> "( hello ):"
-EdgePunctLeft  = re.compile(offEdge + "("+edgePunct+"+)("+notEdgePunct+")", re.UNICODE)
-EdgePunctRight = re.compile("("+notEdgePunct+")("+edgePunct+"+)" + offEdge, re.UNICODE)
+EdgePunctLeft = re.compile(
+    offEdge + "(" + edgePunct + "+)(" + notEdgePunct + ")", re.UNICODE
+)
+EdgePunctRight = re.compile(
+    "(" + notEdgePunct + ")(" + edgePunct + "+)" + offEdge, re.UNICODE
+)
+
 
 def splitEdgePunct(input):
     input = EdgePunctLeft.sub(r"\1\2 \3", input)
     input = EdgePunctRight.sub(r"\1 \2\3", input)
     return input
+
 
 # The main work of tokenizing a tweet.
 def simpleTokenize(text):
@@ -225,9 +277,9 @@ def simpleTokenize(text):
     badSpans = []
     for match in Protected.finditer(splitPunctText):
         # The spans of the "bads" should not be split.
-        if (match.start() != match.end()): #unnecessary?
-            bads.append( [splitPunctText[match.start():match.end()]] )
-            badSpans.append( (match.start(), match.end()) )
+        if match.start() != match.end():  # unnecessary?
+            bads.append([splitPunctText[match.start() : match.end()]])
+            badSpans.append((match.start(), match.end()))
 
     # Create a list of indices to create the "goods", which can be
     # split. We are taking "bad" spans like
@@ -245,7 +297,7 @@ def simpleTokenize(text):
     # Group the indices and map them to their respective portion of the string
     splitGoods = []
     for i in range(0, len(indices), 2):
-        goodstr = splitPunctText[indices[i]:indices[i+1]]
+        goodstr = splitPunctText[indices[i] : indices[i + 1]]
         splitstr = goodstr.strip().split(" ")
         splitGoods.append(splitstr)
 
@@ -259,23 +311,26 @@ def simpleTokenize(text):
 
     # BTO: our POS tagger wants "ur" and "you're" to both be one token.
     # Uncomment to get "you 're"
-    #splitStr = []
-    #for tok in zippedStr:
+    # splitStr = []
+    # for tok in zippedStr:
     #    splitStr.extend(splitToken(tok))
-    #zippedStr = splitStr
+    # zippedStr = splitStr
 
     return zippedStr
+
 
 def addAllnonempty(master, smaller):
     for s in smaller:
         strim = s.strip()
-        if (len(strim) > 0):
+        if len(strim) > 0:
             master.append(strim)
     return master
+
 
 # "foo   bar " => "foo bar"
 def squeezeWhitespace(input):
     return Whitespace.sub(" ", input).strip()
+
 
 # Final pass tokenization based on special patterns
 def splitToken(token):
@@ -283,6 +338,7 @@ def splitToken(token):
     if m:
         return [m.group(1), m.group(2)]
     return [token]
+
 
 # Assume 'text' has no HTML escaping.
 def tokenize(text):
@@ -295,6 +351,7 @@ def normalizeTextForTagger(text):
     text = text.replace("&amp;", "&")
     text = HTMLParser.HTMLParser().unescape(text)
     return text
+
 
 # This is intended for raw tweet text -- we do some HTML entity unescaping before running the tagger.
 #

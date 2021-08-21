@@ -1,9 +1,9 @@
 import matplotlib.colors as colors
 import matplotlib.patheffects as path_effects
 import numpy as np
-from sklearn.preprocessing import minmax_scale
-from cytoolz import unique
 import seaborn as sns
+from cytoolz import unique
+from sklearn.preprocessing import minmax_scale
 
 from aves.models.network import Network
 from aves.visualization.primitives import RenderStrategy
@@ -24,7 +24,7 @@ class NodeStrategy(RenderStrategy):
 
 
 class PlainNodes(NodeStrategy):
-    """All nodes are rendered as a plain scatterplot"""
+    """All nodes are rendered as a scatterplot"""
 
     def __init__(self, network: Network, **kwargs):
         super().__init__(network, **kwargs)
@@ -38,16 +38,20 @@ class PlainNodes(NodeStrategy):
 
     def prepare_data(self):
         if self.weights is not None:
-            self.size = minmax_scale(np.sqrt(self.weights), feature_range=(1.0, 10.0))
+            self.size = minmax_scale(np.sqrt(self.weights), feature_range=(0.01, 1.0))
 
     def render(self, ax, *args, **kwargs):
-        node_size = kwargs.pop("node_size", 50)
-        palette_name = kwargs.pop("palette", None)
+        node_size = kwargs.pop("node_size", 10)
 
         if self.node_categories:
-            palette = sns.color_palette(
-                palette_name, n_colors=len(self.unique_categories)
-            )
+            palette_name = kwargs.pop("palette", None)
+            if isinstance(palette_name, str):
+                palette = sns.color_palette(
+                    palette_name, n_colors=len(self.unique_categories)
+                )
+            else:
+                # assume it's an iterable of colors
+                palette = list(palette_name)
             color_map = dict(zip(self.unique_categories, palette))
             c = [color_map[c] for c in self.node_categories]
         else:
@@ -62,7 +66,7 @@ class PlainNodes(NodeStrategy):
                 self.data[:, 0],
                 self.data[:, 1],
                 *args,
-                s=self.weights * node_size,
+                s=self.size * node_size,
                 c=c,
                 **kwargs,
             )

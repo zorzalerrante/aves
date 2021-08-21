@@ -2,13 +2,16 @@ import numpy as np
 
 EPS = 1e-6
 
+
 class Edge(object):
-    def __init__(self, source, target, source_idx, target_idx, weight=None, index=-1, handle=None):
+    def __init__(
+        self, source, target, source_idx, target_idx, weight=None, index=-1, handle=None
+    ):
         self.source = source
         self.target = target
         self.handle = handle
 
-        self._vector = self.target - self.source 
+        self._vector = self.target - self.source
 
         if np.allclose(self.source, self.target, atol=EPS):
             self._length = EPS
@@ -28,7 +31,6 @@ class Edge(object):
         self.points = [self.source, self.target]
         self.index_pair = (source_idx, target_idx)
 
-
     def as_vector(self):
         return self._vector
 
@@ -38,4 +40,4 @@ class Edge(object):
     def project(self, point):
         L = self._length
         p_vec = point - self.source
-        return self.source + np.dot(p_vec, self._unit_vector)  * self._unit_vector
+        return self.source + np.dot(p_vec, self._unit_vector) * self._unit_vector

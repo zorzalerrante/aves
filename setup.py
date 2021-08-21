@@ -2,8 +2,7 @@ import io
 import os
 import re
 
-from setuptools import find_packages
-from setuptools import setup
+from setuptools import find_packages, setup
 
 # Get some values from the setup.cfg
 try:
@@ -24,14 +23,17 @@ def read(filename):
 
 
 # Metadata
-exec(open('src/aves/version.py').read())
+exec(open("src/aves/version.py").read())
 
 PACKAGENAME = metadata.get("package_name", "aves")
 URL = metadata.get("url", "https://github.com/zorzalerrante/aves")
 LICENSE = metadata.get("license", "GPL3")
 AUTHOR = metadata.get("author_name", "Eduardo Graells-Garrido")
-AUTHOR_EMAIL = metadata.get("author_email", "eduardo.graells@bsc.es")
-DESCRIPTION = metadata.get("description", "Module to support my Information Visualization course.")
+AUTHOR_EMAIL = metadata.get("author_email", "egraells@udd.cl")
+DESCRIPTION = metadata.get(
+    "description",
+    "Module to support my Information Visualization course and my own work.",
+)
 
 
 setup(

@@ -38,8 +38,10 @@ dependencies:
   - graph-tool
   - cytoolz
   - pip:
+    - bezier
     - scattertext
     - KDEpy
     - adjustText
     - contextily
     - matplotlib-scalebar
+    - git+https://github.com/mims-harvard/scikit-fusion

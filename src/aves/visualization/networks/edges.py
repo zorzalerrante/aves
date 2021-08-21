@@ -1,12 +1,14 @@
+from collections import defaultdict
+
+import numpy as np
 import pandas as pd
 import seaborn as sns
-import numpy as np
-from matplotlib.collections import LineCollection
-from aves.visualization.lines import ColoredCurveCollection
 from cytoolz import unique
-from collections import defaultdict
-from aves.visualization.primitives import RenderStrategy
+from matplotlib.collections import LineCollection
+
 from aves.models.network import Network
+from aves.visualization.collections import ColoredCurveCollection
+from aves.visualization.primitives import RenderStrategy
 
 
 class EdgeStrategy(RenderStrategy):
@@ -43,7 +45,7 @@ class PlainEdges(EdgeStrategy):
         linewidth=1.0,
         linestyle="solid",
         alpha=0.75,
-        zorder=0,
+        **kwargs,
     ):
         collection = LineCollection(
             self.lines,
@@ -51,7 +53,7 @@ class PlainEdges(EdgeStrategy):
             linewidths=linewidth,
             linestyle=linestyle,
             alpha=alpha,
-            zorder=zorder,
+            **kwargs,
         )
         return ax.add_collection(collection)
 
@@ -133,7 +135,7 @@ class CommunityGradient(EdgeStrategy):
             colored_lines.set_colors(
                 source=community_colors[pair[0]], target=community_colors[pair[1]]
             )
-            colored_lines.render(ax)
+            colored_lines.render(ax, *args, **kwargs)
 
     def name(self):
         return "community-gradient"
@@ -172,10 +174,10 @@ class ODGradient(EdgeStrategy):
 
     def render(self, ax, *args, **kwargs):
         self.colored_curves.set_colors(
-            source=kwargs.get("source_color", "blue"),
-            target=kwargs.get("target_color", "red"),
+            source=kwargs.pop("source_color", "blue"),
+            target=kwargs.pop("target_color", "red"),
         )
-        self.colored_curves.render(ax)
+        self.colored_curves.render(ax, *args, **kwargs)
 
     def name(self):
         return "origin-destination"

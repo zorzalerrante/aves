@@ -1,0 +1,31 @@
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - configparser
+  - graphviz
+  - python=3.7
+  - matplotlib
+  - seaborn
+  - pandas
+  - geopandas
+  - libpysal
+  - mapclassify
+  - statsmodels
+  - networkx
+  - spectra
+  - descartes
+  - scikit-learn
+  - wordcloud
+  - pip
+  - graph-tool
+  - cytoolz
+  - pip:
+    - bezier
+    - scattertext
+    - KDEpy
+    - adjustText
+    - contextily
+    - matplotlib-scalebar
+    - git+https://github.com/mims-harvard/scikit-fusion
+    - git+https://github.com/zorzalerrante/aves

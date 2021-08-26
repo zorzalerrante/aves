@@ -123,7 +123,8 @@ def read_trips(path=None):
         value_col="Periodos",
     )
     df["HoraIni"] = pd.to_timedelta(df["HoraIni"] + ":00")
-    df = df[pd.notnull(df["HoraIni"])].copy()
+    df = df[pd.notnull(df["HoraIni"])]
+    df = df[df["Imputada"] == 0].copy()
     return df
 
 

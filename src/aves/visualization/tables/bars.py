@@ -51,6 +51,7 @@ def barchart(
         handles, labels = map(reversed, ax.get_legend_handles_labels())
         ax.legend(handles, labels, **legend_args)
 
+    ax.ticklabel_format(useOffset=False, style="plain")
     sns.despine(ax=ax, left=True)
 
     if normalize:

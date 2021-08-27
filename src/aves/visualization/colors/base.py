@@ -121,7 +121,7 @@ def bivariate_matrix_from_palette(palette_name="PiYG", n_colors=3):
     return cmap_xy
 
 
-def categorical_color_legend(ax, color_list, labels, loc="upper left", n_columns=None):
+def categorical_color_legend(ax, color_list, labels, loc="best", n_columns=None):
     legend_elements = []
 
     for label, color in zip(labels, color_list):

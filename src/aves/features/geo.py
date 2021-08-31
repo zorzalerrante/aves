@@ -6,6 +6,11 @@ from cytoolz import valmap
 from scipy.spatial.distance import pdist, squareform
 
 
+def clip_point_geodataframe(geodf, bounding_box, buffer=0):
+    bounds = shapely.geometry.box(*bounding_box).buffer(buffer)
+    return geodf[geodf.within(bounds)]
+
+
 def clip_area_geodataframe(geodf, bounding_box, buffer=0):
     # bounding box should be in same crs
 

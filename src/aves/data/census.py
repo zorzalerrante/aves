@@ -12,4 +12,4 @@ def read_census_map(level, path=None):
     else:
         DATA_PATH = Path(path)
 
-    return gpd.read_file(_CENSUS_MAPS / "{}_C17.shp".format(level.upper()))
+    return gpd.read_file(DATA_PATH / "{}_C17.shp".format(level.upper()))

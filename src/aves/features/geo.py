@@ -17,14 +17,16 @@ def clip_area_geodataframe(geodf, bounding_box, buffer=0):
     bounds = shapely.geometry.box(*bounding_box).buffer(buffer)
 
     try:
-        return geodf.assign(
+        result = geodf.assign(
             geometry=lambda g: g.map(lambda x: x.intersection(bounds))
         ).pipe(lambda x: x[x.geometry.area > 0])
     except Exception:
         # sometimes there are ill-defined intersections in polygons.
-        return geodf.assign(
+        result = geodf.assign(
             geometry=lambda g: g.buffer(0).map(lambda x: x.intersection(bounds))
         ).pipe(lambda x: x[x.geometry.area > 0])
+
+    return result.set_crs(geodf.crs)
 
 
 def to_point_geodataframe(df, longitude, latitude, crs="epsg:4326", drop=False):

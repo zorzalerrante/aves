@@ -51,7 +51,9 @@ class GeoFacetGrid(FacetGrid):
 
         self.zorder += 1
 
-    def add_basemap(self, file_path, interpolation="hanning"):
+    def add_basemap(
+        self, file_path, interpolation="hanning", reset_extent=False, **kwargs
+    ):
         for ax in self.axes.flatten():
             cx.add_basemap(
                 ax,
@@ -59,7 +61,13 @@ class GeoFacetGrid(FacetGrid):
                 source=file_path,
                 interpolation=interpolation,
                 zorder=self.zorder,
+                reset_extent=reset_extent,
+                **kwargs
             )
+
+            if not reset_extent:
+                ax.set_xlim((self.bounds[0], self.bounds[2]))
+                ax.set_ylim((self.bounds[1], self.bounds[3]))
 
         self.zorder += 1
 

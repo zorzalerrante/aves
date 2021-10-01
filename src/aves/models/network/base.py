@@ -177,12 +177,25 @@ class Network(object):
         return self.network
 
     def shortest_path(self, src, dst):
-        return list(graph_tool.topology.all_shortest_paths(self.network, src, dst))
+        v_ids = list(
+            graph_tool.topology.all_shortest_paths(
+                self.network, self.node_map[src], self.node_map[dst]
+            )
+        )
 
-    def subgraph(self, vertex_filter=None, edge_filter=None, copy_positions=True):
-        view = graph_tool.GraphView(
-            self.network, vfilt=vertex_filter, efilt=edge_filter
-        ).copy()
+    def subgraph(
+        self, nodes=None, vertex_filter=None, edge_filter=None, copy_positions=True
+    ):
+        if nodes is not None:
+            view = graph_tool.GraphView(
+                self.network, vfilt=lambda x: self.id_to_label[x] in nodes
+            ).copy()
+        elif vertex_filter is not None or edge_filter is not None:
+            view = graph_tool.GraphView(
+                self.network, vfilt=vertex_filter, efilt=edge_filter
+            ).copy()
+        else:
+            raise ValueError("at least one filter must be specified")
 
         old_vertex_ids = set(map(int, view.vertices()))
 

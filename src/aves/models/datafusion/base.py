@@ -43,14 +43,20 @@ class DataFusionModel(object):
         )
         return profile
 
-    def _construct_relationship(self, path, updated_factors={}):
+    def _construct_relationship(self, path, updated_factors):
         start_node = path[0]
         end_node = path[-1]
 
         computed_matrix = (
             self.fuser.factor(start_node)
-            if not start_node in updated_factors
-            else updated_factors[start_node]
+            if not start_node.name in updated_factors
+            else updated_factors[start_node.name]
+        )
+        print(
+            type(start_node),
+            start_node,
+            start_node.name in updated_factors,
+            computed_matrix.shape,
         )
 
         for src, dst in sliding_window(2, path):
@@ -60,23 +66,25 @@ class DataFusionModel(object):
 
         end_factor = (
             self.fuser.factor(end_node)
-            if not end_node in updated_factors
-            else updated_factors[end_node]
+            if not end_node.name in updated_factors
+            else updated_factors[end_node.name]
         )
         computed_matrix = np.dot(computed_matrix, end_factor.T)
 
         return computed_matrix
 
-    def relation_profiles(self, src, dst):
+    def relation_profiles(self, src, dst, updated_factors=None, index=None):
+        if updated_factors is None:
+            updated_factors = {}
+        if index is None:
+            index = self.indices[src]
+
         paths = list(self.fuser.chain(self.types[src], self.types[dst]))
-        print(paths)
 
         relations = []
         for path in paths:
-            rel = self._construct_relationship(path)
-            profile = pd.DataFrame(
-                rel, index=self.indices[src], columns=self.indices[dst]
-            )
+            rel = self._construct_relationship(path, updated_factors)
+            profile = pd.DataFrame(rel, index=index, columns=self.indices[dst])
             relations.append(profile)
 
         return list(zip(paths, relations))

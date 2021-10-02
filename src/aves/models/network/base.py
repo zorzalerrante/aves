@@ -177,11 +177,13 @@ class Network(object):
         return self.network
 
     def shortest_path(self, src, dst):
-        v_ids = list(
+        paths = list(
             graph_tool.topology.all_shortest_paths(
                 self.network, self.node_map[src], self.node_map[dst]
             )
         )
+
+        return [[self.id_to_label[v] for v in path] for path in paths]
 
     def subgraph(
         self, nodes=None, vertex_filter=None, edge_filter=None, copy_positions=True

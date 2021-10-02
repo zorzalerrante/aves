@@ -7,7 +7,7 @@ Este repositorio contiene datos, código y notebooks relacionados con mi [curso 
 El código fuente (carpeta `src/aves`) tiene la siguiente estructua:
 
 ```
-aves 1.0.0
+aves 1.1.1
 ├── data
 │   ├── census.py   : carga del Censo 2017 de Chile
 │   └── eod.py      : carga de la Encuesta Origen-Destino 2012 de Santiago
@@ -276,7 +276,7 @@ Para añadir o actualizar dependencias:
 ### Personas y Contribuciones
 
 * Parte del tiempo dedicado a este código ha sido financiado por el proyecto **ANID Fondecyt de Iniciación 11180913**.
-* La implementación de Force Directed Edge Bundling está inspirada en la versión de Javascript de esa técnica, y fue inicialmente desarrollada por [Vera Sativa](https://github.com/verasativa) y luego modificada por [Tabita Catalán](https://github.com/verasativa). Yo tomé esa versión inicial y la adapté para que fuese 100% Python y funcionase con el resto de `aves`. 
+* La implementación de Force Directed Edge Bundling está inspirada en la versión de Javascript de esa técnica, y fue inicialmente desarrollada por [Vera Sativa](https://github.com/verasativa) y luego modificada por [Tabita Catalán](https://github.com/tabitaCatalan/s). Yo tomé esa versión inicial y la adapté para que fuese 100% Python y funcionase con el resto de `aves`. 
 * El módulo `aves.features.twokenize` es una versión modificada de [ark-twokenize](https://github.com/myleott/ark-twokenize-py) de [Myle Ott](https://github.com/myleott).
 * Este repositorio fue creado gracias al template de _Cookie Cutter / Data Science with Conda_ hecho por [Patricio Reyes](https://github.com/pareyesv/).
 * Gran parte de la funcionalidad de `aves` es proporcionada por las bibliotecas `matplotlib`, `seaborn`, `pandas`, `geopandas`, `contextily`, `graph-tool`, `scikit-fusion`, `pysal`, `scikit-fusion` y más. 

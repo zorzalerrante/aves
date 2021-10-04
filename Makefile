@@ -20,7 +20,7 @@ ifeq (,$(shell which conda))
 HAS_CONDA=False
 else
 HAS_CONDA=True
-CONDA := $(shell pyenv which conda || which conda)
+CONDA := $(shell which conda)
 ifeq ($(CONDA_DEFAULT_ENV),$(ENV_NAME))
 ENV_IS_ACTIVE=True
 else

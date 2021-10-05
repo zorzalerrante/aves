@@ -246,21 +246,44 @@ grid.set_title("Viajes al trabajo en Santiago (en días laborales, EOD 2012)")
 
 ## Configuración y Requisitos
 
-Si usas Windows, te recomiendo instalar el [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10). Puede ser la versión 1 o 2. Necesitas una instalación de `conda` ([Miniconda](https://docs.conda.io/en/latest/miniconda.html) es una buena alternativa).
+### Paso 1: Preparación
 
-Después de descargar o clonar el repositorio, debes instalar el entorno de `conda`:
+Si tienes un sistema GNU/Linux o Apple puedes omitir este paso.
+
+Si usas Windows, te recomiendo instalar el [Windows Subsystem for Linux](https://docs.microsoft.com/es-es/windows/wsl/install-win10). Puede ser la versión 1 o 2 (recomiendo WSL2). Como distribución te recomiendo Ubuntu 20.04 (es la que uso yo). 
+
+Cuando ya tengas Ubuntu en WSL2 instalado, ejecuta la consola de Ubuntu y ejecuta el siguiente comando:
+
+```sh
+sudo apt-get install libxcursor1 libgdk-pixbuf2.0-dev libxdamage-dev
+```
+
+Esto instalará algunas bibliotecas que son necesarias para el funcionamiento de aves (particularmente de graph-tool que es usada por aves).
+
+### Paso 2: Creación del Entorno
+
+Para administrar el entorno de ejecución de aves necesitas una instalación de `conda` ([Miniconda](https://docs.conda.io/en/latest/miniconda.html) es una buena alternativa).
+
+Después de descargar o clonar el repositorio (utilizando el comando `git clone`), debes instalar el entorno de `conda` con los siguientes comandos:
 
 ```sh
 make conda-create-env
 make install-package
 ```
 
-Es posible que ya tengas un entorno de `conda` en el que ejecutes Jupyter. En ese caso, puedes agregar el entorno de `aves` como _kernel _ejecutando este comando desde el entorno que contiene Jupyter:
+Ello creará un entorno llamado `aves` que puedes utilizar a través del comando `conda activate aves`. 
+
+### Paso 3: Ejecución en Jupyter
+
+El principal modo de uso de aves es a través de los notebooks de Jupyter.
+
+Es posible que ya tengas un entorno de `conda` en el que ejecutes Jupyter. En ese caso, puedes agregar el entorno de `aves` como _kernel_ ejecutando este comando desde el entorno que contiene Jupyter:
 
 ```sh
 python -m ipykernel install --user  --name aves --display-name 'AVES'
 ```
 
+Así quedará habilitado acceder al entorno de aves desde Jupyter.
 
 
 ## Actualización de Dependencias

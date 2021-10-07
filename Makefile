@@ -79,16 +79,6 @@ else
 	@printf ">>> conda command not found. Check out that conda has been installed properly."
 endif
 
-## Activate pre-commit
-install-pre-commit:
-	conda run --name '$(ENV_NAME)' pre-commit install
-	conda run --name '$(ENV_NAME)' pre-commit install -t pre-commit
-	conda run --name '$(ENV_NAME)' pre-commit install -t pre-push
-
-## Deactivate pre-commit
-uninstall-pre-commit:
-	conda run --name '$(ENV_NAME)' pre-commit uninstall
-
 ## install package in editable mode
 install-package:
 	conda run --name '$(ENV_NAME)' python -m pip install --editable .

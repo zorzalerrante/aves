@@ -2,26 +2,9 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - black
   - configparser
-  - flake8
   - graphviz
-  - isort
-  - mypy
-  - pre-commit
-  - pytest
-  - pytest-cov
   - python=3.8
-  - sphinx >= 1.7
-  - sphinx-automodapi
-  - sphinxcontrib-napoleon
-  - sphinx_rtd_theme
-  # jupyter lab/notebook tools
-  - ipykernel
-  - nb_black
-  - watermark
-  - jupyterlab
-  # course libraries
   - matplotlib
   - seaborn
   - pandas
@@ -45,3 +28,4 @@ dependencies:
     - contextily
     - matplotlib-scalebar
     - git+https://github.com/mims-harvard/scikit-fusion
+    - pymunk

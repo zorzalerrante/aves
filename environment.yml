@@ -29,3 +29,4 @@ dependencies:
     - matplotlib-scalebar
     - git+https://github.com/mims-harvard/scikit-fusion
     - pymunk
+    - emoji

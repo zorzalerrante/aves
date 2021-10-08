@@ -14,6 +14,8 @@ class LabelCollection(object):
     def render(
         self,
         ax,
+        fig=None,
+        tight_figure=True,
         avoid_collisions=False,
         outline=False,
         adjustment_args={},
@@ -39,6 +41,9 @@ class LabelCollection(object):
                 )
 
             rendered.append(text)
+
+        if fig is not None and tight_figure:
+            fig.tight_layout()
 
         if avoid_collisions:
             adjust_text(rendered, ax=ax, **adjustment_args)

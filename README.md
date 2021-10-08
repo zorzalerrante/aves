@@ -244,6 +244,64 @@ grid.set_title("Viajes al trabajo en Santiago (en días laborales, EOD 2012)")
 
 ![](reports/figures/example_geo_fdb.png)
 
+### Frecuencia y Tendencia de Palabras usando Bubble Plots
+
+El dataframe `unisex_names` se calcula a partir del dataset guaguas (ver sección datasets).
+
+```python
+from aves.visualization.tables.bubbles import bubble_plot
+
+fig, ax = plt.subplots(figsize=(16, 9))
+
+bubble_plot(
+    ax,
+    unisex_names.reset_index(),
+    "tendency",
+    "n",
+    label_column="nombre",
+    palette="cool",
+    max_label_size=56,
+    starting_y_range=60, margin=2
+)
+
+ax.set_axis_off()
+ax.set_title(
+    "Nombres compartidos por hombres y mujeres (1920-2020, Registro Civil de Chile)"
+)
+ax.annotate(
+    "Más usado por mujeres →",
+    (0.95, 0.01),
+    xycoords="axes fraction",
+    ha="right",
+    va="bottom",
+    fontsize="medium",
+    color="#abacab",
+)
+ax.annotate(
+    "← Más usado por hombres",
+    (0.05, 0.01),
+    xycoords="axes fraction",
+    ha="left",
+    va="bottom",
+    fontsize="medium",
+    color="#abacab",
+)
+ax.annotate(
+    "Fuente: guaguas, por @RivaQuiroga.",
+    (0.5, 0.01),
+    xycoords="axes fraction",
+    ha="center",
+    va="bottom",
+    fontsize="medium",
+    color="#abacab",
+)
+
+fig.set_facecolor("#efefef")
+fig.tight_layout()
+```
+
+![](reports/figures/example_bubbleplot.png)
+
 ## Configuración y Requisitos
 
 ### Paso 1: Preparación
@@ -299,7 +357,7 @@ Para añadir o actualizar dependencias:
 ### Personas y Contribuciones
 
 * Parte del tiempo dedicado a este código ha sido financiado por el proyecto **ANID Fondecyt de Iniciación 11180913**.
-* La implementación de Force Directed Edge Bundling está inspirada en la versión de Javascript de esa técnica, y fue inicialmente desarrollada por [Vera Sativa](https://github.com/verasativa) y luego modificada por [Tabita Catalán](https://github.com/tabitaCatalan/s). Yo tomé esa versión inicial y la adapté para que fuese 100% Python y funcionase con el resto de `aves`. 
+* La implementación de Force Directed Edge Bundling está inspirada en la versión de Javascript de esa técnica, y fue inicialmente desarrollada por [Vera Sativa](https://github.com/verasativa) y luego modificada por [Tabita Catalán](https://github.com/tabitaCatalan/s). Adapté esa versión inicial para que fuese 100% Python y funcionase con el resto de `aves`. 
 * El módulo `aves.features.twokenize` es una versión modificada de [ark-twokenize](https://github.com/myleott/ark-twokenize-py) de [Myle Ott](https://github.com/myleott).
 * Este repositorio fue creado gracias al template de _Cookie Cutter / Data Science with Conda_ hecho por [Patricio Reyes](https://github.com/pareyesv/).
 * Gran parte de la funcionalidad de `aves` es proporcionada por las bibliotecas `matplotlib`, `seaborn`, `pandas`, `geopandas`, `contextily`, `graph-tool`, `scikit-fusion`, `pysal`, `scikit-fusion` y más. 
@@ -312,6 +370,7 @@ Este repositorio incluye los siguientes datasets:
 * [Encuesta Origen-Destino, Santiago 2012](http://datos.gob.cl/dataset/31616) (por SECTRA).
 * [Arenas' Jazz Network](http://konect.uni-koblenz.de/networks/arenas-jazz).
 * Shapefiles del [Censo 2017 de Chile](http://www.censo2017.cl/servicio-de-mapas/) para la Región Metropolitana. En [este repositorio de Diego Caro](https://github.com/diegocaro/chile_census_2017_shapefiles) pueden encontrar todas las regiones del país.
+* Inscripciones de nombres en el Registro Civil de Chile a través del dataset [guaguas](https://github.com/rivaquiroga/guaguas) preparado por [Riva Quiroga](https://twitter.com/rivaquiroga).
 
 ## Otros Asuntos
 

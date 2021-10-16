@@ -29,7 +29,12 @@ class PlainNodes(NodeStrategy):
     def __init__(self, network: Network, **kwargs):
         super().__init__(network, **kwargs)
 
-        self.weights: np.array = kwargs.get("weights", None)
+        weights = kwargs.get("weights", None)
+
+        if not type(weights) in (np.array, np.ndarray):
+            raise ValueError(f"weights must be np.array instead of {type(weights)}.")
+
+        self.weights: np.array = weights
         self.size: np.array = None
 
         self.node_categories = kwargs.pop("categories", None)

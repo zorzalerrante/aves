@@ -31,7 +31,7 @@ class PlainNodes(NodeStrategy):
 
         weights = kwargs.get("weights", None)
 
-        if not type(weights) in (np.array, np.ndarray):
+        if weights is not None and not type(weights) in (np.array, np.ndarray):
             raise ValueError(f"weights must be np.array instead of {type(weights)}.")
 
         self.weights: np.array = weights

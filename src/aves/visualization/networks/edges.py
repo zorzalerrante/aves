@@ -86,9 +86,16 @@ class WeightedEdges(EdgeStrategy):
             self.strategy_per_group[i].prepare_data()
 
     def render(self, ax, *args, **kwargs):
-        edge_colors = list(
-            reversed(sns.dark_palette(kwargs.pop("color", "#a7a7a7"), n_colors=self.k))
-        )
+        palette = kwargs.pop("palette", None)
+
+        if palette is None:
+            edge_colors = list(
+                reversed(
+                    sns.dark_palette(kwargs.pop("color", "#a7a7a7"), n_colors=self.k)
+                )
+            )
+        else:
+            edge_colors = sns.color_palette(palette, n_colors=self.k)
 
         results = []
         for i in range(self.k):

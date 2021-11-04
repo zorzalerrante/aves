@@ -20,6 +20,8 @@ dependencies:
   - pip
   - graph-tool
   - cytoolz
+  - jupyter
+  - ipykernel
   - pip:
     - bezier
     - scattertext

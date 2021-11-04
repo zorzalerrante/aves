@@ -87,6 +87,10 @@ install-package:
 uninstall-package:
 	conda run --name '$(ENV_NAME)' python -m pip uninstall --yes '$(PACKAGE_NAME)'
 
+## install jupyter notebook kernel
+install-kernel:
+	conda run --name '$(ENV_NAME)' python -m ipykernel install --user --name '$(ENV_NAME)' --display-name "Python ($(ENV_NAME))"
+
 
 #################################################################################
 # PROJECT RULES                                                                 #

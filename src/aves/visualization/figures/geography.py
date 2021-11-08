@@ -186,7 +186,7 @@ class GeoAttributeGrid(Grid):
             for ax in flattened:
                 ax.set_aspect("equal")
 
-        self.fig = fig
+        self._figure = fig
         self.axes = axes
         self.data = geodataframe
 

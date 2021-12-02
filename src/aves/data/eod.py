@@ -47,7 +47,9 @@ def decode_column(
     return src_df.join(values_df, on=col_name)[value_col]
 
 
-def read_trips(path=None):
+def read_trips(
+    path=None, decode_columns=True, remove_invalid=True, fix_clock_times=True
+):
     if path is None:
         DATA_PATH = _EOD_PATH
     else:
@@ -65,66 +67,73 @@ def read_trips(path=None):
         )
     )
 
-    df["ModoAgregado"] = decode_column(
-        df,
-        DATA_PATH / "Tablas_parametros" / "ModoAgregado.csv",
-        "ModoAgregado",
-        index_col="ID",
-        value_col="Modo",
-    )
-    df["ModoDifusion"] = decode_column(
-        df,
-        DATA_PATH / "Tablas_parametros" / "ModoDifusion.csv",
-        "ModoDifusion",
-        encoding="latin-1",
-        index_col="ID",
-    )
-    df["SectorOrigen"] = decode_column(
-        df,
-        DATA_PATH / "Tablas_parametros" / "Sector.csv",
-        col_name="SectorOrigen",
-        index_col="Sector",
-        value_col="Nombre",
-        sep=";",
-    )
-    df["SectorDestino"] = decode_column(
-        df,
-        DATA_PATH / "Tablas_parametros" / "Sector.csv",
-        col_name="SectorDestino",
-        index_col="Sector",
-        value_col="Nombre",
-        sep=";",
-    )
-    df["Proposito"] = decode_column(
-        df, DATA_PATH / "Tablas_parametros" / "Proposito.csv", col_name="Proposito"
-    )
-    df["ComunaOrigen"] = decode_column(
-        df,
-        DATA_PATH / "Tablas_parametros" / "Comunas.csv",
-        "ComunaOrigen",
-        value_col="Comuna",
-        sep=",",
-    )
-    df["ComunaDestino"] = decode_column(
-        df,
-        DATA_PATH / "Tablas_parametros" / "Comunas.csv",
-        "ComunaDestino",
-        value_col="Comuna",
-        sep=",",
-    )
-    df["ActividadDestino"] = decode_column(
-        df, DATA_PATH / "Tablas_parametros" / "ActividadDestino.csv", "ActividadDestino"
-    )
-    df["Periodo"] = decode_column(
-        df,
-        DATA_PATH / "Tablas_parametros" / "Periodo.csv",
-        "Periodo",
-        sep=";",
-        value_col="Periodos",
-    )
-    df["HoraIni"] = pd.to_timedelta(df["HoraIni"] + ":00")
-    df = df[pd.notnull(df["HoraIni"])]
-    df = df[df["Imputada"] == 0].copy()
+    if decode_columns:
+        df["ModoAgregado"] = decode_column(
+            df,
+            DATA_PATH / "Tablas_parametros" / "ModoAgregado.csv",
+            "ModoAgregado",
+            index_col="ID",
+            value_col="Modo",
+        )
+        df["ModoDifusion"] = decode_column(
+            df,
+            DATA_PATH / "Tablas_parametros" / "ModoDifusion.csv",
+            "ModoDifusion",
+            encoding="latin-1",
+            index_col="ID",
+        )
+        df["SectorOrigen"] = decode_column(
+            df,
+            DATA_PATH / "Tablas_parametros" / "Sector.csv",
+            col_name="SectorOrigen",
+            index_col="Sector",
+            value_col="Nombre",
+            sep=";",
+        )
+        df["SectorDestino"] = decode_column(
+            df,
+            DATA_PATH / "Tablas_parametros" / "Sector.csv",
+            col_name="SectorDestino",
+            index_col="Sector",
+            value_col="Nombre",
+            sep=";",
+        )
+        df["Proposito"] = decode_column(
+            df, DATA_PATH / "Tablas_parametros" / "Proposito.csv", col_name="Proposito"
+        )
+        df["ComunaOrigen"] = decode_column(
+            df,
+            DATA_PATH / "Tablas_parametros" / "Comunas.csv",
+            "ComunaOrigen",
+            value_col="Comuna",
+            sep=",",
+        )
+        df["ComunaDestino"] = decode_column(
+            df,
+            DATA_PATH / "Tablas_parametros" / "Comunas.csv",
+            "ComunaDestino",
+            value_col="Comuna",
+            sep=",",
+        )
+        df["ActividadDestino"] = decode_column(
+            df,
+            DATA_PATH / "Tablas_parametros" / "ActividadDestino.csv",
+            "ActividadDestino",
+        )
+        df["Periodo"] = decode_column(
+            df,
+            DATA_PATH / "Tablas_parametros" / "Periodo.csv",
+            "Periodo",
+            sep=";",
+            value_col="Periodos",
+        )
+
+    if remove_invalid:
+        df = df[pd.notnull(df["HoraIni"])]
+        df = df[df["Imputada"] == 0].copy()
+
+    if fix_clock_times:
+        df["HoraIni"] = pd.to_timedelta(df["HoraIni"] + ":00")
     return df
 
 
@@ -145,7 +154,7 @@ def read_homes(path=None):
     return df
 
 
-def read_people(path=None):
+def read_people(path=None, decode_columns=True):
     if path is None:
         DATA_PATH = _EOD_PATH
     else:
@@ -155,26 +164,29 @@ def read_people(path=None):
         DATA_PATH / "personas.csv", sep=";", decimal=",", encoding="utf-8"
     ).rename(columns={"Factor": "FactorPersona"})
 
-    df["Sexo"] = decode_column(df, DATA_PATH / "Tablas_parametros" / "Sexo.csv", "Sexo")
-    df["TramoIngreso"] = decode_column(
-        df, DATA_PATH / "Tablas_parametros" / "TramoIngreso.csv", "TramoIngreso"
-    )
-    df["Relacion"] = decode_column(
-        df,
-        DATA_PATH / "Tablas_parametros" / "Relacion.csv",
-        "Relacion",
-        value_col="relacion",
-    )
-    df["Ocupacion"] = decode_column(
-        df,
-        DATA_PATH / "Tablas_parametros" / "Ocupacion.csv",
-        "Ocupacion",
-        value_col="ocupacion",
-    )
+    if decode_columns:
+        df["Sexo"] = decode_column(
+            df, DATA_PATH / "Tablas_parametros" / "Sexo.csv", "Sexo"
+        )
+        df["TramoIngreso"] = decode_column(
+            df, DATA_PATH / "Tablas_parametros" / "TramoIngreso.csv", "TramoIngreso"
+        )
+        df["Relacion"] = decode_column(
+            df,
+            DATA_PATH / "Tablas_parametros" / "Relacion.csv",
+            "Relacion",
+            value_col="relacion",
+        )
+        df["Ocupacion"] = decode_column(
+            df,
+            DATA_PATH / "Tablas_parametros" / "Ocupacion.csv",
+            "Ocupacion",
+            value_col="ocupacion",
+        )
     return df
 
 
-def read_transantiago_usage(path=None):
+def read_transantiago_usage(path=None, decode_columns=True):
     if path is None:
         DATA_PATH = _EOD_PATH
     else:
@@ -189,12 +201,13 @@ def read_transantiago_usage(path=None):
         .reset_index()
     )
 
-    df["NoUsaTransantiago"] = decode_column(
-        df,
-        DATA_PATH / "Tablas_parametros" / "NoUsaTransantiago.csv",
-        "NoUsaTransantiago",
-        index_dtype=str,
-    )
+    if decode_columns:
+        df["NoUsaTransantiago"] = decode_column(
+            df,
+            DATA_PATH / "Tablas_parametros" / "NoUsaTransantiago.csv",
+            "NoUsaTransantiago",
+            index_dtype=str,
+        )
 
     return df
 
@@ -208,7 +221,7 @@ def read_zone_design(path=None):
     return gpd.read_file(DATA_PATH)
 
 
-def read_vehicles(path=None):
+def read_vehicles(path=None, decode_columns=True):
     if path is None:
         DATA_PATH = _EOD_PATH
     else:
@@ -218,13 +231,14 @@ def read_vehicles(path=None):
         DATA_PATH / "Vehiculo.csv", sep=";", decimal=",", encoding="iso-8859-1"
     )
 
-    df["TipoVeh"] = decode_column(
-        df,
-        DATA_PATH / "Tablas_parametros" / "TipoVeh.csv",
-        value_col="vehiculo",
-        col_name="TipoVeh",
-        index_dtype=str,
-        encoding="iso-8859-1",
-    )
+    if decode_columns:
+        df["TipoVeh"] = decode_column(
+            df,
+            DATA_PATH / "Tablas_parametros" / "TipoVeh.csv",
+            value_col="vehiculo",
+            col_name="TipoVeh",
+            index_dtype=str,
+            encoding="iso-8859-1",
+        )
 
     return df

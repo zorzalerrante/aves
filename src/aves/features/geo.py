@@ -76,5 +76,5 @@ def positions_to_array(geoseries):
 def calculate_distance_matrix(geodf):
     centroids = geodf.centroid
     positions = positions_to_array(centroids.geometry)
-    distance_matrix = squareform(pdist(positions)) / 1000
+    distance_matrix = squareform(pdist(positions))
     return distance_matrix

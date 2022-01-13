@@ -4,8 +4,9 @@ channels:
 dependencies:
   - configparser
   - graphviz
+  - black
   - python=3.8
-  - matplotlib
+  - matplotlib=3.4.3
   - seaborn
   - pandas
   - geopandas

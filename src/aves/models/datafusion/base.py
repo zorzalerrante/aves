@@ -1,3 +1,4 @@
+import random
 from itertools import chain
 
 import numpy as np
@@ -116,6 +117,9 @@ class DataFusionModel(object):
                 self.indices[src] = list(dfs[0].index)
             if not dst in self.indices:
                 self.indices[dst] = list(dfs[0].columns)
+
+        random.seed(self.random_state)
+        np.random.seed(self.random_state)
 
         self.fusion_graph = fusion.FusionGraph(self.relations)
 

@@ -262,6 +262,8 @@ class Network(object):
         return graph_tool.topology.label_components(self.network, directed=directed)
 
     def largest_connected_component(self, directed=True):
-        components = self.connected_components(directed=directed)[0]
-        view = self.subgraph(vertex_filter=lambda x: components[x] == 0)
+        components = self.connected_components(directed=directed)
+        view = self.subgraph(
+            vertex_filter=lambda x: components[0][x] == np.argmax(components[1])
+        )
         return view

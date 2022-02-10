@@ -49,14 +49,18 @@ class PlainNodes(NodeStrategy):
         node_size = kwargs.pop("node_size", 10)
 
         if self.node_categories:
-            palette_name = kwargs.pop("palette", None)
+            palette_name = kwargs.pop("palette", "plasma")
             if isinstance(palette_name, str):
                 palette = sns.color_palette(
                     palette_name, n_colors=len(self.unique_categories)
                 )
-            else:
+            elif palette_name is not None:
                 # assume it's an iterable of colors
                 palette = list(palette_name)
+            else:
+                raise ValueError(
+                    "palette must be a valid name or an iterable of colors"
+                )
             color_map = dict(zip(self.unique_categories, palette))
             c = [color_map[c] for c in self.node_categories]
         else:

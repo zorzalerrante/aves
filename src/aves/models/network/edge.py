@@ -4,12 +4,9 @@ EPS = 1e-6
 
 
 class Edge(object):
-    def __init__(
-        self, source, target, source_idx, target_idx, weight=None, index=-1, handle=None
-    ):
+    def __init__(self, source, target, source_idx, target_idx, weight=None, index=-1):
         self.source = source
         self.target = target
-        self.handle = handle
 
         self._vector = self.target - self.source
 

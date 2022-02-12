@@ -117,15 +117,13 @@ class Network(object):
                 dst = self.node_layout.get_position(dst_idx)
                 weight = self.edge_weight[e] if self.edge_weight is not None else 1
 
-                edge = Edge(
-                    src, dst, src_idx, dst_idx, weight=weight, index=i, handle=e
-                )
+                edge = Edge(src, dst, src_idx, dst_idx, weight=weight, index=i)
                 self.edge_data.append(edge)
         else:
             # update positions only! the rest may have been changed manually.
             for data in self.edge_data:
-                src_idx = data.handle.source()
-                dst_idx = data.handle.target()
+                src_idx = data.index_pair[0]
+                dst_idx = data.index_pair[1]
                 src = self.node_layout.get_position(src_idx)
                 dst = self.node_layout.get_position(dst_idx)
                 data.source = src
@@ -251,7 +249,7 @@ class Network(object):
 
         if update_edges:
             for edge in self.edge_data:
-                edge.weight = edge_centrality[edge.handle]
+                edge.weight = edge_centrality[self.network.edge(*edge.index_pair)]
 
         if update_nodes:
             self.node_weight = node_centrality

@@ -122,8 +122,8 @@ class CommunityGradient(EdgeStrategy):
     def prepare_data(self):
         for edge_data in self.data:
             pair = (
-                self.node_communities[int(edge_data.handle.source())],
-                self.node_communities[int(edge_data.handle.target())],
+                self.node_communities[int(edge_data.index_pair[0])],
+                self.node_communities[int(edge_data.index_pair[1])],
             )
 
             self.community_links[pair].add_curve(edge_data.points, edge_data.weight)

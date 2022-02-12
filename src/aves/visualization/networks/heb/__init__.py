@@ -10,7 +10,7 @@ import matplotlib.colors as colors
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from cytoolz import sliding_window, unique, valfilter
+from cytoolz import valfilter, valmap
 from matplotlib.collections import LineCollection, PatchCollection
 from matplotlib.patches import Wedge
 
@@ -148,6 +148,10 @@ class HierarchicalEdgeBundling(object):
 
         self.nested_graph.set_directed(False)
 
+        # removing the lambda enables pickling
+        self.membership_per_level = dict(self.membership_per_level)
+        self.membership_per_level = valmap(dict, self.membership_per_level)
+
     def edge_to_spline(self, src, dst, n_points, smoothing_factor):
         if src == dst:
             raise Exception("Self-pointing edges are not supported")
@@ -266,7 +270,7 @@ class HierarchicalEdgeBundling(object):
             if label_func is not None:
                 community_label = label_func(c_id)
                 if community_label:
-                    ratio = self.node_ratio
+                    ratio = wedge_ratio + wedge_width
 
                     mid_angle = 0.5 * (max_angle + min_angle)
                     mid_angle_radians = np.radians(mid_angle)

@@ -27,3 +27,4 @@ dependencies:
     - contextily
     - matplotlib-scalebar
     - git+https://github.com/zorzalerrante/aves
+    - pymunk

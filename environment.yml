@@ -23,6 +23,7 @@ dependencies:
   - cytoolz
   - jupyter
   - ipykernel
+  - gensim
   - pip:
     - bezier
     - scattertext
@@ -33,3 +34,4 @@ dependencies:
     - git+https://github.com/mims-harvard/scikit-fusion
     - pymunk
     - emoji
+    - xlrd

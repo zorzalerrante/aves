@@ -91,6 +91,14 @@ uninstall-package:
 install-kernel:
 	conda run --name '$(ENV_NAME)' python -m ipykernel install --user --name '$(ENV_NAME)' --display-name "Python ($(ENV_NAME))"
 
+## download data from external sources
+download-external:
+	sh ./scripts/download_casen_2017.sh
+	sh ./scripts/download_casen_2020.sh
+	sh ./scripts/download_presidenciales_2021_primera_vuelta.sh
+	sh ./scripts/download_others.sh
+	sh ./scripts/download_plebiscito_2020.sh
+
 
 #################################################################################
 # PROJECT RULES                                                                 #

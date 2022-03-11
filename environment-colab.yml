@@ -20,6 +20,7 @@ dependencies:
   - pip
   - graph-tool
   - cytoolz
+  - gensim
   - pip:
     - bezier
     - scattertext
@@ -31,3 +32,4 @@ dependencies:
     - git+https://github.com/zorzalerrante/aves
     - pymunk
     - emoji
+    - xlrd

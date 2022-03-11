@@ -19,6 +19,7 @@ dependencies:
   - wordcloud
   - pip
   - cytoolz
+  - gensim
   - pip:
     - bezier
     - scattertext
@@ -28,3 +29,5 @@ dependencies:
     - matplotlib-scalebar
     - git+https://github.com/zorzalerrante/aves
     - pymunk
+    - emoji
+    - xlrd

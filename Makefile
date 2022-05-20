@@ -98,6 +98,7 @@ download-external:
 	sh ./scripts/download_presidenciales_2021_primera_vuelta.sh
 	sh ./scripts/download_others.sh
 	sh ./scripts/download_plebiscito_2020.sh
+	sh ./scripts/download_wiki2vec.sh
 
 
 #################################################################################

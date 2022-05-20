@@ -21,6 +21,8 @@ dependencies:
   - graph-tool
   - cytoolz
   - gensim
+  - umap-learn
+  - hdbscan
   - pip:
     - bezier
     - scattertext
@@ -33,3 +35,5 @@ dependencies:
     - pymunk
     - emoji
     - xlrd
+    - shifterator
+    - alphashape

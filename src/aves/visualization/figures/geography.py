@@ -141,11 +141,11 @@ class GeoAttributeGrid(Grid):
         self.vars = vars
 
         if context is None:
-            geocontext = geodataframe
+            context = geodataframe
 
-        self.geocontext = geocontext
+        self.geocontext = context
 
-        self.bounds = geocontext.total_bounds
+        self.bounds = context.total_bounds
         self.aspect = (self.bounds[2] - self.bounds[0]) / (
             self.bounds[3] - self.bounds[1]
         )

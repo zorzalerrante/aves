@@ -134,6 +134,7 @@ def choropleth_map(
             edgecolor=edgecolor,
             alpha=alpha,
             zorder=zorder,
+            aspect=None,
         )
 
     cbar_ax = add_ranged_color_legend(ax, bins, built_palette, **cbar_args)

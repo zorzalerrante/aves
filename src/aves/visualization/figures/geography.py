@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib import colorbar
 from seaborn.axisgrid import FacetGrid, Grid
+import numpy as np
 
 from aves.visualization.colors import colormap_from_palette
 from aves.visualization.maps.utils import geographical_scale, north_arrow
@@ -33,8 +34,20 @@ class GeoFacetGrid(FacetGrid):
         for ax in self.axes.flatten():
             if kwargs.get("remove_axes", True):
                 ax.set_axis_off()
-            if kwargs.get("equal_aspect", True):
-                ax.set_aspect("equal")
+
+            aspect = kwargs.get("aspect", "auto")
+            # code from geopandas
+            if aspect == "auto":
+                if geodataframe.crs and geodataframe.crs.is_geographic:
+                    bounds = geodataframe.total_bounds
+                    y_coord = np.mean([bounds[1], bounds[3]])
+                    ax.set_aspect(1 / np.cos(y_coord * np.pi / 180))
+                    # formula ported from R package sp
+                    # https://github.com/edzer/sp/blob/master/R/mapasp.R
+                else:
+                    ax.set_aspect("equal")
+            elif aspect is not None:
+                ax.set_aspect(aspect)
 
         self.zorder = 0
 
@@ -89,8 +102,8 @@ class GeoFacetGrid(FacetGrid):
                 break
 
     def add_global_colorbar(self, palette, k, title=None, title_args={}, **kwargs):
-        orientation = kwargs.get("orientation", "horizontal")
 
+        orientation = kwargs.get("orientation", "horizontal")
         if orientation == "horizontal":
             cax = self.fig.add_axes([0.25, -0.012, 0.5, 0.01])
         elif orientation == "vertical":
@@ -101,10 +114,11 @@ class GeoFacetGrid(FacetGrid):
         if title:
             cax.set_title(title, **title_args)
 
-        cax.set_axis_off()
         cb = colorbar.ColorbarBase(
             cax, cmap=colormap_from_palette(palette, n_colors=k), **kwargs
         )
+
+        cax.set_axis_off()
 
         return cax, cb
 
@@ -145,7 +159,7 @@ class GeoAttributeGrid(Grid):
 
         self.geocontext = context
 
-        self.bounds = context.total_bounds
+        self.bounds = self.geocontext.total_bounds
         self.aspect = (self.bounds[2] - self.bounds[0]) / (
             self.bounds[3] - self.bounds[1]
         )
@@ -236,6 +250,16 @@ def figure_from_geodataframe(
         ax.set_xlim([bbox[0], bbox[2]])
         ax.set_ylim([bbox[1], bbox[3]])
 
+        # code from geopandas
+        if geodf.crs and geodf.crs.is_geographic:
+            bounds = geodf.total_bounds
+            y_coord = np.mean([bounds[1], bounds[3]])
+            ax.set_aspect(1 / np.cos(y_coord * np.pi / 180))
+            # formula ported from R package sp
+            # https://github.com/edzer/sp/blob/master/R/mapasp.R
+        else:
+            ax.set_aspect("equal")
+
     if remove_axes:
         ax.set_axis_off()
 
@@ -262,7 +286,7 @@ def small_multiples_from_geodataframe(
     remove_axes=True,
     set_limits=True,
     flatten_axes=True,
-    equal_aspect=True,
+    aspect="auto",
     basemap=None,
     basemap_interpolation="hanning",
 ):
@@ -280,7 +304,17 @@ def small_multiples_from_geodataframe(
     if bbox is None:
         bbox = geodf.total_bounds
 
-    aspect = (bbox[2] - bbox[0]) / (bbox[3] - bbox[1])
+    # code from geopandas
+    if aspect == "auto":
+        if geodf.crs and geodf.crs.is_geographic:
+            y_coord = np.mean([bbox[1], bbox[3]])
+            aspect_ratio = 1 / np.cos(y_coord * np.pi / 180)
+            # formula ported from R package sp
+            # https://github.com/edzer/sp/blob/master/R/mapasp.R
+        else:
+            aspect_ratio = (bbox[2] - bbox[0]) / (bbox[3] - bbox[1])
+    else:
+        aspect_ratio = 1
 
     n_columns = min(col_wrap, n_variables)
     n_rows = n_variables // n_columns
@@ -290,12 +324,15 @@ def small_multiples_from_geodataframe(
     fig, axes = plt.subplots(
         n_rows,
         n_columns,
-        figsize=(n_columns * height * aspect, n_rows * height),
+        figsize=(n_columns * height * aspect_ratio, n_rows * height),
         sharex=sharex,
         sharey=sharey,
         squeeze=False,
     )
     flattened = axes.flatten()
+
+    for ax in flattened:
+        ax.set_aspect(aspect_ratio)
 
     if set_limits:
         for ax in flattened:
@@ -309,10 +346,6 @@ def small_multiples_from_geodataframe(
         # deactivate only unneeded axes
         for i in range(n_variables, len(axes)):
             flattened[i].set_axis_off()
-
-    if equal_aspect:
-        for ax in flattened:
-            ax.set_aspect("equal")
 
     if basemap is not None:
         for ax in flattened:

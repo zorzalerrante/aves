@@ -1,5 +1,5 @@
 import matplotlib.patheffects as path_effects
-from matplotlib_scalebar.scalebar import (  # https://github.com/ppinard/matplotlib-scalebar/
+from matplotlib_scalebar.scalebar import (  
     ScaleBar,
 )
 
@@ -14,6 +14,7 @@ def geographical_labels(
     outline=True,
     outline_color="black",
     outline_width=2,
+    format_func=None
 ):
     labels = []
     for idx, row in geodf.iterrows():
@@ -22,6 +23,9 @@ def geographical_labels(
             label = idx
         else:
             label = row[column]
+
+        if format_func is not None:
+            label = format_func(label)
 
         t = ax.text(
             centroid.x,

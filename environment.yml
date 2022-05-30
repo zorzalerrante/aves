@@ -33,7 +33,7 @@ dependencies:
     - adjustText
     - contextily
     - matplotlib-scalebar
-    - git+https://github.com/mims-harvard/scikit-fusion
+    - git+https://github.com/zorzalerrante/scikit-fusion
     - pymunk
     - emoji
     - xlrd

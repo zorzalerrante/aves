@@ -30,7 +30,7 @@ dependencies:
     - adjustText
     - contextily
     - matplotlib-scalebar
-    - git+https://github.com/mims-harvard/scikit-fusion
+    - git+https://github.com/zorzalerrante/scikit-fusion
     - git+https://github.com/zorzalerrante/aves
     - pymunk
     - emoji

@@ -313,7 +313,7 @@ Si usas Windows, te recomiendo instalar el [Windows Subsystem for Linux](https:/
 Cuando ya tengas Ubuntu en WSL2 instalado, ejecuta la consola de Ubuntu y ejecuta el siguiente comando:
 
 ```sh
-sudo apt-get install libxcursor1 libgdk-pixbuf2.0-dev libxdamage-dev
+sudo apt-get install make libxcursor1 libgdk-pixbuf2.0-dev libxdamage-dev
 ```
 
 Esto instalará algunas bibliotecas que son necesarias para el funcionamiento de aves (particularmente de graph-tool que es usada por aves).
@@ -338,7 +338,7 @@ El principal modo de uso de aves es a través de los notebooks de Jupyter.
 Es posible que ya tengas un entorno de `conda` en el que ejecutes Jupyter. En ese caso, puedes agregar el entorno de `aves` como _kernel_ ejecutando este comando desde el entorno que contiene Jupyter:
 
 ```sh
-python -m ipykernel install --user  --name aves --display-name 'AVES'
+make install-kernel
 ```
 
 Así quedará habilitado acceder al entorno de aves desde Jupyter.

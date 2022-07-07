@@ -135,7 +135,11 @@ def categorical_color_legend(
     else:
         n_columns = 1
 
-    ax.legend(handles=legend_elements, loc=loc, frameon=False, ncol=n_columns, **kwargs)
+    artist = ax.legend(
+        handles=legend_elements, loc=loc, frameon=False, ncol=n_columns, **kwargs
+    )
+    ax.add_artist(artist)
+    return artist
 
 
 def add_ranged_color_legend(

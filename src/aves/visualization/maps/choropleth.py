@@ -17,7 +17,7 @@ def choropleth_map(
     default_negative="Blues_r",
     default_positive="Reds",
     palette_type="light",
-    legend_type="colorbar",
+    legend="colorbar",
     edgecolor="white",
     palette_center=None,
     binning="uniform",
@@ -137,6 +137,9 @@ def choropleth_map(
             aspect=None,
         )
 
-    cbar_ax = add_ranged_color_legend(ax, bins, built_palette, **cbar_args)
+    if legend is not None:
+        cbar_ax = add_ranged_color_legend(ax, bins, built_palette, **cbar_args)
+    else:
+        cbar_ax = None
 
     return ax, cbar_ax

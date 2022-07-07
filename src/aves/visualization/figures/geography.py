@@ -324,7 +324,7 @@ def small_multiples_from_geodataframe(
     fig, axes = plt.subplots(
         n_rows,
         n_columns,
-        figsize=(n_columns * height * aspect_ratio, n_rows * height),
+        figsize=(n_columns * height / aspect_ratio, n_rows * height),
         sharex=sharex,
         sharey=sharey,
         squeeze=False,

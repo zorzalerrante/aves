@@ -8,6 +8,7 @@ dependencies:
   - matplotlib=3.4.3
   - seaborn
   - pandas
+  - gdal
   - geopandas
   - libpysal
   - mapclassify

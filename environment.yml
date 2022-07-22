@@ -8,6 +8,7 @@ dependencies:
   - python=3.8
   - matplotlib=3.4.3
   - seaborn
+  - gdal
   - pandas
   - geopandas
   - libpysal

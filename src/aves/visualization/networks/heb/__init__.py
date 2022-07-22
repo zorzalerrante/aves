@@ -26,12 +26,15 @@ class HierarchicalEdgeBundling(object):
         covariate_type=None,
         points_per_edge=50,
         path_smoothing_factor=0.8,
+        random_state=42,
     ):
         self.network = network
         self.state = state
         if state is not None:
             self.block_levels = self.state.get_bs()
         else:
+            np.random.seed(random_state)
+            graph_tool.seed_rng(random_state)
             self.estimate_blockmodel(covariate_type=covariate_type)
 
         self.build_community_graph()
@@ -72,14 +75,38 @@ class HierarchicalEdgeBundling(object):
             self.state, empty_branches=False
         )
         self.nested_graph = tree
+
         self.nested_graph.set_directed(False)
+
+        new_nodes = 0
+        root_node_level = 0
+        for i, level in enumerate(self.block_levels):
+            level = list(level)
+            _nodes = len(np.unique(level))
+            if _nodes == 1:
+                # new_nodes += 1
+                break
+            else:
+                new_nodes += _nodes
+                root_node_level += 1
+
+        root_idx = list(self.nested_graph.vertices())[
+            self.network.num_vertices() + new_nodes
+        ]
+
+        self.root_idx = root_idx
 
         self.radial_positions = np.array(
             list(
                 graph_tool.draw.radial_tree_layout(
-                    self.nested_graph, self.nested_graph.num_vertices() - 1
+                    self.nested_graph,
+                    self.nested_graph.vertex(root_idx),
                 )
             )
+        )
+
+        self.node_to_radial_idx = dict(
+            zip(self.nested_graph.vertices(), range(self.nested_graph.num_vertices()))
         )
 
         self.node_angles = np.degrees(
@@ -122,7 +149,7 @@ class HierarchicalEdgeBundling(object):
         self.nested_graph.set_directed(True)
 
         depth_edges = graph_tool.search.dfs_iterator(
-            self.nested_graph, source=self.nested_graph.num_vertices() - 1, array=True
+            self.nested_graph, source=self.root_idx, array=True
         )
 
         self.membership_per_level = defaultdict(lambda: defaultdict(int))
@@ -159,7 +186,10 @@ class HierarchicalEdgeBundling(object):
         vertex_path, edge_path = graph_tool.topology.shortest_path(
             self.nested_graph, src, dst
         )
-        edge_cp = [self.radial_positions[int(node_id)] for node_id in vertex_path]
+        edge_cp = [
+            self.radial_positions[self.node_to_radial_idx[node_id]]
+            for node_id in vertex_path
+        ]
 
         try:
             smooth_edge = bspline(edge_cp, degree=min(len(edge_cp) - 1, 3), n=n_points)

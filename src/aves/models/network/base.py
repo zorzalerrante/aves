@@ -256,6 +256,12 @@ class Network(object):
 
         return node_centrality, edge_centrality
 
+    def get_pagerank(self, damping=0.85):
+        node_centrality = graph_tool.centrality.pagerank(
+            self.network, weight=self.edge_weight
+        )
+        return node_centrality
+
     def connected_components(self, directed=True):
         return graph_tool.topology.label_components(self.network, directed=directed)
 

@@ -26,7 +26,7 @@ import html.parser as HTMLParser
 import operator
 import re
 
-from emoji.unicode_codes import EMOJI_UNICODE
+from emoji.unicode_codes import EMOJI_DATA
 
 
 def regex_or(*items):
@@ -119,7 +119,7 @@ otherMouths = r"(?:[oO]+|[/\\]+|[vV]+|[Ss]+|[|]+)"  # remove forward slash if ht
 Emojis = regex_or(
     *map(
         lambda x: re.escape(x) + "[\U0001F3Fb-\U0001F3FF]?",
-        sorted(EMOJI_UNICODE["en"].values(), key=len, reverse=True),
+        sorted(EMOJI_DATA.keys(), key=len, reverse=True),
     )
 )
 EmojiPat = re.compile(Emojis, re.UNICODE)

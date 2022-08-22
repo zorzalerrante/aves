@@ -17,6 +17,7 @@ def scatterplot(
     na_value=0,
     drop_na=False,
     adjustment_args={"lim": 5},
+    label_filter_func=None,
 ):
     if not drop_na:
         df = df.fillna(na_value)
@@ -30,8 +31,13 @@ def scatterplot(
     if annotate:
         collection = LabelCollection()
 
-        for index, row in df.iterrows():
-            collection.add_text(index.title(), row[x], row[y])
+        if label_filter_func is not None:
+            label_df = df.pipe(label_filter_func)
+        else:
+            label_df = df
+
+        for index, row in label_df.iterrows():
+            collection.add_text(index, row[x], row[y])
 
         collection.render(
             ax,

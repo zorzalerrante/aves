@@ -312,9 +312,9 @@ def small_multiples_from_geodataframe(
             # formula ported from R package sp
             # https://github.com/edzer/sp/blob/master/R/mapasp.R
         else:
-            aspect_ratio = (bbox[2] - bbox[0]) / (bbox[3] - bbox[1])
+            aspect_ratio = 1
     else:
-        aspect_ratio = 1
+        aspect_ratio = aspect
 
     n_columns = min(col_wrap, n_variables)
     n_rows = n_variables // n_columns
@@ -331,13 +331,13 @@ def small_multiples_from_geodataframe(
     )
     flattened = axes.flatten()
 
-    for ax in flattened:
-        ax.set_aspect(aspect_ratio)
-
     if set_limits:
         for ax in flattened:
             ax.set_xlim([bbox[0], bbox[2]])
             ax.set_ylim([bbox[1], bbox[3]])
+
+    for ax in flattened:
+        ax.set_aspect(aspect_ratio)
 
     if remove_axes:
         for ax in flattened:

@@ -31,6 +31,19 @@ class PlainNodes(NodeStrategy):
 
         weights = kwargs.get("weights", None)
 
+        if type(weights) == str:
+            if not weights in self.network.network.vertex_properties:
+                if weights in ("in_degree", "out_degree", "total_degree"):
+                    self.network.estimate_node_degree(degree_type=weights.split("_")[0])
+                elif weights == "pagerank":
+                    self.network.estimate_pagerank()
+                elif weights == "betweenness":
+                    self.network.estimate_betweenness()
+                else:
+                    raise Exception("weights must be a valid vertex property if str")
+
+            weights = np.array(self.network.network.vertex_properties[weights].a)
+
         if weights is not None and not type(weights) in (np.array, np.ndarray):
             raise ValueError(f"weights must be np.array instead of {type(weights)}.")
 
@@ -39,7 +52,13 @@ class PlainNodes(NodeStrategy):
 
         self.node_categories = kwargs.pop("categories", None)
         if self.node_categories is not None:
+            if type(self.node_categories) == str:
+                self.node_categories = list(
+                    self.network.network.vertex_properties[self.node_categories].a
+                )
             self.unique_categories = sorted(unique(self.node_categories))
+        else:
+            self.unique_categories = None
 
     def prepare_data(self):
         if self.weights is not None:
@@ -48,8 +67,9 @@ class PlainNodes(NodeStrategy):
     def render(self, ax, *args, **kwargs):
         node_size = kwargs.pop("node_size", 10)
 
-        if self.node_categories:
+        if self.node_categories is not None:
             palette_name = kwargs.pop("palette", "plasma")
+
             if isinstance(palette_name, str):
                 palette = sns.color_palette(
                     palette_name, n_colors=len(self.unique_categories)
@@ -57,13 +77,19 @@ class PlainNodes(NodeStrategy):
             elif palette_name is not None:
                 # assume it's an iterable of colors
                 palette = list(palette_name)
+                if len(palette) != len(self.unique_categories):
+                    raise ValueError(
+                        "the number of colors does not match the number of categories"
+                    )
             else:
                 raise ValueError(
                     "palette must be a valid name or an iterable of colors"
                 )
             color_map = dict(zip(self.unique_categories, palette))
+
             c = [color_map[c] for c in self.node_categories]
         else:
+            kwargs.pop("palette", "plasma")
             c = None
 
         if self.weights is None:
@@ -96,11 +122,12 @@ class LabeledNodes(PlainNodes):
     def prepare_data(self):
         super().prepare_data()
 
-        graph = self.network.graph()
+        graph = self.network.graph
 
         for idx in graph.vertices():
-            label = self.label_property[idx]
+            label = graph.vertex_properties[self.label_property][idx]
             if label:
+                label = str(label)
                 text_args = {}
 
                 if self.radial:

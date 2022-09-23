@@ -4,7 +4,7 @@ EPS = 1e-6
 
 
 class Edge(object):
-    def __init__(self, source, target, source_idx, target_idx, weight=None, index=-1):
+    def __init__(self, source, target, source_idx, target_idx, index=-1):
         self.source = source
         self.target = target
 
@@ -17,11 +17,6 @@ class Edge(object):
 
         self._unit_vector = self._vector / self._length
         self._mid_point = (self.source + self.target) * 0.5
-
-        if weight is None:
-            self.weight = 1
-        else:
-            self.weight = weight
 
         self.index = index
         # this can be filled by y external algorithms

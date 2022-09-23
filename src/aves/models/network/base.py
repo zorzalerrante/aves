@@ -4,24 +4,61 @@ import graph_tool
 import graph_tool.centrality
 import graph_tool.inference
 import graph_tool.topology
+import graph_tool.search
 import numpy as np
 import pandas as pd
-from cytoolz import itemmap, keyfilter, valfilter
+from cytoolz import itemmap, valfilter, valmap
+import joblib
+from collections import defaultdict
+import os.path
+from pathlib import Path
 
 from .edge import Edge
 
 
 class Network(object):
-    def __init__(self, graph: graph_tool.Graph, edge_weight=None):
+    def __init__(self, graph: graph_tool.Graph):
         self.network: graph_tool.Graph = graph
-        self.edge_weight = edge_weight
-        self.node_weight = None
         self.edge_data = None
 
         self.node_map: dict = None
         self.node_layout: LayoutStrategy = None
 
         self.id_to_label: dict = None
+        self.community_tree = None
+        self.community_root = None
+
+    @classmethod
+    def load(cls, filename: str):
+        if isinstance(filename, Path):
+            filename = str(filename)
+
+        network = graph_tool.Graph()
+        network.load(filename)
+
+        result = Network(network)
+        result.node_map = dict(
+            zip(network.vertex_properties["elem_id"], network.vertices())
+        )
+        result.id_to_label = itemmap(reversed, result.node_map)
+
+        tree_filename = filename + ".community_tree.gt"
+        if os.path.exists(tree_filename):
+            result.community_tree = graph_tool.Graph()
+            result.community_tree.load(tree_filename)
+            result.community_root = result.community_tree.graph_properties["root_node"]
+            result.communities_per_level = result._build_node_memberships()
+
+        return result
+
+    def save(self, filename: str):
+        if isinstance(filename, Path):
+            filename = str(filename)
+
+        self.network.save(filename, fmt="gt")
+
+        if self.community_tree is not None:
+            self.community_tree.save(filename + ".community_tree.gt", fmt="gt")
 
     @classmethod
     def from_edgelist(
@@ -37,8 +74,8 @@ class Network(object):
         target_attr = f"{target}__mapped__"
 
         node_values = set(df[source].unique())
-        node_values = node_values | set(df[target].unique())
-        node_map = dict(zip(sorted(node_values), range(len(node_values))))
+        node_values = sorted(node_values | set(df[target].unique()))
+        node_map = dict(zip(node_values, range(len(node_values))))
 
         df_mapped = df.assign(
             **{
@@ -47,25 +84,19 @@ class Network(object):
             }
         )
 
-        if weight is not None:
-            network, edge_weight = cls._parse_edgelist(
-                df_mapped,
-                source=source_attr,
-                target=target_attr,
-                weight=weight,
-                directed=directed,
-            )
-        else:
-            network = cls._parse_edgelist(
-                df_mapped,
-                source=source_attr,
-                target=target_attr,
-                weight=None,
-                directed=directed,
-            )
-            edge_weight = None
+        network = cls._parse_edgelist(
+            df_mapped,
+            source_attr,
+            target_attr,
+            weight_column=weight,
+            directed=directed,
+        )
 
-        result = cls(network, edge_weight=edge_weight)
+        network.vertex_properties["elem_id"] = network.new_vertex_property(
+            "object", vals=node_values
+        )
+
+        result = cls(network)
         result.node_map = node_map
         result.id_to_label = itemmap(reversed, node_map)
         return result
@@ -74,30 +105,31 @@ class Network(object):
     def _parse_edgelist(
         cls,
         df,
-        source="source",
-        target="target",
-        weight="weight",
+        source_column,
+        target_column,
+        weight_column=None,
         directed=True,
         remove_empty=True,
-    ):
+    ) -> graph_tool.Graph:
         network = graph_tool.Graph(directed=directed)
-        n_vertices = max(df[source].max(), df[target].max()) + 1
-        vertex_list = network.add_vertex(n_vertices)
+        n_vertices = max(df[source_column].max(), df[target_column].max()) + 1
+        network.add_vertex(n_vertices)
 
-        if weight is not None and weight in df.columns:
+        if weight_column is not None and weight_column in df.columns:
             if remove_empty:
-                df = df[df[weight] > 0]
+                df = df[df[weight_column] > 0]
             weight_prop = network.new_edge_property("double")
             network.add_edge_list(
-                df.assign(**{weight: df[weight].astype(np.float64)})[
-                    [source, target, weight]
+                df.assign(**{weight_column: df[weight_column].astype(np.float64)})[
+                    [source_column, target_column, weight_column]
                 ].values,
                 eprops=[weight_prop],
             )
+            network.edge_properties["edge_weight"] = weight_prop
             # network.shrink_to_fit()
-            return network, weight_prop
+            return network
         else:
-            network.add_edge_list(df[[source, target]].values)
+            network.add_edge_list(df[[source_column, target_column]].values)
             # network.shrink_to_fit()
             return network
 
@@ -115,9 +147,8 @@ class Network(object):
 
                 src = self.node_layout.get_position(src_idx)
                 dst = self.node_layout.get_position(dst_idx)
-                weight = self.edge_weight[e] if self.edge_weight is not None else 1
 
-                edge = Edge(src, dst, src_idx, dst_idx, weight=weight, index=i)
+                edge = Edge(src, dst, src_idx, dst_idx, index=i)
                 self.edge_data.append(edge)
         else:
             # update positions only! the rest may have been changed manually.
@@ -156,21 +187,27 @@ class Network(object):
         self.node_layout.layout_nodes(*args, **kwargs)
         self.build_edge_data()
 
+    @property
     def num_vertices(self):
         return self.network.num_vertices()
 
+    @property
     def num_edges(self):
         return self.network.num_edges()
 
+    @property
     def vertices(self):
         return self.network.vertices()
 
+    @property
     def edges(self):
         return self.network.edges()
 
+    @property
     def is_directed(self):
         return self.network.is_directed()
 
+    @property
     def graph(self):
         return self.network
 
@@ -184,7 +221,12 @@ class Network(object):
         return [[self.id_to_label[v] for v in path] for path in paths]
 
     def subgraph(
-        self, nodes=None, vertex_filter=None, edge_filter=None, copy_positions=True
+        self,
+        nodes=None,
+        vertex_filter=None,
+        edge_filter=None,
+        keep_positions=True,
+        copy=False,
     ):
         if nodes is not None:
             view = graph_tool.GraphView(
@@ -199,7 +241,7 @@ class Network(object):
 
         old_vertex_ids = set(map(int, view.vertices()))
 
-        if copy_positions and self.node_layout is not None:
+        if keep_positions and self.node_layout is not None:
             vertex_positions = [
                 self.node_layout.get_position(v_id) for v_id in view.vertices()
             ]
@@ -208,66 +250,206 @@ class Network(object):
 
         node_map_keys = valfilter(lambda x: x in old_vertex_ids, self.node_map).keys()
 
-        # TODO: vertex ids also change
-        # TODO: vertex weights
-
-        if self.edge_weight is not None:
-            edge_weight = [self.edge_weight[e_id] for e_id in view.edges()]
-        else:
-            edge_weight = None
-
         view.purge_vertices()
         view.purge_edges()
 
-        if edge_weight is not None:
-            weight_prop = view.new_edge_property("double")
-            weight_prop.a = edge_weight
-        else:
-            weight_prop = None
+        if copy:
+            view = graph_tool.Graph(view)
+            view.shrink_to_fit()
 
-        result = Network(view, edge_weight=weight_prop)
+        result = Network(view)
         result.node_map = dict(zip(node_map_keys, map(int, view.vertices())))
-        # print(result.node_map)
         result.id_to_label = itemmap(reversed, result.node_map)
 
         if vertex_positions:
             result.layout_nodes(method="precomputed", positions=vertex_positions)
         return result
 
-    def node_degree(self, degree_type="in"):
+    @property
+    def _edge_weight(self):
+        return (
+            self.network.edge_properties["edge_weight"]
+            if "edge_weight" in self.network.edge_properties
+            else None
+        )
+
+    def estimate_node_degree(self, degree_type="in"):
         if not degree_type in ("in", "out", "total"):
             raise ValueError("Unsupported node degree")
 
-        return getattr(self.network, f"get_{degree_type}_degrees")(
-            list(self.network.vertices()), eweight=self.edge_weight
+        vals = getattr(self.network, f"get_{degree_type}_degrees")(
+            list(self.network.vertices()),
+            eweight=self._edge_weight,
         )
 
-    def get_betweenness(self, update_nodes=False, update_edges=False):
+        degree = self.network.new_vertex_property("int", vals=vals)
+        self.network.vertex_properties[f"{degree_type}_degree"] = degree
+
+        return degree
+
+    def estimate_betweenness(self, update_nodes=False, update_edges=False):
         node_centrality, edge_centrality = graph_tool.centrality.betweenness(
             self.network
         )
 
-        if update_edges:
-            for edge in self.edge_data:
-                edge.weight = edge_centrality[self.network.edge(*edge.index_pair)]
-
-        if update_nodes:
-            self.node_weight = node_centrality
+        self.network.edge_properties["betweenness"] = edge_centrality
+        self.network.vertex_properties["betweenness"] = node_centrality
 
         return node_centrality, edge_centrality
 
-    def get_pagerank(self, damping=0.85):
+    def estimate_pagerank(self, damping=0.85):
         node_centrality = graph_tool.centrality.pagerank(
-            self.network, weight=self.edge_weight
+            self.network, weight=self._edge_weight
         )
+
+        self.network.vertex_properties["pagerank"] = node_centrality
         return node_centrality
 
     def connected_components(self, directed=True):
         return graph_tool.topology.label_components(self.network, directed=directed)
 
-    def largest_connected_component(self, directed=True):
+    def largest_connected_component(self, directed=True, copy=False):
         components = self.connected_components(directed=directed)
         view = self.subgraph(
-            vertex_filter=lambda x: components[0][x] == np.argmax(components[1])
+            vertex_filter=lambda x: components[0][x] == np.argmax(components[1]),
+            copy=copy,
         )
         return view
+
+    def detect_communities(
+        self,
+        random_state=42,
+        method="sbm",
+        hierarchical_initial_level=1,
+        hierarchical_covariate_type="real-exponential",
+        ranked=False,
+    ):
+        np.random.seed(random_state)
+        graph_tool.seed_rng(random_state)
+
+        self.communities_per_level = None
+        self.community_tree = None
+        self.community_root = None
+
+        if method == "sbm":
+            self.state = graph_tool.inference.minimize_blockmodel_dl(
+                self.network, state_args={"eweight": self._edge_weight}
+            )
+
+            self.communities_per_level = None
+            self.community_tree = None
+            self.community_root = None
+
+            vals = np.array(self.state.get_blocks().a)
+        elif method == "hierarchical":
+            state_args = dict()
+
+            if self._edge_weight is not None:
+                state_args["recs"] = [self._edge_weight]
+                state_args["rec_types"] = [hierarchical_covariate_type]
+
+            self.state = graph_tool.inference.minimize_nested_blockmodel_dl(
+                self.network, state_args=state_args
+            )
+
+            self.community_tree, self.community_root = self._build_community_tree()
+            self.communities_per_level = self._build_node_memberships()
+
+            vals = np.array(self.state.get_bs()[hierarchical_initial_level])
+        elif method == "ranked":
+            state_args = dict()
+            state_args["eweight"] = self._edge_weight
+            state_args["base_type"] = graph_tool.inference.RankedBlockState
+            self.state = graph_tool.inference.minimize_nested_blockmodel_dl(
+                self.network, state_args=state_args
+            )
+
+            vals = np.array(self.state.levels[0].get_vertex_order().a)
+        else:
+            raise ValueError("unsupported method")
+
+        community_prop = self.network.new_vertex_property("int", vals=vals)
+        self.network.vertex_properties["community"] = community_prop
+
+    def set_community_level(self, level: int):
+        vals = self.get_community_labels(level)
+        community_prop = self.network.new_vertex_property("int", vals=vals)
+        self.network.vertex_properties["community"] = community_prop
+
+    def get_community_labels(self, level: int = 0):
+        if self.communities_per_level is not None:
+            return self.communities_per_level[level]
+
+        elif "community" in self.network.vertex_properties:
+            return np.array(self.network.vertex_properties["community"].a)
+
+        else:
+            raise Exception("must run community detection first")
+
+    def _build_community_tree(self):
+        if self.state is None:
+            raise Exception("must detect hierarchical communities first.")
+
+        (
+            tree,
+            membership,
+            order,
+        ) = graph_tool.inference.nested_blockmodel.get_hierarchy_tree(
+            self.state, empty_branches=False
+        )
+        self.nested_graph = tree
+
+        new_nodes = 0
+        root_node_level = 0
+        for i, level in enumerate(self.state.get_bs()):
+            level = list(level)
+            _nodes = len(np.unique(level))
+            if _nodes == 1:
+                # new_nodes += 1
+                break
+            else:
+                new_nodes += _nodes
+                root_node_level += 1
+
+        root_idx = list(tree.vertices())[self.network.num_vertices() + new_nodes]
+
+        tree.graph_properties["root_node"] = tree.new_graph_property(
+            "int", val=root_idx
+        )
+
+        return tree, root_idx
+
+    def _build_node_memberships(self):
+        tree, root = self.community_tree, self.community_root
+
+        depth_edges = graph_tool.search.dfs_iterator(tree, source=root, array=True)
+
+        membership_per_level = defaultdict(lambda: defaultdict(int))
+
+        stack = []
+        for src_idx, dst_idx in depth_edges:
+            if not stack:
+                stack.append(src_idx)
+
+            if dst_idx < self.network.num_vertices():
+                # leaf node
+                path = [dst_idx]
+                path.extend(reversed(stack))
+
+                for level, community_id in enumerate(path):
+                    membership_per_level[level][dst_idx] = community_id
+            else:
+                while src_idx != stack[-1]:
+                    # a new community, remove visited branches
+                    stack.pop()
+
+                stack.append(dst_idx)
+
+        # removing the lambda enables pickling
+        membership_per_level = dict(membership_per_level)
+        membership_per_level = valmap(
+            lambda x: np.array([x[v_id] for v_id in self.network.vertices()]),
+            membership_per_level,
+        )
+
+        return membership_per_level

@@ -14,11 +14,9 @@ from aves.visualization.primitives import RenderStrategy
 class EdgeStrategy(RenderStrategy):
     """An interface to methods to render edges"""
 
-    def __init__(self, edge_data):
-        super().__init__(edge_data)
-
-    def get_edge_weights(self):
-        return pd.Series([e.weight for e in self.data])
+    def __init__(self, network: Network, **kwargs):
+        self.network = network
+        super().__init__(self.network.edge_data)
 
     def name(self):
         return "strategy-name"
@@ -27,12 +25,13 @@ class EdgeStrategy(RenderStrategy):
 class PlainEdges(EdgeStrategy):
     """All edges are rendered with the same color"""
 
-    def __init__(self, edge_data, **kwargs):
-        super().__init__(edge_data)
+    def __init__(self, network, **kwargs):
+        super().__init__(network)
         self.lines = None
 
     def prepare_data(self):
         self.lines = []
+
         for edge in self.data:
             self.lines.append(edge.points)
 
@@ -64,26 +63,44 @@ class PlainEdges(EdgeStrategy):
 class WeightedEdges(EdgeStrategy):
     """Colors encode edge weight"""
 
-    def __init__(self, edge_data, k, **kwargs):
-        super().__init__(edge_data)
-        self.edge_data_per_group = {i: [] for i in range(k)}
-        self.strategy_per_group = {
-            i: PlainEdges(self.edge_data_per_group[i]) for i in range(k)
-        }
+    def __init__(self, network, weights, k, **kwargs):
+        super().__init__(network)
+        # self.edge_data_per_group = {i: [] for i in range(k)}
+        # self.strategy_per_group = {
+        #    i: PlainEdges(self.edge_data_per_group[i]) for i in range(k)
+        # }
         self.k = k
         self.bins = None
+        self.weights = weights
+        self.lines = None
 
     def prepare_data(self):
-        weights = self.get_edge_weights()
+        self.lines = []
+
+        for edge in self.data:
+            self.lines.append(edge.points)
+
+        self.lines = np.array(self.lines)
+
+        weights = self.weights
+
+        if type(weights) == str:
+            if not weights in self.network.network.edge_properties:
+                if weights == "betweenness":
+                    self.network.estimate_betweenness()
+                else:
+                    raise Exception("weights must be a valid edge property if str")
+
+            weights = np.array(self.network.network.edge_properties[weights].a)
+
+        if weights is not None and not type(weights) in (np.array, np.ndarray):
+            raise ValueError(f"weights must be np.array instead of {type(weights)}.")
+
+        weights: np.array = weights
+
         groups, bins = pd.cut(weights, self.k, labels=False, retbins=True)
         self.bins = bins
-
-        for i, edge in zip(groups.values, self.data):
-            self.edge_data_per_group[i].append(edge)
-
-        for i in range(self.k):
-            self.strategy_per_group[i].set_data(self.edge_data_per_group[i])
-            self.strategy_per_group[i].prepare_data()
+        self.line_groups = groups
 
     def render(self, ax, *args, **kwargs):
         palette = kwargs.pop("palette", None)
@@ -99,10 +116,14 @@ class WeightedEdges(EdgeStrategy):
 
         results = []
         for i in range(self.k):
-            coll = self.strategy_per_group[i].render(
-                ax, *args, color=edge_colors[i], **kwargs
+            coll_lines = self.lines[self.line_groups == i]
+
+            coll = LineCollection(
+                coll_lines,
+                color=edge_colors[i],
+                **kwargs,
             )
-            results.append(coll)
+            results.append(ax.add_collection(coll))
 
         return results
 
@@ -113,8 +134,8 @@ class WeightedEdges(EdgeStrategy):
 class CommunityGradient(EdgeStrategy):
     """Colors encode communities of each node at the edges"""
 
-    def __init__(self, edge_data, node_communities, **kwargs):
-        super().__init__(edge_data)
+    def __init__(self, network, node_communities, **kwargs):
+        super().__init__(network)
         self.node_communities = node_communities
         self.community_ids = sorted(unique(node_communities))
         self.community_links = defaultdict(ColoredCurveCollection)
@@ -126,7 +147,8 @@ class CommunityGradient(EdgeStrategy):
                 self.node_communities[int(edge_data.index_pair[1])],
             )
 
-            self.community_links[pair].add_curve(edge_data.points, edge_data.weight)
+            # TODO: add weight
+            self.community_links[pair].add_curve(edge_data.points, 1)
 
     def render(self, ax, *args, **kwargs):
         community_colors = dict(
@@ -151,8 +173,8 @@ class CommunityGradient(EdgeStrategy):
 class ODGradient(EdgeStrategy):
     """Colors encode direction of edges"""
 
-    def __init__(self, edge_data, n_points, **kwargs):
-        super().__init__(edge_data)
+    def __init__(self, network, n_points, **kwargs):
+        super().__init__(network)
         self.n_points = n_points
         self.colored_curves = ColoredCurveCollection()
 
@@ -177,7 +199,8 @@ class ODGradient(EdgeStrategy):
             else:
                 points = edge_data.points
 
-            self.colored_curves.add_curve(points, edge_data.weight)
+            # TODO: add weight
+            self.colored_curves.add_curve(points, 1)
 
     def render(self, ax, *args, **kwargs):
         self.colored_curves.set_colors(

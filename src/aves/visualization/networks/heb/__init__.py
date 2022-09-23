@@ -1,4 +1,3 @@
-import typing
 from collections import defaultdict
 
 import graph_tool
@@ -6,12 +5,9 @@ import graph_tool.draw
 import graph_tool.inference
 import graph_tool.search
 import graph_tool.topology
-import matplotlib.colors as colors
 import numpy as np
-import pandas as pd
 import seaborn as sns
-from cytoolz import valfilter, valmap
-from matplotlib.collections import LineCollection, PatchCollection
+from matplotlib.collections import PatchCollection
 from matplotlib.patches import Wedge
 
 from aves.features.geometry import bspline
@@ -22,85 +18,33 @@ class HierarchicalEdgeBundling(object):
     def __init__(
         self,
         network: Network,
-        state=None,
-        covariate_type=None,
+        hierarchy_tree: graph_tool.Graph,
+        root_idx: int = 0,
         points_per_edge=50,
         path_smoothing_factor=0.8,
-        random_state=42,
     ):
         self.network = network
-        self.state = state
-        if state is not None:
-            self.block_levels = self.state.get_bs()
-        else:
-            np.random.seed(random_state)
-            graph_tool.seed_rng(random_state)
-            self.estimate_blockmodel(covariate_type=covariate_type)
 
-        self.build_community_graph()
-        self.build_node_memberships()
+        self.nested_graph = hierarchy_tree
+        self.root_idx = root_idx
+
+        self.root_dist_map, self.root_pred_map = graph_tool.topology.shortest_distance(
+            self.nested_graph, source=self.root_idx, pred_map=True
+        )
+
+        self.build_structure()
         self.build_edges(
             n_points=points_per_edge, smoothing_factor=path_smoothing_factor
         )
 
-    def estimate_blockmodel(self, covariate_type="real-exponential"):
-        if self.network.edge_weight is not None and covariate_type is not None:
-            state_args = dict(
-                recs=[self.network.edge_weight], rec_types=[covariate_type]
-            )
-            self.state = graph_tool.inference.minimize_nested_blockmodel_dl(
-                self.network.graph(), state_args=state_args
-            )
-        else:
-            self.state = graph_tool.inference.minimize_nested_blockmodel_dl(
-                self.network.graph()
-            )
-
-        self.block_levels = self.state.get_bs()
-
-    def get_node_memberships(self, level):
-        return [
-            self.membership_per_level[level][int(node_id)]
-            for node_id in self.network.vertices()
-        ]
-
-    def build_community_graph(self):
+    def build_structure(self):
         from aves.visualization.networks import NodeLink
-
-        (
-            tree,
-            membership,
-            order,
-        ) = graph_tool.inference.nested_blockmodel.get_hierarchy_tree(
-            self.state, empty_branches=False
-        )
-        self.nested_graph = tree
-
-        self.nested_graph.set_directed(False)
-
-        new_nodes = 0
-        root_node_level = 0
-        for i, level in enumerate(self.block_levels):
-            level = list(level)
-            _nodes = len(np.unique(level))
-            if _nodes == 1:
-                # new_nodes += 1
-                break
-            else:
-                new_nodes += _nodes
-                root_node_level += 1
-
-        root_idx = list(self.nested_graph.vertices())[
-            self.network.num_vertices() + new_nodes
-        ]
-
-        self.root_idx = root_idx
 
         self.radial_positions = np.array(
             list(
                 graph_tool.draw.radial_tree_layout(
                     self.nested_graph,
-                    self.nested_graph.vertex(root_idx),
+                    self.nested_graph.vertex(self.root_idx),
                 )
             )
         )
@@ -121,7 +65,7 @@ class HierarchicalEdgeBundling(object):
 
         self.network.layout_nodes(
             method="precomputed",
-            positions=self.radial_positions[: self.network.num_vertices()],
+            positions=self.radial_positions[: self.network.num_vertices],
             angles=self.node_angles,
             ratios=np.sqrt(
                 np.sum(self.radial_positions * self.radial_positions, axis=1)
@@ -132,74 +76,37 @@ class HierarchicalEdgeBundling(object):
             graph_tool.GraphView(
                 self.nested_graph,
                 directed=True,
-                vfilt=lambda x: x >= self.network.num_vertices(),
+                vfilt=lambda x: x >= self.network.num_vertices,
             )
         )
         self.community_nodelink = NodeLink(self.community_graph)
         self.community_nodelink.layout_nodes(
             method="precomputed",
-            positions=self.radial_positions[self.network.num_vertices() :],
+            positions=self.radial_positions[self.network.num_vertices :],
             angles=self.node_angles,
             ratios=self.node_ratio,
         )
         self.community_nodelink.set_node_drawing(method="plain")
         self.community_nodelink.set_edge_drawing(method="plain")
 
-    def build_node_memberships(self):
-        self.nested_graph.set_directed(True)
-
-        depth_edges = graph_tool.search.dfs_iterator(
-            self.nested_graph, source=self.root_idx, array=True
-        )
-
-        self.membership_per_level = defaultdict(lambda: defaultdict(int))
-
-        stack = []
-        for src_idx, dst_idx in depth_edges:
-            if not stack:
-                stack.append(src_idx)
-
-            if dst_idx < self.network.num_vertices():
-                # leaf node
-                path = [dst_idx]
-                path.extend(reversed(stack))
-
-                for level, community_id in enumerate(path):
-                    self.membership_per_level[level][dst_idx] = community_id
-            else:
-                while src_idx != stack[-1]:
-                    # a new community, remove visited branches
-                    stack.pop()
-
-                stack.append(dst_idx)
-
-        self.nested_graph.set_directed(False)
-
-        # removing the lambda enables pickling
-        self.membership_per_level = dict(self.membership_per_level)
-        self.membership_per_level = valmap(dict, self.membership_per_level)
-
-    def edge_to_spline(self, src, dst, n_points, smoothing_factor):
-        if src == dst:
-            raise Exception("Self-pointing edges are not supported")
-
-        vertex_path, edge_path = graph_tool.topology.shortest_path(
-            self.nested_graph, src, dst
-        )
-        edge_cp = [
-            self.radial_positions[self.node_to_radial_idx[node_id]]
-            for node_id in vertex_path
-        ]
-
+    def edge_to_spline(self, control_points, n_points, smoothing_factor):
         try:
-            smooth_edge = bspline(edge_cp, degree=min(len(edge_cp) - 1, 3), n=n_points)
+            smooth_edge = bspline(
+                control_points, degree=min(len(control_points) - 1, 3), n=n_points
+            )
             source_edge = np.vstack(
                 (
                     np.linspace(
-                        edge_cp[0][0], edge_cp[-1][0], num=n_points, endpoint=True
+                        control_points[0][0],
+                        control_points[-1][0],
+                        num=n_points,
+                        endpoint=True,
                     ),
                     np.linspace(
-                        edge_cp[0][1], edge_cp[-1][1], num=n_points, endpoint=True
+                        control_points[0][1],
+                        control_points[-1][1],
+                        num=n_points,
+                        endpoint=True,
                     ),
                 )
             ).T
@@ -210,16 +117,47 @@ class HierarchicalEdgeBundling(object):
                 )
 
             return smooth_edge
-        except ValueError:
-            print(src, dst, "error")
-            return None
+        except ValueError as ex:
+            raise ValueError(f"Could not build a spline in {control_points}. {ex}")
 
     def build_edges(self, n_points=50, smoothing_factor=0.8):
+        edge_ids_per_source = defaultdict(list)
+        built_edges = dict()
+
         for e in self.network.edge_data:
             src = e.index_pair[0]
             dst = e.index_pair[1]
 
-            curve = self.edge_to_spline(src, dst, n_points, smoothing_factor)
+            if src == dst:
+                raise Exception(
+                    "Self-pointing edges are not supported ({src} -> {dst})"
+                )
+
+            edge_ids_per_source[src].append(dst)
+
+        self.nested_graph.set_directed(False)
+        for src, dst_nodes in edge_ids_per_source.items():
+            _, pred_map = graph_tool.topology.shortest_distance(
+                self.nested_graph, src, dst_nodes, pred_map=True
+            )
+
+            for dst in dst_nodes:
+                vertex_path, _ = graph_tool.topology.shortest_path(
+                    self.nested_graph, src, dst, pred_map=pred_map
+                )
+
+                edge_cp = [
+                    self.radial_positions[self.node_to_radial_idx[node_id]]
+                    for node_id in vertex_path
+                ]
+                built_edges[(src, dst)] = self.edge_to_spline(
+                    edge_cp, n_points, smoothing_factor
+                )
+
+        self.nested_graph.set_directed(True)
+
+        for e in self.network.edge_data:
+            curve = built_edges[(e.index_pair[0], e.index_pair[1])]
 
             if curve is not None:
                 e.points = curve
@@ -231,25 +169,54 @@ class HierarchicalEdgeBundling(object):
         wedge_width=0.5,
         wedge_ratio=None,
         wedge_offset=0.05,
+        wedge_kwargs=None,
         alpha=1.0,
         fill_gaps=False,
         palette="plasma",
         label_func=None,
+        label_kwargs=None,
     ):
 
         if wedge_ratio is None:
             wedge_ratio = self.node_ratio + wedge_offset
 
-        community_ids = sorted(set(self.membership_per_level[level].values()))
-        community_colors = dict(
-            zip(community_ids, sns.color_palette(palette, n_colors=len(community_ids)))
-        )
+        nodes = np.array(list(map(int, self.network.vertices)))
+        community_ids = sorted(set(self.network.communities_per_level[level]))
+
+        if isinstance(palette, dict):
+            if len(palette) != len(community_ids):
+                raise ValueError(
+                    "the number of colors does not match the number of categories"
+                )
+            if set(palette.keys()) != set(community_ids):
+                raise ValueError(
+                    "the provided palette does not contain all community ids"
+                )
+
+            community_colors = palette
+        else:
+            if isinstance(palette, str):
+                palette = sns.color_palette(palette, n_colors=len(community_ids))
+            elif palette is not None:
+                # assume it's an iterable of colors
+                palette = list(palette)
+                if len(palette) != len(community_ids):
+                    raise ValueError(
+                        "the number of colors does not match the number of categories"
+                    )
+            else:
+                raise ValueError(
+                    "palette must be a valid name or an iterable of colors"
+                )
+
+            community_colors = dict(zip(community_ids, palette))
 
         wedge_meta = []
-        wedge_gap = 180 / self.network.num_vertices() if fill_gaps else 0
+        wedge_gap = 180 / self.network.num_vertices if fill_gaps else 0
 
         # fom https://matplotlib.org/stable/gallery/pie_and_polar_charts/pie_and_donut_labels.html
         bbox_props = dict(boxstyle="square,pad=0.3", fc="none", ec="none")
+
         kw = dict(
             arrowprops=dict(arrowstyle="-", color="#abacab"),
             bbox=bbox_props,
@@ -257,12 +224,14 @@ class HierarchicalEdgeBundling(object):
             va="center",
             fontsize=8,
         )
+        if label_kwargs is not None:
+            kw.update(label_kwargs)
 
         for c_id in community_ids:
 
-            nodes_in_community = list(
-                valfilter(lambda x: x == c_id, self.membership_per_level[level]).keys()
-            )
+            nodes_in_community = nodes[
+                self.network.communities_per_level[level] == c_id
+            ]
 
             community_angles = [
                 self.node_angles_dict[n_id] for n_id in nodes_in_community
@@ -315,7 +284,7 @@ class HierarchicalEdgeBundling(object):
                     ax.annotate(
                         community_label,
                         xy=(pos_x, pos_y),
-                        xytext=(1.35 * pos_x, 1.4 * pos_y),
+                        xytext=(1.15 * pos_x, 1.25 * pos_y),
                         horizontalalignment=horizontalalignment,
                         **kw,
                     )
@@ -330,12 +299,14 @@ class HierarchicalEdgeBundling(object):
             )
             for w in wedge_meta
         ]
+
+        collection_args = dict(edgecolor="none", alpha=alpha)
+        if wedge_kwargs is not None:
+            collection_args.update(wedge_kwargs)
+
         ax.add_collection(
             PatchCollection(
-                collection,
-                edgecolor="none",
-                color=[w["color"] for w in wedge_meta],
-                alpha=alpha,
+                collection, color=[w["color"] for w in wedge_meta], **collection_args
             )
         )
 
@@ -345,13 +316,13 @@ class HierarchicalEdgeBundling(object):
         if ratio is None:
             ratio = self.node_ratio + offset
 
-        community_ids = set(self.membership_per_level[level].values())
+        nodes = np.array(list(map(int, self.network.vertices)))
+        community_ids = sorted(set(self.network.communities_per_level[level]))
 
         for c_id in community_ids:
-
-            nodes_in_community = list(
-                valfilter(lambda x: x == c_id, self.membership_per_level[level]).keys()
-            )
+            nodes_in_community = nodes[
+                self.network.communities_per_level[level] == c_id
+            ]
 
             community_angles = [
                 self.node_angles_dict[n_id] for n_id in nodes_in_community

@@ -61,7 +61,14 @@ class NodeLink(object):
         if method == "force-directed":
             self.bundle_model = FDB(self.network, *args, **kwargs)
         elif method == "hierarchical":
-            self.bundle_model = HierarchicalEdgeBundling(self.network, *args, **kwargs)
+            tree = kwargs.get("tree", None)
+            if tree is None:
+                tree, root = self.network.community_tree, self.network.community_root
+            else:
+                root = kwargs.get("root_vertex")
+            self.bundle_model = HierarchicalEdgeBundling(
+                self.network, tree, root, *args, **kwargs
+            )
         else:
             raise ValueError(f"method {str} not supported")
 
@@ -72,24 +79,24 @@ class NodeLink(object):
     def set_edge_drawing(self, method="plain", **kwargs):
         if method == "weighted":
             self.edge_strategy = WeightedEdges(
-                self.network.edge_data, kwargs.get("k", 5)
+                self.network,
+                kwargs.get("weights", "edge_weight"),
+                kwargs.get("k", 5),
             )
         elif method == "origin-destination":
-            if not self.network.is_directed():
+            if not self.network.is_directed:
                 raise ValueError("method only works with directed graphs")
-            self.edge_strategy = ODGradient(
-                self.network.edge_data, kwargs.get("n_points", 30)
-            )
+            self.edge_strategy = ODGradient(self.network, kwargs.get("n_points", 30))
         elif method == "community-gradient":
             if type(self.bundle_model) != HierarchicalEdgeBundling:
                 raise ValueError(f"{method} only works with HierarchicalEdgeBundling")
-            level = kwargs.get("level", 1)
-            communities = self.bundle_model.get_node_memberships(level)
+            level = kwargs.get("level", 0)
+            communities = self.network.get_community_labels(level)
             self.edge_strategy = CommunityGradient(
-                self.network.edge_data, node_communities=communities
+                self.network, node_communities=communities
             )
         elif method == "plain":
-            self.edge_strategy = PlainEdges(self.network.edge_data, **kwargs)
+            self.edge_strategy = PlainEdges(self.network)
         else:
             raise ValueError(f"{method} is not supported")
 
@@ -99,16 +106,15 @@ class NodeLink(object):
         if method == "plain":
             self.node_strategy = PlainNodes(self.network, **kwargs)
         elif method == "labeled":
-            if self.labels is None:
-                raise ValueError("labeled strategy requires set up labels")
-            self.node_strategy = LabeledNodes(self.network, self.labels, **kwargs)
+            labels = kwargs.get("label", "elem_id")
+            self.node_strategy = LabeledNodes(self.network, labels, **kwargs)
         else:
             raise ValueError(f"{method} is not supported")
 
         self.node_strategy_args = dict(**kwargs)
 
     def set_node_labels(self, func=None):
-        graph = self.network.graph()
+        graph = self.network.graph
         self.labels = graph.new_vertex_property("string")
 
         for idx in graph.vertices():

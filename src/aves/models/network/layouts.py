@@ -32,7 +32,7 @@ class LayoutStrategy(ABC):
         self.node_positions_vector = np.array(list(self.node_positions))
         self.node_positions_dict = dict(
             zip(
-                list(map(int, self.network.vertices())),
+                list(map(int, self.network.vertices)),
                 list(self.node_positions_vector),
             )
         )
@@ -67,13 +67,13 @@ class ForceDirectedLayout(LayoutStrategy):
 
         if method == "sfdp":
             self.node_positions = graph_tool.draw.sfdp_layout(
-                self.network.graph(),
-                eweight=self.network.edge_weight,
+                self.network.graph,
+                eweight=self.network._edge_weight,
                 verbose=kwargs.pop("verbose", False),
                 **kwargs,
             )
         else:
-            self.node_positions = graph_tool.draw.arf_layout(self.network.graph())
+            self.node_positions = graph_tool.draw.arf_layout(self.network.graph)
 
 
 class RadialLayout(LayoutStrategy):
@@ -86,7 +86,7 @@ class RadialLayout(LayoutStrategy):
     def layout(self, *args, **kwargs):
         root_node = kwargs.get("root", 0)
         self.node_positions = graph_tool.draw.radial_tree_layout(
-            self.network.graph(), root_node
+            self.network.graph, root_node
         )
 
     def _post_layout(self):
@@ -112,11 +112,11 @@ class PrecomputedLayout(LayoutStrategy):
     def layout(self, *args, **kwargs):
         positions = np.array(kwargs.get("positions"))
 
-        if positions.shape[0] != self.network.num_vertices():
+        if positions.shape[0] != self.network.num_vertices:
             raise ValueError("dimensions do not match")
 
-        self.node_positions = self.network.graph().new_vertex_property("vector<double>")
-        for v, p in zip(self.network.vertices(), positions):
+        self.node_positions = self.network.graph.new_vertex_property("vector<double>")
+        for v, p in zip(self.network.vertices, positions):
             self.node_positions[v] = p
 
         angles = kwargs.get("angles", None)

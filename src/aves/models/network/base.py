@@ -364,7 +364,7 @@ class Network(object):
                 self.network, state_args=state_args
             )
 
-            vals = np.array(self.state.levels[0].get_vertex_order().a)
+            vals = np.array(self.state.levels[0].get_blocks().a)
         else:
             raise ValueError("unsupported method")
 

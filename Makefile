@@ -16,11 +16,11 @@ PYTHON_INTERPRETER = python
 CURRENT_ENV := $(CONDA_DEFAULT_ENV)
 
 
-ifeq (,$(shell which conda))
+ifeq (,$(shell which mamba))
 HAS_CONDA=False
 else
 HAS_CONDA=True
-CONDA := $(shell which conda)
+CONDA := $(shell which mamba)
 ifeq ($(CONDA_DEFAULT_ENV),$(ENV_NAME))
 ENV_IS_ACTIVE=True
 else

@@ -4,38 +4,11 @@ Por [Eduardo Graells-Garrido](http://datagramas.cl).
 
 Este repositorio contiene datos, código y notebooks relacionados con mi [curso de Visualización de Información](http://datagramas.cl/courses/infovis) y mi trabajo diario. Lo he estructurado en un paquete llamado `aves`, sigla descrita en el título de este documento. 
 
-El código fuente (carpeta `src/aves`) tiene la siguiente estructua:
+Todavía no existe una documentación exhaustiva para `aves`, ya que su uso es primariamente interno, pero estos ejemplos muestran cómo se utilizan sus funciones. En lo que respecta a visualización, se mantiene el esquema típico que se utiliza en `matplotlib` y `seaborn`, las bibliotecas de visualización de bajo nivel más utilizadas en Python. De cierto modo, `aves` es un conjunto de herramientas de bajos niveles de abstracción, es decir, utiliza un paradigma imperativo, donde le damos instrucciones específicas al programa (**cómo** hacerlo); en contraste, una herramienta de alto nivel se enfoca en **qué** hacer, ocultando los detalles de implementación.
 
-```
-aves 1.1.1
-├── data
-│   ├── census.py   : carga del Censo 2017 de Chile
-│   └── eod.py      : carga de la Encuesta Origen-Destino 2012 de Santiago
-├── features
-│   ├── geo.py      : utilidades geográficas (para mapas)
-│   ├── geometry.py : utilidades geométricas
-│   ├── twokenize   : procesamiento de texto con ark-twokenize (ver créditos)
-│   └── utils.py    : funciones utilitarias para DataFrames
-├── models
-│   ├── datafusion  : envoltura para scikit-fusion
-│   └── network     : envoltura para graph-tool
-└── visualization
-    ├── collections : objetos para graficar conjuntos de elementos
-    ├── colors      : funciones utilitarias para colores y leyendas
-    ├── figures     : creación de figuras (sobretodo para geografía)
-    ├── maps        : técnicas de visualización de mapas
-    ├── networks    : técnicas de visualización de redes
-    ├── primitives  : interfaces (abstract) para las técnicas de visualización
-    └── tables      : técnicas de visualización de tablas
-```
+Para comprender la funcionalidad del código puedes explorar la carpeta `notebooks`. Sin embargo, los notebooks se preocupan de trabajar conceptos que en ocasiones están más allá del alcance de `aves`, ya que los utilizo en los cursos que dicto. Esos conceptos incluyen trabajar con `DataFrames` de `pandas` o utilizar técnicas de visualización implementadas en bibliotecas como `geopandas`, `matplotlib` y `seaborn` (que `aves` utiliza de manera interna).
 
-Para comprender la funcionalidad del código puedes explorar las unidades de práctica en la carpeta `notebooks`. Sin embargo, los notebooks se preocupan de trabajar conceptos que en ocasiones están más allá del alcance de `aves`, ya que los utilizo en el curso de visualización. Esos conceptos incluyen trabajar con `DataFrames` de `pandas` o utilizar técnicas de visualización implementadas en bibliotecas como `geopandas`, `matplotlib` y `seaborn` (que `aves` utiliza de manera interna).
-
-## Funcionalidad
-
-`aves` es un conjunto de herramientas de bajos niveles de abstracción, es decir, utiliza un paradigma imperativo, donde le damos instrucciones específicas al programa (**cómo** hacerlo); en contraste, una herramienta de alto nivel se enfoca en **qué** hacer, ocultando los detalles de implementación.
-
-Todavía no existe una documentación exhaustiva para `aves`, ya que su uso es primariamente interno, pero estos ejemplos muestran cómo se utilizan sus funciones. En lo que respecta a visualización, se mantiene el esquema típico que se utiliza en `matplotlib` y `seaborn`, las bibliotecas de visualización de bajo nivel más utilizadas en Python.
+## Ejemplos 
 
 ### Visualización de Tablas
 
@@ -306,21 +279,26 @@ fig.tight_layout()
 
 ### Paso 1: Preparación
 
-Si tienes un sistema GNU/Linux o Apple puedes omitir este paso.
+Si usas Windows, te recomiendo instalar el [Windows Subsystem for Linux](https://docs.microsoft.com/es-es/windows/wsl/install-win10). Puede ser la versión 1 o 2 (recomiendo WSL2). Como distribución te recomiendo Ubuntu 22.04 (es la que uso yo). 
 
-Si usas Windows, te recomiendo instalar el [Windows Subsystem for Linux](https://docs.microsoft.com/es-es/windows/wsl/install-win10). Puede ser la versión 1 o 2 (recomiendo WSL2). Como distribución te recomiendo Ubuntu 20.04 (es la que uso yo). 
-
-Cuando ya tengas Ubuntu en WSL2 instalado, ejecuta la consola de Ubuntu y ejecuta el siguiente comando:
+Abre la consola (_shell_) de Ubuntu y ejecuta el siguiente comando:
 
 ```sh
 sudo apt-get install make libxcursor1 libgdk-pixbuf2.0-dev libxdamage-dev
 ```
 
-Esto instalará algunas bibliotecas que son necesarias para el funcionamiento de aves (particularmente de graph-tool que es usada por aves).
+Esto instalará algunas bibliotecas que son necesarias para el funcionamiento de `aves` (particularmente de `graph-tool` que es usada por aves).
+
+Además, para administrar el entorno de ejecución de aves necesitas una instalación de `conda` ([Miniconda](https://docs.conda.io/en/latest/miniconda.html) es una buena alternativa) y de `mamba`. Primero debes instalar `conda`, y una vez que la tengas, puedes ejecutar:
+
+```sh
+conda install mamba
+```
+
+¿Por qué `mamba`? Es una versión más eficiente de `conda`. ¡Te ahorrará muchos minutos de instalación!
+
 
 ### Paso 2: Creación del Entorno
-
-Para administrar el entorno de ejecución de aves necesitas una instalación de `conda` ([Miniconda](https://docs.conda.io/en/latest/miniconda.html) es una buena alternativa).
 
 Después de descargar o clonar el repositorio (utilizando el comando `git clone`), debes instalar el entorno de `conda` con los siguientes comandos:
 
@@ -383,7 +361,3 @@ from matplotlib.font_manager import FontManager; FontManager().findfont('Fira Sa
 ```
 
 Después de copiar las fuentes, debes eliminar este fichero: `~/.cache/matplotlib/fontlist-v330.json`.
-
-### Comunidad
-
-Transmito _live coding_ en [Zorzal TV @ Twitch](https://www.twitch.tv/zorzalcl/) donde muestro ejemplos de uso de `aves` en mi trabajo.

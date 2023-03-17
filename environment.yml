@@ -5,12 +5,13 @@ dependencies:
   - configparser
   - graphviz
   - black
-  - python=3.8
-  - matplotlib=3.4.3
+  - python>=3.8
+  - matplotlib
+  - ipympl
   - seaborn
   - gdal
   - pandas
-  - geopandas
+  - geopandas<=0.9.0
   - libpysal
   - mapclassify
   - statsmodels
@@ -25,14 +26,20 @@ dependencies:
   - jupyter
   - ipykernel
   - gensim
+  - rapidjson
   - umap-learn
   - hdbscan
+  - shapely<=1.7.1
+  - numpy<=1.22.4
+  - cython<=0.29.28
+  - pygeos<=0.10
+  - h3-py==3.7.4
+  - contextily
   - pip:
     - bezier
     - scattertext
     - KDEpy
     - adjustText
-    - contextily
     - matplotlib-scalebar
     - git+https://github.com/zorzalerrante/scikit-fusion
     - pymunk
@@ -40,3 +47,5 @@ dependencies:
     - xlrd
     - shifterator
     - alphashape
+    - s2sphere
+    - pyrosm==0.6.1

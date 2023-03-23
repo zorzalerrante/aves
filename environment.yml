@@ -49,3 +49,4 @@ dependencies:
     - alphashape
     - s2sphere
     - pyrosm==0.6.1
+    - lxml

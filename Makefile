@@ -110,6 +110,9 @@ download-external:
 	sh ./scripts/download_plebiscito_2020.sh
 	sh ./scripts/download_wiki2vec.sh
 
+## download OSM data
+download-osm:
+	sh ./scripts/download_osm.sh
 
 #################################################################################
 # PROJECT RULES                                                                 #

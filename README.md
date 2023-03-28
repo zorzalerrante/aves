@@ -284,7 +284,7 @@ Si usas Windows, te recomiendo instalar el [Windows Subsystem for Linux](https:/
 Abre la consola (_shell_) de Ubuntu y ejecuta el siguiente comando:
 
 ```sh
-sudo apt-get install make libxcursor1 libgdk-pixbuf2.0-dev libxdamage-dev
+sudo apt install make libxcursor1 libgdk-pixbuf2.0-dev libxdamage-dev osmctools gcc
 ```
 
 Esto instalará algunas bibliotecas que son necesarias para el funcionamiento de `aves` (particularmente de `graph-tool` que es usada por aves).

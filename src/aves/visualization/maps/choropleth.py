@@ -21,6 +21,7 @@ def choropleth_map(
     edgecolor="white",
     palette_center=None,
     binning="uniform",
+    custom_bins = [],
     alpha=1.0,
     linewidth=1,
     zorder=1,
@@ -42,6 +43,13 @@ def choropleth_map(
         bins = np.linspace(
             min_value, max_value + (max_value - min_value) * 0.001, num=k + 1
         )
+        geodf = geodf.assign(
+            __bin__=lambda x: pd.cut(
+                x[column], bins=bins, include_lowest=True, labels=False
+            ).astype(np.int)
+        )
+    elif binning == "custom":
+        bins = np.array(custom_bins)
         geodf = geodf.assign(
             __bin__=lambda x: pd.cut(
                 x[column], bins=bins, include_lowest=True, labels=False

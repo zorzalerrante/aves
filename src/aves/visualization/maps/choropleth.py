@@ -21,7 +21,7 @@ def choropleth_map(
     edgecolor="white",
     palette_center=None,
     binning="uniform",
-    custom_bins = [],
+    bins=None,
     alpha=1.0,
     linewidth=1,
     zorder=1,
@@ -49,7 +49,9 @@ def choropleth_map(
             ).astype(np.int)
         )
     elif binning == "custom":
-        bins = np.array(custom_bins)
+        if bins is None:
+            raise ValueError('bins are needed for custom binning')
+        bins = np.array(bins)
         geodf = geodf.assign(
             __bin__=lambda x: pd.cut(
                 x[column], bins=bins, include_lowest=True, labels=False
@@ -103,7 +105,8 @@ def choropleth_map(
         if not using_divergent:
             built_palette = sns.color_palette(cmap_name, n_colors=k)
         else:
-            middle_idx = np.where((bins[:-1] * bins[1:]) < 0)[0][0]
+            print(bins, bins[:-1] * bins[1:], np.where((bins[:-1] * bins[1:]) <= 0))
+            middle_idx = np.where((bins[:-1] * bins[1:]) <= 0)[0][0]
             left = middle_idx
             right = k - middle_idx - 1
             if left == right:

@@ -33,7 +33,7 @@ def colormap_from_palette(palette_name, n_colors=10):
 
 
 def color_legend(
-    ax, color_list, bins=None, sizes=None, orientation="horizontal", remove_axes=False
+    ax, color_list, bins=None, sizes=None, orientation="horizontal", remove_axes=False, tick_labels=None
 ):
     if bins is None:
         if type(color_list) == colors.ListedColormap:
@@ -53,7 +53,7 @@ def color_legend(
                 color=color_list,
                 edgecolor=color_list,
             )
-            ax.set_xticks(bins)
+            ax.set_xticks(bins, labels=tick_labels)
         else:
             ax.barh(
                 bins[:-1],
@@ -63,14 +63,14 @@ def color_legend(
                 color=color_list,
                 edgecolor=color_list,
             )
-            ax.set_yticks(bins)
+            ax.set_yticks(bins, labels=tick_labels)
     else:
         cbar_norm = colors.BoundaryNorm(bins, len(bins) - 1)
         if type(color_list) == colors.ListedColormap:
             cmap = color_list
         else:
             cmap = colors.ListedColormap(color_list)
-        colorbar.ColorbarBase(
+        cb = colorbar.ColorbarBase(
             ax,
             cmap=cmap,
             norm=cbar_norm,
@@ -78,6 +78,7 @@ def color_legend(
             spacing="proportional",
             orientation=orientation,
         )
+        cb.set_ticks(bins, labels=tick_labels)
 
     sns.despine(ax=ax, top=True, bottom=True, left=True, right=True)
 
@@ -156,6 +157,7 @@ def add_ranged_color_legend(
     height="5%",
     bbox_to_anchor=(0.0, 0.0, 0.95, 0.95),
     bbox_transform=None,
+    tick_labels=None
 ):
     if bbox_transform is None:
         bbox_transform = ax.transAxes
@@ -192,6 +194,7 @@ def add_ranged_color_legend(
         bins,
         orientation=orientation,
         remove_axes=False,
+        tick_labels=tick_labels
     )
 
     sns.despine(ax=cbar_ax, left=True, top=True, bottom=True, right=True)

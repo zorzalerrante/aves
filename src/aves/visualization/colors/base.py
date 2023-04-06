@@ -78,7 +78,7 @@ def color_legend(
             spacing="proportional",
             orientation=orientation,
         )
-        cb.set_ticks(bins, labels=tick_labels)
+        cb.set_ticklabels(tick_labels)
 
     sns.despine(ax=ax, top=True, bottom=True, left=True, right=True)
 

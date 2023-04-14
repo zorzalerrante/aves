@@ -13,6 +13,8 @@ dependencies:
   - pandas
   - geopandas<=0.9.0
   - libpysal
+  - esda
+  - splot
   - mapclassify
   - statsmodels
   - networkx

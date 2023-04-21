@@ -15,6 +15,7 @@ dependencies:
   - libpysal
   - esda
   - splot
+  - spreg
   - mapclassify
   - statsmodels
   - networkx

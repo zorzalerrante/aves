@@ -16,6 +16,8 @@ dependencies:
   - esda
   - splot
   - spreg
+  - spglm
+  - mgwr
   - mapclassify
   - statsmodels
   - networkx

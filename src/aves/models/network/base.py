@@ -69,7 +69,6 @@ class Network(object):
         directed=True,
         weight=None,
     ):
-
         source_attr = f"{source}__mapped__"
         target_attr = f"{target}__mapped__"
 
@@ -211,10 +210,10 @@ class Network(object):
     def graph(self):
         return self.network
 
-    def shortest_path(self, src, dst):
+    def shortest_path(self, src, dst, *args, **kwargs):
         paths = list(
             graph_tool.topology.all_shortest_paths(
-                self.network, self.node_map[src], self.node_map[dst]
+                self.network, self.node_map[src], self.node_map[dst], *args, **kwargs
             )
         )
 

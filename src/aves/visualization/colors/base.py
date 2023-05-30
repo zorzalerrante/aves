@@ -9,6 +9,7 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
 # from http://chris35wills.github.io/matplotlib_diverging_colorbar/
 
+
 # set the colormap and centre the colorbar
 class MidpointNormalize(colors.Normalize):
     """
@@ -33,7 +34,13 @@ def colormap_from_palette(palette_name, n_colors=10):
 
 
 def color_legend(
-    ax, color_list, bins=None, sizes=None, orientation="horizontal", remove_axes=False
+    ax,
+    color_list,
+    bins=None,
+    sizes=None,
+    orientation="horizontal",
+    remove_axes=False,
+    bin_spacing="proportional",
 ):
     if bins is None:
         if type(color_list) == colors.ListedColormap:
@@ -75,7 +82,7 @@ def color_legend(
             cmap=cmap,
             norm=cbar_norm,
             ticks=bins,
-            spacing="proportional",
+            spacing=bin_spacing,
             orientation=orientation,
         )
 
@@ -156,6 +163,7 @@ def add_ranged_color_legend(
     height="5%",
     bbox_to_anchor=(0.0, 0.0, 0.95, 0.95),
     bbox_transform=None,
+    **kwargs
 ):
     if bbox_transform is None:
         bbox_transform = ax.transAxes
@@ -192,6 +200,7 @@ def add_ranged_color_legend(
         bins,
         orientation=orientation,
         remove_axes=False,
+        **kwargs
     )
 
     sns.despine(ax=cbar_ax, left=True, top=True, bottom=True, right=True)

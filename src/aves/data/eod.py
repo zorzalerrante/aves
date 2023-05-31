@@ -20,14 +20,32 @@ def decode_column(
     index_dtype=np.float64,
 ):
     """
-    param :df: DataFrame del que leeremos una columna.
-    param :fname: nombre del archivo que contiene los valores a decodificar.
-    param :col_name: nombre de la columna que queremos decodificar.
-    param :index_col: nombre de la columna en el archivo @fname que tiene los índices que codifican @col_name
-    param :value_col: nombre de la columna en el archivo @fname que tiene los valores decodificados
-    param :sep: carácter que separa los valores en @fname.
-    param :encoding: identificación del _character set_ que utiliza el archivo. Usualmente es utf-8, si no funciona,
-                     se puede probar con iso-8859-1.
+    Decodifica los valores de una columna, reemplazando identificadores por su correspondiente valor según la tabla de códigos.
+
+    Parameters
+    ----------
+    df : pandas.dataframe
+        Dataframe del que se leerá una columna.
+    fname: string
+        Nombre del archivo que contiene los valores a decodificar.
+    col_name: string
+        Nombre de la columna que queremos decodificar.
+    index_col: string, default="Id"
+        Nombre de la columna en el archivo ` fname `  que tiene los índices que codifican ` col_name ` .
+    value_col: string, default=None
+        Nombre de la columna en el archivo ` fname `  que tiene los valores decodificados.
+    sep: string, default=";"
+        Caracter que separa los valores en ` fname ` .
+    encoding: string, default="utf-8"
+        Identificación del _character set_ que utiliza el archivo. Usualmente es utf-8, si no funciona,
+          se puede probar con iso-8859-1. 
+    index_dtype: dtype, default=np.float64
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe decodificado en la columna señalada.
+    
     """
     if value_col is None:
         value_col = "value"
@@ -50,6 +68,23 @@ def decode_column(
 def read_trips(
     path=None, decode_columns=True, remove_invalid=True, fix_clock_times=True
 ):
+    """ 
+    Parameters
+    ----------
+    path : string, default=None
+        Ruta del archivo que contiene los viajes.
+    decode_column: bool, default=True
+        Indica si se quiere decodificar el contenido de las columnas, reemplazando IDs por su significado
+    remove_invalid: bool, default=True
+        Indica si se quiere eliminar filas que no tienen hora o que han sido inputadas.
+    fix_clock_times: bool, default=True
+        Indica si se desea estandarizar la hora de inicio al formato timedelta.
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe with
+    
+    """
     if path is None:
         DATA_PATH = _EOD_PATH
     else:
@@ -138,6 +173,9 @@ def read_trips(
 
 
 def read_homes(path=None):
+    """
+
+    """
     if path is None:
         DATA_PATH = _EOD_PATH
     else:

@@ -69,6 +69,9 @@ def read_trips(
     path=None, decode_columns=True, remove_invalid=True, fix_clock_times=True
 ):
     """ 
+    Lee los archivos que contienen los resultados de la encuesta origen destino y crea una tabla con
+    la información de los viajes.
+
     Parameters
     ----------
     path : string, default=None
@@ -79,11 +82,53 @@ def read_trips(
         Indica si se quiere eliminar filas que no tienen hora o que han sido inputadas.
     fix_clock_times: bool, default=True
         Indica si se desea estandarizar la hora de inicio al formato timedelta.
+
     Returns
     -------
     pd.DataFrame
-        Dataframe with
-    
+        Dataframe con la información de viajes de la encuesta origen-destino. Las columnas son las siguientes:
+
+        ==========  ==============================================================
+        Hogar
+		Persona
+		Viaje
+		Etapas
+		ComunaOrigen
+		ComunaDestino
+        SectorOrigen
+		SectorDestino
+		ZonaOrigen
+		ZonaDestino
+        OrigenCoordX
+		OrigenCoordY
+		DestinoCoordX
+		DestinoCoordY
+        Proposito
+		PropositoAgregado
+		ActividadDestino
+		MediosUsados
+        ModoAgregado
+		ModoPriPub
+		ModoMotor
+		HoraIni
+		HoraFin
+        HoraMedia
+		TiempoViaje
+		TiempoMedio
+		Periodo
+		MinutosDespues
+        CuadrasDespues
+		FactorLaboralNormal
+		FactorSabadoNormal
+        FactorDomingoNormal
+		FactorLaboralEstival
+        FactorFindesemanaEstival
+		CodigoTiempo
+		ModoDifusion
+        DistEuclidiana
+		DistManhattan
+		Imputada
+        ==========  ==============================================================
     """
     if path is None:
         DATA_PATH = _EOD_PATH

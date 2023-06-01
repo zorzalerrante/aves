@@ -75,7 +75,7 @@ def read_trips(
     Parameters
     ----------
     path : string, default=None
-        Ruta del archivo que contiene los viajes.
+        Ubicación de los archivos csv con la data de la encuesta origen destino.
     decode_column: bool, default=True
         Indica si se quiere decodificar el contenido de las columnas, reemplazando IDs por su significado
     remove_invalid: bool, default=True
@@ -177,7 +177,19 @@ def read_trips(
 
 def read_homes(path=None):
     """
+    Carga el contenido del archivo con las respuestas sobre hogares participantes de la
+      encuesta origen destino a un dataframe.
 
+    Parameters
+    ----------
+    path: string, default=None
+        Ubicación de los archivos csv con la data de la encuesta origen destino.
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe con la información sobre hogares, con las columnas decodificadas.
+    
     """
     if path is None:
         DATA_PATH = _EOD_PATH
@@ -196,6 +208,22 @@ def read_homes(path=None):
 
 
 def read_people(path=None, decode_columns=True):
+    """
+    Carga el contenido del archivo con información sobre las personas encuestadas a un dataframe.
+
+    Parameters
+    ----------
+    path: string, default=None
+        Ubicación de los archivos csv con la data de la encuesta origen destino.
+    decode_columns: bool, default=True
+        Indica si se quiere decodificar el contenido de las columnas, reemplazando IDs por su significado
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe con la información sobre personas.
+    
+    """
     if path is None:
         DATA_PATH = _EOD_PATH
     else:
@@ -228,6 +256,22 @@ def read_people(path=None, decode_columns=True):
 
 
 def read_transantiago_usage(path=None, decode_columns=True):
+    """
+    Crea un dataframe que contiene a las personas que no usaron el sistema Transantiago en su viaje y la razón.
+
+    Parameters
+    ----------
+    path: string, default=None
+        Ubicación de los archivos csv con la data de la encuesta origen destino.
+    decode_columns: bool, default=True
+        Indica si se quiere decodificar el contenido de las columnas, reemplazando IDs por su significado
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe con una fila por persona que no usó el Transantiago y su razón para no hacerlo.
+    
+    """
     if path is None:
         DATA_PATH = _EOD_PATH
     else:

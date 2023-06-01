@@ -37,7 +37,7 @@ def decode_column(
     sep: string, default=";"
         Caracter que separa los valores en ` fname ` .
     encoding: string, default="utf-8"
-        Identificación del _character set_ que utiliza el archivo. Usualmente es utf-8, si no funciona,
+        Identificación del character set que utiliza el archivo. Usualmente es utf-8, si no funciona,
           se puede probar con iso-8859-1. 
     index_dtype: dtype, default=np.float64
 
@@ -86,49 +86,7 @@ def read_trips(
     Returns
     -------
     pd.DataFrame
-        Dataframe con la información de viajes de la encuesta origen-destino. Las columnas son las siguientes:
-
-        ==========  ==============================================================
-        Hogar
-		Persona
-		Viaje
-		Etapas
-		ComunaOrigen
-		ComunaDestino
-        SectorOrigen
-		SectorDestino
-		ZonaOrigen
-		ZonaDestino
-        OrigenCoordX
-		OrigenCoordY
-		DestinoCoordX
-		DestinoCoordY
-        Proposito
-		PropositoAgregado
-		ActividadDestino
-		MediosUsados
-        ModoAgregado
-		ModoPriPub
-		ModoMotor
-		HoraIni
-		HoraFin
-        HoraMedia
-		TiempoViaje
-		TiempoMedio
-		Periodo
-		MinutosDespues
-        CuadrasDespues
-		FactorLaboralNormal
-		FactorSabadoNormal
-        FactorDomingoNormal
-		FactorLaboralEstival
-        FactorFindesemanaEstival
-		CodigoTiempo
-		ModoDifusion
-        DistEuclidiana
-		DistManhattan
-		Imputada
-        ==========  ==============================================================
+        Dataframe con la información de viajes de la encuesta origen-destino.
     """
     if path is None:
         DATA_PATH = _EOD_PATH

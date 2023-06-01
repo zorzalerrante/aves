@@ -30,7 +30,7 @@ setup_cfg = dict(conf.items("metadata"))
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath(os.path.join('..', 'src', 'aves')))
 
 # -- General configuration -----------------------------------------------------
 
@@ -55,7 +55,6 @@ extensions = [
     "sphinx.ext.ifconfig",
     #"sphinx_automodapi.automodapi",
     #"sphinx_automodapi.smart_resolver",
-    "sphinx.ext.autodoc",
     # 'matplotlib.sphinxext.only_directives',
     # 'matplotlib.sphinxext.plot_directive',
 ]

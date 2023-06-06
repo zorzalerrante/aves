@@ -72,6 +72,8 @@ def read_trips(
     Busca los archivos "viajes.csv", "ViajesDifusion.csv" y "DistanciaViaje.csv" dentro
     del directorio especificado o en su defecto en el definido en la variable global "_EOD_PATH".
     Unifica la información de estos archivos en un dataframe de pandas.
+    En el notebook ubicado en notebooks/gds-course/01-scl-travel-survey-maps.ipynb se pueden encontrar ejemplos de uso
+    de esta función.
 
     Parameters
     ----------
@@ -181,6 +183,8 @@ def read_homes(path=None):
     """
     Carga el contenido del archivo "Hogares.csv", que contiene las respuestas sobre hogares participantes de la
     encuesta origen destino, a un dataframe.
+    En el notebook ubicado en notebooks/gds-course/01-scl-travel-survey-maps.ipynb se pueden encontrar ejemplos de uso
+    de esta función.
 
     Parameters
     ----------
@@ -212,6 +216,8 @@ def read_homes(path=None):
 def read_people(path=None, decode_columns=True):
     """
     Carga el contenido del archivo "personas.csv", que contiene información sobre las personas encuestadas, a un dataframe.
+    En el notebook ubicado en notebooks/gds-course/01-scl-travel-survey-maps.ipynb se pueden encontrar ejemplos de uso
+    de esta función.
 
     Parameters
     ----------
@@ -300,6 +306,21 @@ def read_transantiago_usage(path=None, decode_columns=True):
 
 
 def read_zone_design(path=None):
+    """
+    Carga la geometría de la zonificación de las comunas participantes en la encuesta.
+    Podemos encontrar un tutorial de uso de esta función en el notebook ` notebooks/vis-course/03-python-mapas-preliminario.ipynb` 
+
+    Parameters
+    ----------
+    path: string, default=None
+        Ubicación del archivo shapefile que contiene la geometría de las comunas. Si no se especifica, se usará el valor
+        almacenado en la variable global _EOD_MAPS.
+    Returns
+    -------
+    geopandas.GeoDataFrame
+        GeoDataframe con la geometría de la zonificación de las comunas, el sistema de coordenadas usado es [`EPSG:32719`](https://epsg.io/32719)
+    
+    """
     
     if path is None:
         DATA_PATH = _EOD_MAPS
@@ -311,7 +332,8 @@ def read_zone_design(path=None):
 
 def read_vehicles(path=None, decode_columns=True):
     """
-    Carga el contenido del archivo "Vehiculo.csv", que contiene información sobre las personas encuestadas, a un dataframe.
+    Carga el contenido del archivo "Vehiculo.csv", que contiene información sobre los vehículos de los
+    hogares encuestados.
 
     Parameters
     ----------

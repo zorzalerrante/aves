@@ -69,8 +69,9 @@ def read_trips(
     path=None, decode_columns=True, remove_invalid=True, fix_clock_times=True
 ):
     """ 
-    Lee los archivos que contienen los resultados de la encuesta origen destino y crea una tabla con
-    la información de los viajes.
+    Busca los archivos "viajes.csv", "ViajesDifusion.csv" y "DistanciaViaje.csv" dentro
+    del directorio especificado o en su defecto en el definido en la variable global "_EOD_PATH".
+    Unifica la información de estos archivos en un dataframe de pandas.
 
     Parameters
     ----------
@@ -78,6 +79,7 @@ def read_trips(
         Ubicación de los archivos csv con la data de la encuesta origen destino.
     decode_column: bool, default=True
         Indica si se quiere decodificar el contenido de las columnas, reemplazando IDs por su significado
+        según las tablas de decodificación ubicadas en el directorio "Tablas_parametros".
     remove_invalid: bool, default=True
         Indica si se quiere eliminar filas que no tienen hora o que han sido inputadas.
     fix_clock_times: bool, default=True
@@ -177,8 +179,8 @@ def read_trips(
 
 def read_homes(path=None):
     """
-    Carga el contenido del archivo con las respuestas sobre hogares participantes de la
-      encuesta origen destino a un dataframe.
+    Carga el contenido del archivo "Hogares.csv", que contiene las respuestas sobre hogares participantes de la
+    encuesta origen destino, a un dataframe.
 
     Parameters
     ----------
@@ -209,7 +211,7 @@ def read_homes(path=None):
 
 def read_people(path=None, decode_columns=True):
     """
-    Carga el contenido del archivo con información sobre las personas encuestadas a un dataframe.
+    Carga el contenido del archivo "personas.csv", que contiene información sobre las personas encuestadas, a un dataframe.
 
     Parameters
     ----------
@@ -298,6 +300,7 @@ def read_transantiago_usage(path=None, decode_columns=True):
 
 
 def read_zone_design(path=None):
+    
     if path is None:
         DATA_PATH = _EOD_MAPS
     else:
@@ -307,6 +310,22 @@ def read_zone_design(path=None):
 
 
 def read_vehicles(path=None, decode_columns=True):
+    """
+    Carga el contenido del archivo "Vehiculo.csv", que contiene información sobre las personas encuestadas, a un dataframe.
+
+    Parameters
+    ----------
+    path: string, default=None
+        Ubicación de los archivos csv con la data de la encuesta origen destino.
+    decode_columns: bool, default=True
+        Indica si se quiere decodificar el contenido de las columnas, reemplazando IDs por su significado
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe con la información sobre personas.
+    
+    """
     if path is None:
         DATA_PATH = _EOD_PATH
     else:
@@ -322,7 +341,7 @@ def read_vehicles(path=None, decode_columns=True):
             DATA_PATH / "Tablas_parametros" / "TipoVeh.csv",
             value_col="vehiculo",
             col_name="TipoVeh",
-            index_dtype=str,
+            index_dtype=int,
             encoding="iso-8859-1",
         )
 

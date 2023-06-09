@@ -23,7 +23,7 @@ def decode_column(
     Decodifica los valores de una columna, reemplazando identificadores por su correspondiente valor según la tabla de códigos.
 
     Parameters
-    ----------
+    ------------
     df : pandas.dataframe
         Dataframe del que se leerá una columna.
     fname: string

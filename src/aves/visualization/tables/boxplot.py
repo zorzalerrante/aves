@@ -76,6 +76,8 @@ def boxplot(
         grupos de datos numéricos mediante sus cuartiles. La caja se extiende desde el primer cuartil (Q1) hasta el tercer cuartil (Q3) del grupo,
         con una línea que marca la mediana (Q2). De cada extremo de la caja  se extiende una línea que muestra el rango de los datos.
         Los datos "outliers" o atípicos quedan fuera de este rango.
+        En el notebook `notebooks/vis-course/02-python-tablas.ipynb` se pueden encontrar ejemplos de uso
+        de esta función.
 
         Parámetros
         ----------

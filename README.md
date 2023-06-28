@@ -291,7 +291,7 @@ sudo apt install make libxcursor1 libgdk-pixbuf2.0-dev libxdamage-dev osmctools 
 Además, para administrar el entorno de ejecución de aves necesitas una instalación de `conda` ([Miniconda](https://docs.conda.io/en/latest/miniconda.html) es una buena alternativa) y de `mamba`. Primero debes instalar `conda`, y una vez que la tengas, puedes ejecutar:
 
 ```sh
-conda install mamba
+conda install mamba -n base -c conda-forge
 ```
 
 ¿Por qué `mamba`? Es una versión más eficiente de `conda`. ¡Te ahorrará muchos minutos de instalación!

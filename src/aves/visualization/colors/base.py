@@ -41,6 +41,7 @@ def color_legend(
     orientation="horizontal",
     remove_axes=False,
     bin_spacing="proportional",
+    tick_labels=None,
 ):
     if bins is None:
         if type(color_list) == colors.ListedColormap:
@@ -60,7 +61,7 @@ def color_legend(
                 color=color_list,
                 edgecolor=color_list,
             )
-            ax.set_xticks(bins)
+            ax.set_xticks(bins, labels=tick_labels)
         else:
             ax.barh(
                 bins[:-1],
@@ -70,14 +71,14 @@ def color_legend(
                 color=color_list,
                 edgecolor=color_list,
             )
-            ax.set_yticks(bins)
+            ax.set_yticks(bins, labels=tick_labels)
     else:
         cbar_norm = colors.BoundaryNorm(bins, len(bins) - 1)
         if type(color_list) == colors.ListedColormap:
             cmap = color_list
         else:
             cmap = colors.ListedColormap(color_list)
-        colorbar.ColorbarBase(
+        cb = colorbar.ColorbarBase(
             ax,
             cmap=cmap,
             norm=cbar_norm,
@@ -85,6 +86,8 @@ def color_legend(
             spacing=bin_spacing,
             orientation=orientation,
         )
+        if tick_labels:
+            cb.set_ticklabels(tick_labels)
 
     sns.despine(ax=ax, top=True, bottom=True, left=True, right=True)
 
@@ -95,7 +98,6 @@ def color_legend(
 
 
 def bivariate_matrix_from_palette(palette_name="PiYG", n_colors=3):
-    # full_palette = sns.diverging_palette(150, 275, s=80, l=40, n=(cmap_n_colors - 1) * 2 + 1)
     full_palette = sns.color_palette(palette_name, n_colors=(n_colors - 1) * 2 + 1)
 
     cmap_x = full_palette[n_colors - 1 :]
@@ -109,18 +111,19 @@ def bivariate_matrix_from_palette(palette_name="PiYG", n_colors=3):
             y = spectra.rgb(*cmap_y[j][0:3])
 
             if i == j and i == 0:
-                cmap_xy.append(x.darken(1.5).rgb)
+                cmap_xy.append(x.darken(3).rgb)
+
             elif i == 0:
                 cmap_xy.append(y.rgb)
             elif j == 0:
                 cmap_xy.append(x.rgb)
             else:
-                blended = x.blend(y, ratio=0.5)
+                blended = x.blend(y, ratio=0.5).brighten(1.5)
 
                 if i == j:
-                    blended = blended.saturate(7.5 * (i + 1))
+                    blended = blended
                 else:
-                    blended = blended.saturate(4.5 * (i + 1))
+                    blended = blended.saturate(3)
 
                 cmap_xy.append(blended.rgb)
 
@@ -163,7 +166,8 @@ def add_ranged_color_legend(
     height="5%",
     bbox_to_anchor=(0.0, 0.0, 0.95, 0.95),
     bbox_transform=None,
-    **kwargs
+    tick_labels=None,
+    **kwargs,
 ):
     if bbox_transform is None:
         bbox_transform = ax.transAxes
@@ -200,7 +204,8 @@ def add_ranged_color_legend(
         bins,
         orientation=orientation,
         remove_axes=False,
-        **kwargs
+        tick_labels=tick_labels if tick_labels is not None else [],
+        **kwargs,
     )
 
     sns.despine(ax=cbar_ax, left=True, top=True, bottom=True, right=True)

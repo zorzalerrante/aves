@@ -17,7 +17,40 @@ from .edge import Edge
 
 
 class Network(object):
+    """
+    Una red de vértices conectados por aristas.
+
+    Attributes
+    ----------------
+        network: graph_tool.Graph
+            El grafo que almacena la estructura de la red.
+        edge_data: [List[Edge]]
+            Lista con la información de las aristas de la red.
+        node_map: dict
+            Un diccionario que mapea identificadores de nodos a vértices en la red.
+        node_layout: LayoutStrategy
+            La estrategia de diseño usada para posicionar los nodos al visualizar la red.
+        id_to_label: dict
+            Diccionario que mapea el identificador de un nodo a su etiqueta.
+        community_tree: graph_tool.Graph
+            La estructura jerárquica de las comunidades detectadas en la red.
+        community_root: int
+            El nodo raíz en el árbol de comunidades.
+    """
     def __init__(self, graph: graph_tool.Graph):
+        """
+        Inicializa una nueva instancia de la clase Network.
+
+        Parameters
+        ----------
+        graph : graph_tool.Graph
+            Objeto Graph de graph-tool que representa la red.
+
+        Returns
+        -------
+        Network
+            Una nueva instancia de la clase Network.
+        """
         self.network: graph_tool.Graph = graph
         self.edge_data = None
 
@@ -30,6 +63,20 @@ class Network(object):
 
     @classmethod
     def load(cls, filename: str):
+        """
+        Carga una red desde un archivo.
+
+        Parameters
+        ----------
+        filename : str
+            Ruta del archivo que contiene la red. Ela rchivo debe estar en formato “gt”, “graphml”, “xml”, “dot” o “gml”.
+            Graph_tool recomienda usar "gt" o "graphml" para garantizar la conservación de las propiedades internas del grafo cargado.
+
+        Returns
+        -------
+        Network
+            Instancia de la clase Network creada a partir del archivo.
+        """
         if isinstance(filename, Path):
             filename = str(filename)
 
@@ -52,6 +99,14 @@ class Network(object):
         return result
 
     def save(self, filename: str):
+        """
+        Guarda la red en un archivo.
+
+        Parameters
+        ----------
+        filename : str
+            Ruta del archivo donde se guardará la red. El archivo debe ser formato "gt", es decir, terminar en ".gt".
+        """
         if isinstance(filename, Path):
             filename = str(filename)
 

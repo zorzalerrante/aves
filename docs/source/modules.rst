@@ -6,3 +6,4 @@ Código
 
    aves.data
    aves.visualization.tables
+   aves.models

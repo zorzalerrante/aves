@@ -73,7 +73,7 @@ class Network(object):
             Graph_tool recomienda usar "gt" o "graphml" para garantizar la conservación de las propiedades internas del grafo cargado.
 
         Returns
-        -------
+        ---------
         Network
             Instancia de la clase Network creada a partir del archivo.
         """
@@ -124,6 +124,23 @@ class Network(object):
         directed=True,
         weight=None,
     ):
+        """Crea una red a partir de un listado de aristas.
+
+        Parameters
+            df: pandas.DataFrame
+                El DataFrame que contiene la lista de aristas.
+            source: str, default="source"
+                El nombre de la columna de `df` que contiene los nodos de origen.
+            target: str, default="target"
+                El nombre de la columna de `df` que contiene los nodos de destino.
+            directed: bool, default=True
+                Indica si el grafo es dirigido o no.
+            weight: str, default=None
+                El nombre de la columna de `df` que contiene los pesos de las aristas de existir.
+        Returns
+        ----------
+            Network: La red creada
+        """
         source_attr = f"{source}__mapped__"
         target_attr = f"{target}__mapped__"
 
@@ -165,6 +182,26 @@ class Network(object):
         directed=True,
         remove_empty=True,
     ) -> graph_tool.Graph:
+        """Crea un grafo a partir de un listado de aristas.
+
+        Parameters
+            df: pandas.DataFrame
+                El DataFrame que contiene la lista de aristas.
+            source: str, default="source"
+                El nombre de la columna de `df` que contiene los nodos de origen.
+            target: str, default="target"
+                El nombre de la columna de `df` que contiene los nodos de destino.
+            directed: bool, default=True
+                Indica si el grafo es dirigido o no.
+            weight: str, default=None
+                El nombre de la columna de `df` que contiene los pesos de las aristas de existir.
+            remove_empty: bool, default=True
+                Indica si se deben eliminar las aristas cuyo peso sea menor o igual a 0,
+                en caso de tratarse de un grafo con peso.
+        Returns
+        ----------
+            graph_tool.Graph: el grafo creado.
+        """
         network = graph_tool.Graph(directed=directed)
         n_vertices = max(df[source_column].max(), df[target_column].max()) + 1
         network.add_vertex(n_vertices)
@@ -188,6 +225,15 @@ class Network(object):
             return network
 
     def build_edge_data(self):
+        """Actualiza la información de las aristas de la red (`edge_data`) a partir del posicionamiento de los nodos
+        (`node_layout`). Si la red todavía no almacena información de las aristas,  crea un objeto `Edge` por arista y los
+        almacena en el atributo `edge_data`.
+        En caso contrario, actualiza la posición de los vértices de las aristas según el atributo `node_layout`.
+
+        Returns
+        ----------
+            None
+        """
         if self.edge_data is None:
             # first time?
             self.edge_data = []
@@ -216,6 +262,47 @@ class Network(object):
                 data.points = [src, dst]
 
     def layout_nodes(self, *args, **kwargs):
+        """
+        Aplica un algoritmo de posicionamiento para distribuir los nodos de la red en el plano.
+
+        Parameters
+        ----------
+        *args : positional arguments
+            Argumentos posicionales que se pasarán al método de distribución de nodos.
+            Los argumentos necesarios dependen del método seleccionado, para más información
+            ver la documentación de `LayoutStrategy`.
+
+        **kwargs : keyword arguments
+            Argumentos que se pasarán al método de distribución de nodos.
+            Los argumentos disponibles dependen del método seleccionado, para más información
+            ver la documentación de `LayoutStrategy`.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        La función utiliza un método de distribución según el argumento `method` especificado al invocar la función.
+        Los métodos disponibles son "force-directed", "precomputed", "geographical", and "radial".
+
+        - Si `method` es "force-directed", se usa ForceDirectedLayout para posicionar los nodos.
+        - Si `method` es "precomputed", se usa PrecomputedLayout.
+        - Si `method` is "geographical", se usa GeographicalLayout. Este método requiere que se entregue un GeoDataFrame
+        (`geodataframe`) y el nombre de una columna en este (`node_column`) para mapear nodos a posiciones en un mapa.
+        Si  no se especifica el nombre de la columna, se usa "node_column" por defecto.
+        - Si `method` es "radial", se usa RadialLayout.
+
+        Luego de aplicar el método de distribución para posicionar los nodos, se invoca al método  `build_edge_data`
+        para actualizar la posición de las aristas.
+
+        Raises
+        ------
+        NotImplementedError
+            Si el método de distribución especificado no está implementado por la librería.
+
+        """
+
         from .layouts import (
             ForceDirectedLayout,
             GeographicalLayout,

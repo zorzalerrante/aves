@@ -10,9 +10,9 @@ class Edge(object):
     Attributes:
     --------------
     source : ArrayLike
-        Vértice de origen de la arista.
-    target : Any
-        Vértice de destino de la arista.
+        Posicion de vértice de origen de la arista.
+    target : ArrayLike
+        Posicion de vértice de destino de la arista.
     index : int
         Índice de la arista.
     points : list[]

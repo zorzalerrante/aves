@@ -93,6 +93,8 @@ release = setup_cfg["version"]
 # for a list of supported languages.
 language = 'es'
 
+napoleon_include_private_with_doc = True
+
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
 # today = ''

@@ -22,9 +22,9 @@ class Network(object):
 
     Attributes
     ----------------
-        network: graph_tool.Graph
+        network:  `graph_tool.Graph <https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.Graph.html>`_
             El grafo que almacena la estructura de la red.
-        edge_data: [List[Edge]]
+        edge_data: List[Edge]
             Lista con la información de las aristas de la red.
         node_map: dict
             Un diccionario que mapea identificadores de nodos a vértices en la red.
@@ -43,7 +43,7 @@ class Network(object):
 
         Parameters
         ----------
-        graph : graph_tool.Graph
+        graph : `graph_tool.Graph <https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.Graph.html>`_
             Objeto Graph de graph-tool que representa la red.
 
         Returns
@@ -124,9 +124,11 @@ class Network(object):
         directed=True,
         weight=None,
     ):
-        """Crea una red a partir de un listado de aristas.
+        """
+        Crea una red a partir de un listado de aristas.
 
         Parameters
+        ------------
             df: pandas.DataFrame
                 El DataFrame que contiene la lista de aristas.
             source: str, default="source"
@@ -185,6 +187,7 @@ class Network(object):
         """Crea un grafo a partir de un listado de aristas.
 
         Parameters
+        ----------------
             df: pandas.DataFrame
                 El DataFrame que contiene la lista de aristas.
             source: str, default="source"
@@ -273,7 +276,7 @@ class Network(object):
             ver la documentación de `LayoutStrategy`.
 
         **kwargs : keyword arguments
-            Argumentos que se pasarán al método de distribución de nodos.
+            Argumentos nombrados que se pasarán al método de distribución de nodos.
             Los argumentos disponibles dependen del método seleccionado, para más información
             ver la documentación de `LayoutStrategy`.
 
@@ -288,9 +291,7 @@ class Network(object):
 
         - Si `method` es "force-directed", se usa ForceDirectedLayout para posicionar los nodos.
         - Si `method` es "precomputed", se usa PrecomputedLayout.
-        - Si `method` is "geographical", se usa GeographicalLayout. Este método requiere que se entregue un GeoDataFrame
-        (`geodataframe`) y el nombre de una columna en este (`node_column`) para mapear nodos a posiciones en un mapa.
-        Si  no se especifica el nombre de la columna, se usa "node_column" por defecto.
+        - Si `method` is "geographical", se usa GeographicalLayout. Este método requiere que se entregue un GeoDataFrame (`geodataframe`) y el nombre de una columna en este (`node_column`) para mapear nodos a posiciones en un mapa. Si  no se especifica el nombre de la columna, se usa "node_column" por defecto.
         - Si `method` es "radial", se usa RadialLayout.
 
         Luego de aplicar el método de distribución para posicionar los nodos, se invoca al método  `build_edge_data`
@@ -330,29 +331,96 @@ class Network(object):
 
     @property
     def num_vertices(self):
+        """
+        Retorna la cantidad de vértices en la red.
+
+        Returns
+        -------------
+        int
+        """
         return self.network.num_vertices()
 
     @property
     def num_edges(self):
+        """
+        Retorna la cantidad de aristas en la red.
+
+        Returns
+        -------------
+        int
+        """
         return self.network.num_edges()
 
     @property
     def vertices(self):
+        """
+        Retorna un iterador que recorre la lista de vértices de la red.
+        El orden en el cual se itera sobre los vértices corresponde al orden del índice de los vértices.
+
+        Returns
+        -------------
+         :meth:`iterator <iterator.__iter__>` 
+        """
         return self.network.vertices()
 
     @property
     def edges(self):
+        """
+        Retorna un iterador que reccore la lista de aristas de la red.
+
+        Returns
+        -------------
+         :meth:`iterator <iterator.__iter__>` 
+        """
         return self.network.edges()
 
     @property
     def is_directed(self):
+        """
+        Indica si el grafo es dirigido o no.
+
+        Returns
+        -------------
+        Bool
+        """
         return self.network.is_directed()
 
     @property
     def graph(self):
+        """
+        El grafo que almacena la estructura de red.
+
+        Returns
+        ---------
+        `graph_tool.Graph <https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.Graph.html>`_
+        """
         return self.network
 
     def shortest_path(self, src, dst, *args, **kwargs):
+        """
+        Encuentra todos los caminos más cortos entre dos nodos en la red.
+
+        Parameters
+        -------------
+        src : int
+            Identificador del nodo de origen.
+        dst : int
+            Identificador del nodo de destino.
+        *args : argumentos posicionales
+            Argumentos posicionales adicionales para pasar al algoritmo de camino más corto.
+            Una lista completa de las opciones disponibles se encuentra en la documentación de `graph-tool <https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.topology.all_shortest_paths.html#graph-tool-topology-all-shortest-paths>`_.
+        **kwargs : argumentos de palabras clave
+            Argumentos de palabras clave adicionales para pasar al algoritmo de camino más corto.
+            Una lista completa de las opciones disponibles se encuentra en la documentación de `graph-tool <https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.topology.all_shortest_paths.html#graph-tool-topology-all-shortest-paths>`_.
+
+        Returns
+        ----------
+        List[List[str]]
+            Una lista de caminos más cortos, donde cada camino está representado como una lista de etiquetas de nodos.
+            Las etiquetas se obtienen a partir del mapeo `id_to_label`.
+
+        """
+
         paths = list(
             graph_tool.topology.all_shortest_paths(
                 self.network, self.node_map[src], self.node_map[dst], *args, **kwargs

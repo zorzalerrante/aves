@@ -7,7 +7,7 @@ class Edge(object):
     """
     Una arista que conecta dos vértices en un espacio bidimensional.
 
-    Attributes:
+    Attributes
     --------------
     source : ArrayLike
         Posicion de vértice de origen de la arista.
@@ -30,6 +30,9 @@ class Edge(object):
 
     """
     def __init__(self, source, target, source_idx, target_idx, index=-1):
+        """
+        
+        """
         self.source = source
         self.target = target
 
@@ -52,7 +55,7 @@ class Edge(object):
         """
         Devuelve el vector unitario que representa la arista. El vector se calcula como el desplazamiento entre el origen y el destino.
 
-        Returns:
+        Returns
         ---------
         numpy.ndarray
             Vector que representa la arista.
@@ -66,7 +69,7 @@ class Edge(object):
         Si los vértices son puntos cercanos según una tolerancia definida como 1e-6, se establece
         una longitud mínima equivalente a esta para evitar divisiones por cero.
 
-        Returns:
+        Returns
         ----------
         float
             Longitud de la arista.
@@ -78,12 +81,12 @@ class Edge(object):
         """
         Proyecta un punto en la arista.
 
-        Parameters:
+        Parameters
         ------------
         point : numpy.ndarray
             Punto a proyectar.
 
-        Returns:
+        Returns
         ---------
         numpy.ndarray
             Punto proyectado.

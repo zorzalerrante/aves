@@ -366,7 +366,7 @@ class GeographicalLayout(LayoutStrategy):
         """
         Inicializa una estrategia de organización de nodos que utiliza posiciones geográficas para posicionar los nodos.
 
-        Parámetros
+        Parameters
         ----------
         network : Network
             La red a la cual se aplicará la estrategia de diseño.

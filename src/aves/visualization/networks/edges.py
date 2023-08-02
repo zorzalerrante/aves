@@ -12,24 +12,64 @@ from aves.visualization.primitives import RenderStrategy
 
 
 class EdgeStrategy(RenderStrategy):
-    """An interface to methods to render edges"""
+    """Una interfaz para los métodos de visualziación de aristas."""
 
     def __init__(self, network: Network, **kwargs):
+        """
+        Inicializa una estrategia de representación de aristas.
+
+        Parameters
+        ----------
+        network : Network
+            La red sobre la cual se aplicará el método de representación de aristas.
+        **kwargs : dict
+            Argumentos adicionales (sin uso).
+
+        """
         self.network = network
         super().__init__(self.network.edge_data)
 
     def name(self):
+        """
+        Retorna el nombre de la estrategia.
+
+        Returns
+        -------
+        str
+            El nombre de la estrategia de representación de aristas.
+
+        """
         return "strategy-name"
 
 
 class PlainEdges(EdgeStrategy):
-    """All edges are rendered with the same color"""
+    """Estrategia para renderizar las aristas del grafo en la cual las aristas tienen un aspecto uniforme."""
 
     def __init__(self, network, **kwargs):
+        """
+        Inicializa una estrategia de visualización de aristas con un único color y aspecto uniforme.
+
+        Parameters
+        ----------
+        network : Network
+            La red sobre la cual se aplicará el método de representación de aristas.
+        **kwargs : dict
+            Argumentos adicionales (sin uso).
+
+        """
         super().__init__(network)
         self.lines = None
 
     def prepare_data(self):
+        """
+        Prepara los datos de las aristas para su visualización.
+        
+        Extrae las coordenadas de las aristas y las almacena en el atributo `lines`.
+
+        Returns
+        -------
+        None
+        """
         self.lines = []
 
         for edge in self.data:
@@ -46,6 +86,31 @@ class PlainEdges(EdgeStrategy):
         alpha=0.75,
         **kwargs,
     ):
+        """
+        Agrega las aristas a la visualización de la red.
+
+        Parameters
+        ----------
+        ax : Matplotlib Axes
+            Los ejes en los cuales se dibujará la red.
+        color : str, default= "#abacab", optional
+            El color de las aristas. Puede indicarse por su representación hexadecimal o nombre.
+        linewidth : float, default=1.0, optional
+            El grosor de las aristas.
+        linestyle : str, default="solid", optional
+            El estilo de línea de las aristas.
+        alpha : float, default=0.75, optional
+            La transparencia de las aristas.
+        **kwargs : dict
+            Argumentos adicionales que permiten personalizar la visualización. Una lista completa
+            de las opciones disponibles se encuentra en la documentación de la librería `Matplotlib<https://matplotlib.org/stable/api/collections_api.html#matplotlib.collections.LineCollection>`_.
+
+        Returns
+        -------
+        LineCollection
+            Una colección de líneas que representa las aristas en el gráfico.
+
+        """
         collection = LineCollection(
             self.lines,
             color=color,
@@ -61,9 +126,41 @@ class PlainEdges(EdgeStrategy):
 
 
 class WeightedEdges(EdgeStrategy):
-    """Colors encode edge weight"""
+    """
+    Método para renderizar aristas del grafo en el cual las aristas tienen un peso asociado.
+    El color de cada arista es determinado por su peso.
+
+    Attributes
+    ------------
+    network : Network
+        Objeto Network que representa la red.
+    k : int
+        El número de grupos o bins para categorizar las aristas según sus pesos.
+    bins : np.array o None
+        Los límites de los bins para los pesos categorizados.
+    weights : np.array o None
+        Los pesos de las aristas a utilizar para el renderizado.
+    lines : np.array o None
+        Las coordenadas de las aristas a renderizar.
+
+    """
 
     def __init__(self, network, weights, k, **kwargs):
+        """
+        Inicializa el objeto WeightedEdges.
+
+        Parameters
+        ----------
+        network : Network
+            Objeto Network que representa la red.
+        weights : str o np.array o None, default=None, optional
+            Los pesos de las aristas a utilizar para el renderizado. Si es str, especifica el nombre de la propiedad
+            de la arista que contiene los pesos. Si es np.array, proporciona los pesos directamente. Si es None, no se utilizan pesos.
+        k : int
+            El número de grupos o bins para categorizar las aristas según sus pesos.
+        **kwargs : dict, opcional
+            Argumentos adicionales. (sin uso)
+        """
         super().__init__(network)
         # self.edge_data_per_group = {i: [] for i in range(k)}
         # self.strategy_per_group = {
@@ -75,6 +172,16 @@ class WeightedEdges(EdgeStrategy):
         self.lines = None
 
     def prepare_data(self):
+        """
+        Prepara los datos para renderizar las aristas. Almacena las coordenadas de las aristas en el atributo `lines` y divide las aristas
+        en `k`  grupos según su peso.
+
+        Raises
+        ------
+        ValueError
+            Si el atributo `weights` no corresponde a una propiedad de las aristas del grafo (en caso de ser un string)
+            o si no se almacena como un np.array.
+        """
         self.lines = []
 
         for edge in self.data:
@@ -103,6 +210,26 @@ class WeightedEdges(EdgeStrategy):
         self.line_groups = groups
 
     def render(self, ax, *args, **kwargs):
+        """
+        Renderiza las aristas en la visualización de la red
+
+        Parameters
+        ------------
+        ax : Axes
+            El eje en el cual se dibujará el grafo.
+        palette: str, optional
+            Nombre de la paleta de colores a usar.
+        color: str
+            Color a partir del cual crear la paleta de colores.
+        **kwargs : optional
+            Argumentos adicionales que permiten personalizar la visualización. Una lista completa
+            de las opciones disponibles se encuentra en la documentación de la librería `Matplotlib<https://matplotlib.org/stable/api/collections_api.html#matplotlib.collections.LineCollection>`_.
+
+        Returns
+        -------
+        list
+            Una lista de objetos LineCollection que representan las aristas renderizadas para cada grupo.
+        """
         palette = kwargs.pop("palette", None)
 
         if palette is None:
@@ -132,15 +259,52 @@ class WeightedEdges(EdgeStrategy):
 
 
 class CommunityGradient(EdgeStrategy):
-    """Colors encode communities of each node at the edges"""
+    """
+    Método para renderizar aristas de una red que tiene comunidades de nodos. Cada extremo de una arista es
+    coloreado según la comunidad del nodo del cual entra o sale.
+
+    Parameters
+    ----------
+    network : Network
+        Objeto Network que representa la red.
+    node_communities : np.array
+        Un array numpy que indica a qué comunidad pertenece cada nodo.
+
+    Attributes
+    ------------
+    network : Network
+        Objeto Network que representa la red.
+    node_communities : np.array
+        Un array numpy que indica a qué comunidad pertenece cada nodo.
+    community_ids : list
+        Una lista de identificadores únicos de las comunidades.
+    community_links : defaultdict
+        Un diccionario que mapea pares de comunidades a objetos ColoredCurveCollection, que almacenan las aristas entre esas comunidades.
+    """
 
     def __init__(self, network, node_communities, **kwargs):
+        """
+        Inicializa el objeto CommunityGradient.
+
+        Parameters
+        ----------
+        network : Network
+            Objeto Network que representa la red.
+        node_communities : np.array
+            Un array numpy que indica a qué comunidad pertenece cada nodo.
+        **kwargs : dict, opcional
+            Argumentos adicionales (sin uso).
+        """
         super().__init__(network)
         self.node_communities = node_communities
         self.community_ids = sorted(unique(node_communities))
         self.community_links = defaultdict(ColoredCurveCollection)
 
     def prepare_data(self):
+        """
+        Prepara los datos para renderizar las aristas, identificando la comunidad de cada nodo participante de la arista. Almacena
+        las líneas a trazar en el atributo `community_links`.
+        """
         for edge_data in self.data:
             pair = (
                 self.node_communities[int(edge_data.index_pair[0])],
@@ -151,6 +315,22 @@ class CommunityGradient(EdgeStrategy):
             self.community_links[pair].add_curve(edge_data.points, 1)
 
     def render(self, ax, *args, **kwargs):
+        """
+        Renderiza las aristas de la red en una visualización. 
+
+        Parameters
+        ------------
+        ax : Axes
+            Los ejes Matplotlib donde se dibujarán las aristas.
+        *args : optional
+            Argumentos posicionales adicionales para configurar la visualización. Una lista completa se encuentra en la documentación
+            de `Matplotlib<https://matplotlib.org/stable/api/collections_api.html#matplotlib.collections.LineCollection>`_.
+        palette : string, default="plasma", optional
+            Paleta de colores a usar en el trazado de las aristas.
+        **kwargs : optional
+            Argumentos adicionales para configurar la visualización. Una lista completa se encuentra en la documentación
+            de `Matplotlib<https://matplotlib.org/stable/api/collections_api.html#matplotlib.collections.LineCollection>`_.
+        """
         community_colors = dict(
             zip(
                 self.community_ids,
@@ -171,14 +351,42 @@ class CommunityGradient(EdgeStrategy):
 
 
 class ODGradient(EdgeStrategy):
-    """Colors encode direction of edges"""
+    """
+    Estrategia para renderizar aristas de una red en la cual el color de cada extremo de la arista
+    indica si el nodo correspondiente es el origen o el destino de la arista. Este método solo funciona
+    en visualizaciones de grafos dirigidos.
+    
+    Attributes
+    ------------
+    network : Network
+        La red a visualizar.
+    n_points : int
+        Número de puntos para interpolar las aristas al colorearlas.
+    colored_curves : ColoredCurveCollection
+        Colección de líneas que almacena las aristas.
+    """
 
     def __init__(self, network, n_points, **kwargs):
+        """
+        Inicializa el objeto ODGradient.
+
+        Parameters
+        ------------
+        network : Network
+            La red a visualizar.
+        n_points : int
+            Número de puntos para interpolar en las aristas al colorearlas.
+        **kwargs : dict, optional
+            Argumentos adicionales (sin uso).
+        """
         super().__init__(network)
         self.n_points = n_points
         self.colored_curves = ColoredCurveCollection()
 
     def prepare_data(self):
+        """
+        Prepara los datos para renderizar las aristas. Almacena las líneas a trazar en el atributo `colored_curves`.
+        """
         interp = np.linspace(0, 1, num=self.n_points, endpoint=True)
 
         for edge_data in self.data:
@@ -203,6 +411,25 @@ class ODGradient(EdgeStrategy):
             self.colored_curves.add_curve(points, 1)
 
     def render(self, ax, *args, **kwargs):
+        """
+        Renderiza las aristas de la red en una visualización. 
+
+        Parameters
+        ------------
+        ax : Axes
+            Los ejes Matplotlib donde se dibujarán las aristas.
+        *args : optional
+            Argumentos posicionales adicionales para configurar la visualización. Una lista completa se encuentra en la documentación
+            de `Matplotlib<https://matplotlib.org/stable/api/collections_api.html#matplotlib.collections.LineCollection>`_.
+        source_color : string, default="blue", optional
+            Color que se usará para el extremo "origen" de la arista.
+        target_color : string, default="red", optional
+            Color que se usará para el extremo "destino" de la arista.
+        **kwargs : optional
+            Argumentos adicionales para configurar la visualización. Una lista completa se encuentra en la documentación
+            de `Matplotlib<https://matplotlib.org/stable/api/collections_api.html#matplotlib.collections.LineCollection>`_.
+        """
+
         self.colored_curves.set_colors(
             source=kwargs.pop("source_color", "blue"),
             target=kwargs.pop("target_color", "red"),

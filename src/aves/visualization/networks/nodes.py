@@ -10,23 +10,93 @@ from aves.visualization.primitives import RenderStrategy
 
 
 class NodeStrategy(RenderStrategy):
-    """An interface to methods to render nodes"""
+    """
+    Interfaz para las estrategias de renderización de nodos.
+
+    Attributes
+    ------------
+    network : Network
+        La red a visualizar.
+
+    """
 
     def __init__(self, network: Network, **kwargs):
+        """
+        Inicializa el objeto NodeStrategy.
+
+        Parameters
+        ------------
+        network : Network
+            La red a visualizar.
+        **kwargs : dict, opcional
+            Argumentos adicionales (sin uso).
+        """
         self.network = network
         super().__init__(network.node_layout.node_positions_vector)
 
     def prepare_data(self):
+        """
+        Prepara los datos antes de renderizar los nodos.
+        """
         pass
 
     def name(self):
+        """
+        Retorna el nombre de la estrategia.
+
+        Returns
+        -------
+        str
+            El nombre de la estrategia de representación de aristas.
+
+        """
         return "node-strategy"
 
 
 class PlainNodes(NodeStrategy):
-    """All nodes are rendered as a scatterplot"""
+    """
+    Estrategia para renderizar nodos de un grafo que visualiza estos como puntos en el plano. Permite ajustar el color y tamaño
+    de los vértices en la visualización según la categoría o peso de estos.
+
+    Attributes
+    -----------
+    network : Network
+        La red/grafo a visualizar.
+    weights : np.array
+        Un arreglo que representa los pesos de los nodos. Si no es proporcionado, todos los nodos tendrá el mismo tamaño.
+    size : np.array
+        Un arreglo que almacena los tamaños de los nodos escalados en base a sus pesos.
+    node_categories : str or list, optional
+        Categorías de los nodos para colorearlos de acuerdo a estas. Puede ser un nombre de propiedad de vértice (str) o una lista de categorías.
+    unique_categories : list, optional
+        Lista de categorías únicas para colorear los nodos, si se proporcionan categorías.
+
+    """
 
     def __init__(self, network: Network, **kwargs):
+        """
+        Inicializa el objeto PlainNodes.
+
+        Parameters
+        ----------
+        network : Network
+            La red a visualizar.
+        weights : str or array-like or None, optional
+            Si se provee un string, este debe corresponder a una propiedad de vértice `network` a partir de la cual se calculará el peso.
+            
+            Si se entrega un arreglo, este representa el peso de los nodos. Esto determina el tamaño de los nodos en la visualización;
+            si no es provisto, todos los nodos serán del mismo tamaño.
+        node_categories : str or array-like, optional
+            Un string o una lista que define las categorías de los nodos. Si es entregado, los nodos serán coloreados 
+            según su categoría.
+
+        Raises
+        ------
+        ValueError
+            Si el string entregado como peso no corresponde a una propiedad de vértice válida.
+            Si los pesos son provistos pero no son del tipo `numpy array` o no tienen un estructura de arreglo.
+    
+        """
         super().__init__(network, **kwargs)
 
         weights = kwargs.get("weights", None)
@@ -61,10 +131,33 @@ class PlainNodes(NodeStrategy):
             self.unique_categories = None
 
     def prepare_data(self):
+        """
+        Prepara los datos antes de renderizar los vérticas, escalando el tamaño de cada nodo en base a su peso en caso de tener.
+        El resultado de esta operación queda almacenado en `size`.
+        """
         if self.weights is not None:
             self.size = minmax_scale(np.sqrt(self.weights), feature_range=(0.01, 1.0))
 
     def render(self, ax, *args, **kwargs):
+        """
+        Renderiza los nodos en una visualización.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            Los ejes donde se dibujarán los nodos.
+        node_size : int o float, default=10 optional
+            El tamaño de los nodos en el gráfico.
+        palette : str o lista de colores, default=plasma, optional
+            La paleta de colores utilizada para mapear las categorías de los nodos a colores.
+    
+        Raises
+        ------
+        ValueError
+            Si el númer de colores en la paleta no coincide con la cantidad de categorías.
+            Si la paleta no tiene un nombre válido (según la librería Seaborn) o no corresponde a un iterable de colores.
+            
+        """
         node_size = kwargs.pop("node_size", 10)
 
         if self.node_categories is not None:
@@ -111,7 +204,40 @@ class PlainNodes(NodeStrategy):
 
 
 class LabeledNodes(PlainNodes):
+    """
+    Estrategia para renderizar nodos que los representa como puntos en el plano, junto a su etiqueta.
+
+Esta clase hereda de PlainNodes y añade la capacidad de agregar etiquetas de texto a los nodos en el gráfico.
+
+    Attributes
+    ----------
+    network : Network
+        La red a visualizar.
+    label_property : str
+        El nombre de la propiedad de vértice que contiene las etiquetas de texto para los nodos, en `network`.
+    labels : list(tuple)
+        Una lista que contiene las etiquetas de texto junto a sus coordenadas y cofiguración para cada nodo en el gráfico.
+    radial : bool, optional
+        Un valor booleano que indica si las etiquetas se deben representar radialmente alrededor del nodo.
+    offset : float, optional
+        Un valor que controla la distancia radial de las etiquetas desde los nodos si `radial` es True,
+
+    """
     def __init__(self, network: Network, label_property, **kwargs):
+        """
+        Parameters
+        ----------
+         network : Network
+            La red a visualizar.
+        label_property : str
+            El nombre de la propiedad de vértice que contiene las etiquetas de texto para los nodos, en `network`.
+        labels : list
+            Una lista que contiene las coordenadas, las etiquetas de texto y los argumentos de texto para cada nodo en el gráfico.
+        radial : bool, default=False, optional
+            Indica si las etiquetas se deben representar radialmente alrededor del nodo.
+        offset : float, default=0.0, optional
+            Controla la distancia radial de las etiquetas desde los nodos si `radial` es True,
+        """
         super().__init__(network, **kwargs)
         self.labels = []
         self.label_property = label_property
@@ -120,6 +246,10 @@ class LabeledNodes(PlainNodes):
         self.offset = kwargs.get("offset", 0.0)
 
     def prepare_data(self):
+        """
+        Prepara los datos antes de representar los nodos. Llama al método de la clase base `PlainNodes` y
+        luego para cada nodo agrega su etiqueta, su posición en el plano y la configuración del texto al atributo `labels`.
+        """
         super().prepare_data()
 
         graph = self.network.graph
@@ -156,6 +286,22 @@ class LabeledNodes(PlainNodes):
                 self.labels.append((pos, label, text_args))
 
     def render(self, ax, *args, **kwargs):
+        """
+        Renderiza los nodos en el plano especificado, junto a sus etiquetas.
+
+        Parameters
+        ------------
+        ax : matplotlib.axes.Axes
+            Los ejes donde se dibujarán los nodos.
+        node_size : int o float, default=10 optional
+            El tamaño de los nodos en el gráfico.
+        palette : str o lista de colores, default=plasma, optional
+            La paleta de colores utilizada para mapear las categorías de los nodos a colores.
+        fontsize : str o int, default="medium", optional
+            El tamaño de fuente para las etiquetas de texto.
+        text_color : str, default="white", optional
+            El color del texto.
+        """
         fontsize = kwargs.pop("fontsize", "medium")
         text_color = kwargs.pop("text_color", "white")
 

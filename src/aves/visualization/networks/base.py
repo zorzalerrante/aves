@@ -82,6 +82,8 @@ class NodeLink(object):
                 self.network,
                 kwargs.get("weights", "edge_weight"),
                 kwargs.get("k", 5),
+                kwargs.get("scheme", "bins"),
+                kwargs.get('bins', None)
             )
         elif method == "origin-destination":
             if not self.network.is_directed:

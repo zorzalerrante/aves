@@ -15,7 +15,12 @@ def load_json_values(x):
 
 
 def explode_tags(df):
-    return df.join(pd.DataFrame.from_records(df["tags"].map(load_json_values)))
+    tag_df = pd.DataFrame.from_records(df["tags"].map(load_json_values))
+    for col in df:
+        if col in tag_df.columns:
+            tag_df = tag_df.rename({col: f'{col}_json_tags'}, axis=1)
+
+    return df.join(tag_df)
 
 
 osm_to_tax = {

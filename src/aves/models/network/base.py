@@ -43,7 +43,7 @@ class Network(object):
 
         Parameters
         ----------
-        graph : `graph_tool.Graph <https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.Graph.html>`_
+        graph : graph_tool.Graph
             Objeto Graph de graph-tool que representa la red.
 
         Returns
@@ -285,13 +285,15 @@ class Network(object):
         None
 
         Notes
-        -----
+        -------
         La función utiliza un método de organización según el argumento `method` especificado al invocar la función.
         Los métodos disponibles son "force-directed", "precomputed", "geographical", and "radial".
 
         - Si `method` es "force-directed", se usa ForceDirectedLayout para posicionar los nodos.
         - Si `method` es "precomputed", se usa PrecomputedLayout.
-        - Si `method` is "geographical", se usa GeographicalLayout. Este método requiere que se entregue un GeoDataFrame (`geodataframe`) y el nombre de una columna en este (`node_column`) para mapear nodos a posiciones en un mapa. Si  no se especifica el nombre de la columna, se usa "node_column" por defecto.
+        - Si `method` is "geographical", se usa GeographicalLayout. Este método requiere que se entregue un GeoDataFrame (`geodataframe`)
+        y el nombre de una columna en este (`node_column`) para mapear nodos a posiciones en un mapa. Si  no se especifica el nombre de la
+        columna, se usa "node_column" por defecto.
         - Si `method` es "radial", se usa RadialLayout.
 
         Luego de aplicar el método de distribución para posicionar los nodos, se invoca al método  `build_edge_data`
@@ -473,7 +475,7 @@ class Network(object):
 
     Notes
     --------
-    Para saber más sobre cómo hacer los filtros en base a PropertyMaps, leer la documentación correspondiente de `Graph Tool<https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.PropertyMap.html#graph_tool.PropertyMap>`_. 
+    Para saber más sobre cómo hacer los filtros en base a PropertyMaps, leer la documentación correspondiente de `Graph-Tool <https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.PropertyMap.html#graph_tool.PropertyMap>`_. 
 
     Examples
     --------
@@ -687,22 +689,19 @@ class Network(object):
         Detecta comunidades de nodos en el grafo utilizando el modelo de detección especificado. 
         Las comunidades son grupos de nodos que estén altamente conectados entre sí en comparación con las conexiones de los demás nodos.
 
-        Si `method` es "sbm", se utilizará el modelo de bloque estocástico para la detección de comunidades.
-        El resultado será almacenado en `self.state`. Para más información acerca del algoritmo usado, ver la
-        `documentación <https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.inference.minimize_blockmodel_dl.html#graph_tool.inference.minimize_blockmodel_dl>`_.
+         Si `method` es "sbm", se utilizará el modelo de bloque estocástico para la detección de comunidades. El resultado será almacenado en `self.state`. Para más información acerca del algoritmo usado, ver la `documentación <https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.inference.minimize_blockmodel_dl.html#graph_tool.inference.minimize_blockmodel_dl>`_.
 
-        Si `method` es "hierarchical", se utilizará el modelo jerárquico para la detección de comunidades. Se construirá el árbol de comunidades
-        (community_tree) y se almacenará la raíz del árbol (community_root) en `self.community_tree` y `self.community_root` respectivamente.
-        También se calcularán los niveles de comunidades por nodo y se almacenarán en `self.communities_per_level`.
-        Para más información acerca del algoritmo usado, referirse a la documentación de `Graph_Tool<https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.inference.minimize_nested_blockmodel_dl.html>`_.
+         Si `method` es "hierarchical", se utilizará el modelo jerárquico para la detección de comunidades. Se construirá el árbol de comunidades
+         (community_tree) y se almacenará la raíz del árbol (community_root) en `self.community_tree` y `self.community_root` respectivamente. También se calcularán los niveles de comunidades por nodo y se almacenarán en `self.communities_per_level`.
+         Para más información acerca del algoritmo usado, referirse a la documentación de `Graph_Tool <https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.inference.minimize_nested_blockmodel_dl.html>`_.
 
-        Si `method` es "ranked", se utilizará el modelo clasificado (ranked) para la detección de comunidades.
-        Para más información acerca del algoritmo usado, referirse a la documentación de `Graph_Tool<https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.inference.minimize_nested_blockmodel_dl.html>`_.
+         Si `method` es "ranked", se utilizará el modelo clasificado (ranked) para la detección de comunidades. Para más información acerca del algoritmo usado, referirse a la documentación de `Graph_Tool <https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.inference.minimize_nested_blockmodel_dl.html>`_.
 
         Después de ejecutar el algoritmo de detección de comunidades correspondiente, se asignarán las etiquetas de comunidad
         a los nodos del grafo y se almacenarán en `self.network.vertex_properties["community"]`.
 
         El resultado final de la detección de comunidades se almacenará en las siguientes propiedades de la red:
+
         - self.state: Estado del modelo de detección de comunidades.
         - self.community_tree: Árbol de comunidades (solo si method es "hierarchical").
         - self.community_root: Raíz del árbol de comunidades (solo si method es "hierarchical").
@@ -720,7 +719,7 @@ class Network(object):
         hierarchical_covariate_type : str, default="real-exponential"
             Tipo de covariante utilizada en la detección de comunidades jerárquicas. Solo se aplica si `method` es "hierarchical".
             Puede ser "real-exponential" (real-exponencial) u otro tipo de covariante compatible, para más información
-            referirse a la documentacion de `GraphTool<https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.inference.BlockState.html#graph_tool.inference.BlockState>`_.
+            referirse a la documentacion de `GraphTool <https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.inference.BlockState.html#graph_tool.inference.BlockState>`_.
 
         """
         np.random.seed(random_state)

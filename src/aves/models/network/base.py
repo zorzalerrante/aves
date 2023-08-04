@@ -210,10 +210,16 @@ class Network(object):
     def graph(self):
         return self.network
 
-    def shortest_path(self, src, dst, *args, **kwargs):
+    def shortest_path(self, src, dst, **kwargs):
+        weights = kwargs.pop("weights", self._edge_weight)
+
         paths = list(
             graph_tool.topology.all_shortest_paths(
-                self.network, self.node_map[src], self.node_map[dst], *args, **kwargs
+                self.network,
+                self.node_map[src],
+                self.node_map[dst],
+                weights=weights,
+                **kwargs,
             )
         )
 
@@ -286,9 +292,11 @@ class Network(object):
 
         return degree
 
-    def estimate_betweenness(self, update_nodes=False, update_edges=False):
+    def estimate_betweenness(self, **kwargs):
+        weight = kwargs.pop("weight", self._edge_weight)
+
         node_centrality, edge_centrality = graph_tool.centrality.betweenness(
-            self.network
+            self.network, weight=weight, **kwargs
         )
 
         self.network.edge_properties["betweenness"] = edge_centrality
@@ -296,9 +304,11 @@ class Network(object):
 
         return node_centrality, edge_centrality
 
-    def estimate_pagerank(self, damping=0.85):
+    def estimate_pagerank(self, **kwargs):
+        weight = kwargs.pop("weight", self._edge_weight)
+
         node_centrality = graph_tool.centrality.pagerank(
-            self.network, weight=self._edge_weight
+            self.network, weight=weight, **kwargs
         )
 
         self.network.vertex_properties["pagerank"] = node_centrality

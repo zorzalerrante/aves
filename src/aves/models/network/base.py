@@ -68,6 +68,7 @@ class Network(object):
         target="target",
         directed=True,
         weight=None,
+        allow_negative_weights=False,
     ):
         source_attr = f"{source}__mapped__"
         target_attr = f"{target}__mapped__"
@@ -89,6 +90,7 @@ class Network(object):
             target_attr,
             weight_column=weight,
             directed=directed,
+            allow_negative_weights=allow_negative_weights,
         )
 
         network.vertex_properties["elem_id"] = network.new_vertex_property(
@@ -108,14 +110,14 @@ class Network(object):
         target_column,
         weight_column=None,
         directed=True,
-        remove_empty=True,
+        allow_negative_weights=False,
     ) -> graph_tool.Graph:
         network = graph_tool.Graph(directed=directed)
         n_vertices = max(df[source_column].max(), df[target_column].max()) + 1
         network.add_vertex(n_vertices)
 
         if weight_column is not None and weight_column in df.columns:
-            if remove_empty:
+            if not allow_negative_weights:
                 df = df[df[weight_column] > 0]
             weight_prop = network.new_edge_property("double")
             network.add_edge_list(
@@ -231,6 +233,7 @@ class Network(object):
         vertex_filter=None,
         edge_filter=None,
         keep_positions=True,
+        remove_isolated=True,
         copy=False,
     ):
         if nodes is not None:
@@ -243,6 +246,10 @@ class Network(object):
             ).copy()
         else:
             raise ValueError("at least one filter must be specified")
+
+        if remove_isolated:
+            degree = view.get_total_degrees(list(view.vertices()))
+            view = graph_tool.GraphView(view, vfilt=degree > 0).copy()
 
         old_vertex_ids = set(map(int, view.vertices()))
 

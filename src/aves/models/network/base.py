@@ -251,6 +251,10 @@ class Network(object):
             degree = view.get_total_degrees(list(view.vertices()))
             view = graph_tool.GraphView(view, vfilt=degree > 0).copy()
 
+        if remove_isolated:
+            degree = view.get_total_degrees(list(view.vertices()))
+            view = graph_tool.GraphView(view, vfilt=degree > 0).copy()
+
         old_vertex_ids = set(map(int, view.vertices()))
 
         if keep_positions and self.node_layout is not None:

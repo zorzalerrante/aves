@@ -18,13 +18,16 @@ def scatterplot(
     drop_na=False,
     adjustment_args={"lim": 5},
     label_filter_func=None,
+    legend_args=None,
 ):
     if not drop_na:
         df = df.fillna(na_value)
     else:
         df = df.dropna()
 
-    sns.scatterplot(data=df, x=x, y=y, hue=hue, ax=ax, **scatter_args)
+    g = sns.scatterplot(data=df, x=x, y=y, hue=hue, ax=ax, **scatter_args)
+    if legend_args is not None:
+        g.legend(**legend_args)
     ax.ticklabel_format(useOffset=False, style="plain")
     sns.despine(ax=ax)
 

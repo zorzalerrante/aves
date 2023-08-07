@@ -145,7 +145,7 @@ class WeightedEdges(EdgeStrategy):
 
     """
 
-    def __init__(self, network, weights, k, **kwargs):
+    def __init__(self, network, weights, k, scheme, bins, **kwargs):
         """
         Inicializa el objeto WeightedEdges.
 
@@ -158,8 +158,19 @@ class WeightedEdges(EdgeStrategy):
             de la arista que contiene los pesos. Si es np.array, proporciona los pesos directamente. Si es None, no se utilizan pesos.
         k : int
             El número de grupos o bins para categorizar las aristas según sus pesos.
+        scheme: string
+            Estrategia para categorizar las aristas. Puede ser por número de grupos, por cuantiles o personalizada.
+        bins: int, sequence of scalars, o IntervalIndex
+            Los límites de los rangos de las categorías en caso de que `scheme` sea `custom`.
+
         **kwargs : dict, opcional
             Argumentos adicionales. (sin uso)
+        
+        Raises
+        --------
+        ValueErrror
+            Si `scheme` no corresponde a los valores aceptados.
+            Si la configuración personalizada resulta en un grupo con menos de dos aristas.
         """
         super().__init__(network)
         # self.edge_data_per_group = {i: [] for i in range(k)}
@@ -170,6 +181,16 @@ class WeightedEdges(EdgeStrategy):
         self.bins = None
         self.weights = weights
         self.lines = None
+        self.scheme = scheme
+        if not self.scheme in ('bins', 'quantiles', 'custom'):
+            raise ValueError('scheme must be bins, quantiles or custom')
+
+        if self.scheme == 'custom':
+            self.bins = np.array(bins)
+            if len(bins) < 2:
+                raise ValueError('bins must have at least two elements')
+            self.bins = bins
+            self.k = len(self.bins) - 1
 
     def prepare_data(self):
         """
@@ -187,9 +208,11 @@ class WeightedEdges(EdgeStrategy):
         for edge in self.data:
             self.lines.append(edge.points)
 
-        self.lines = np.array(self.lines)
+        self.lines: np.array = np.array(self.lines)
 
         weights = self.weights
+
+        print('lens', len(self.lines), len(weights))
 
         if type(weights) == str:
             if not weights in self.network.network.edge_properties:
@@ -203,10 +226,17 @@ class WeightedEdges(EdgeStrategy):
         if weights is not None and not type(weights) in (np.array, np.ndarray):
             raise ValueError(f"weights must be np.array instead of {type(weights)}.")
 
-        weights: np.array = weights
+        #weights: np.array = weights
+        print(self.scheme)
 
-        groups, bins = pd.cut(weights, self.k, labels=False, retbins=True)
-        self.bins = bins
+        if self.scheme == 'bins':
+            groups, bins = pd.cut(weights, self.k, labels=False, retbins=True, duplicates='raise')
+            self.bins = bins
+        elif self.scheme == 'quantiles':
+            groups, bins = pd.qcut(weights, self.k, labels=False, retbins=True, duplicates='raise')
+            self.bins = bins
+        else:
+            groups = pd.cut(weights, bins=self.bins, labels=False, retbins=False, duplicates='raise')
         self.line_groups = groups
 
     def render(self, ax, *args, **kwargs):
@@ -243,6 +273,7 @@ class WeightedEdges(EdgeStrategy):
 
         results = []
         for i in range(self.k):
+            print(len(self.lines), len(self.line_groups))
             coll_lines = self.lines[self.line_groups == i]
 
             coll = LineCollection(

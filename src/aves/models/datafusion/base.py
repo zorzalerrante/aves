@@ -90,7 +90,7 @@ class DataFusionModel(object):
 
         return list(zip(paths, relations))
 
-    def fit(self):
+    def fit(self, method='factorization'):
         self.types = dict(
             zip(
                 self.nodes.keys(),
@@ -123,7 +123,14 @@ class DataFusionModel(object):
 
         self.fusion_graph = fusion.FusionGraph(self.relations)
 
-        self.fuser = fusion.Dfmf(
+        if method == 'factorization':
+            fuser = fusion.Dfmf
+        elif method == 'completion':
+            fuser = fusion.Dfmc
+        else:
+            raise ValueError('method must be factorization or completion')
+
+        self.fuser = fuser(
             init_type=self.init_type, random_state=self.random_state, n_jobs=self.n_jobs
         )
 

@@ -123,6 +123,7 @@ class Network(object):
         target="target",
         directed=True,
         weight=None,
+        allow_negative_weights=False
     ):
         """
         Crea una red a partir de un listado de aristas.
@@ -163,6 +164,7 @@ class Network(object):
             target_attr,
             weight_column=weight,
             directed=directed,
+            allow_negative_weights=allow_negative_weights
         )
 
         network.vertex_properties["elem_id"] = network.new_vertex_property(
@@ -182,7 +184,7 @@ class Network(object):
         target_column,
         weight_column=None,
         directed=True,
-        remove_empty=True,
+        allow_negative_weights=False,
     ) -> graph_tool.Graph:
         """Crea un grafo a partir de un listado de aristas.
 
@@ -210,7 +212,7 @@ class Network(object):
         network.add_vertex(n_vertices)
 
         if weight_column is not None and weight_column in df.columns:
-            if remove_empty:
+            if not allow_negative_weights:
                 df = df[df[weight_column] > 0]
             weight_prop = network.new_edge_property("double")
             network.add_edge_list(
@@ -437,6 +439,7 @@ class Network(object):
         vertex_filter=None,
         edge_filter=None,
         keep_positions=True,
+        remove_isolated=True,
         copy=False,
     ):
         """
@@ -497,6 +500,10 @@ class Network(object):
             ).copy()
         else:
             raise ValueError("at least one filter must be specified")
+        
+        if remove_isolated:
+            degree = view.get_total_degrees(list(view.vertices()))
+            view = graph_tool.GraphView(view, vfilt=degree > 0).copy()
 
         old_vertex_ids = set(map(int, view.vertices()))
 
@@ -574,13 +581,20 @@ class Network(object):
 
         return degree
 
-    def estimate_betweenness(self):
+    def estimate_betweenness(self, weight=None, **kwargs):
         """
         Estima la centralidad de intermediación (betweenness centrality) para nodos y aristas en el grafo.
         La centralidad de intermediación es una medida de centralidad que cuantifica la importancia de un nodo o arista basándose
         en su prevalencia en los caminos más cortos entre todos los nodos del grafo.
         Los valores calculados también quedan almacenados en las propiedades de aristas y nodos del grafo asociados a la llave "betweenness".
     
+        Parameters
+        ------------
+        weight : PropertyMap, default=None
+            Diccionario con el peso de cada arista
+        **kwargs: argumentos de palabras clave
+            Argumentos de palabras clave adicionales para configurar el algoritmo.
+            Una lista completa de las opciones disponibles se encuentra en la documentación de `graph-tool <https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.centrality.betweenness.html#graph_tool.centrality.betweenness>`_.
 
         Returns
         -------
@@ -590,8 +604,12 @@ class Network(object):
             Valores de centralidad de intermediación para las aristas.
 
         """
+
+        if weight is None:
+            weight = self._edge_weight
+
         node_centrality, edge_centrality = graph_tool.centrality.betweenness(
-            self.network
+            self.network, weight=weight, *kwargs
         )
 
         self.network.edge_properties["betweenness"] = edge_centrality
@@ -599,7 +617,7 @@ class Network(object):
 
         return node_centrality, edge_centrality
 
-    def estimate_pagerank(self, damping=0.85):
+    def estimate_pagerank(self, damping=0.85, weight=None, **kwargs):
         """
         Calcula PageRank para cada nodo en la red.
         PageRank asigna una puntuación de importancia a cada nodo en función
@@ -614,6 +632,12 @@ class Network(object):
             El factor de amortiguación utilizado en el cálculo de PageRank. Especifica la
             probabilidad de que un navegante aleatorio continúe en un nodo en lugar de
             seguir un enlace saliente. Debe estar en el rango [0, 1].
+        weight : PropertyMap, default=None
+            Diccionario con el peso de cada arista
+
+        **kwargs: argumentos de palabras clave
+            Argumentos de palabras clave adicionales para configurar el algoritmo.
+            Una lista completa de las opciones disponibles se encuentra en la documentación de `graph-tool <https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.centrality.pagerank.html>`_.
 
         Returns
         -------
@@ -621,8 +645,11 @@ class Network(object):
             La puntuación de PageRank para cada nodo en la red.
 
         """
+        if weight is None:
+            weight = self._edge_weight
+        
         node_centrality = graph_tool.centrality.pagerank(
-            self.network, weight=self._edge_weight
+            self.network, weight=weight
         )
 
         self.network.vertex_properties["pagerank"] = node_centrality

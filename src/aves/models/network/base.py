@@ -123,7 +123,7 @@ class Network(object):
         target="target",
         directed=True,
         weight=None,
-        allow_negative_weights=False
+        allow_negative_weights=False,
     ):
         """
         Crea una red a partir de un listado de aristas.
@@ -164,7 +164,7 @@ class Network(object):
             target_attr,
             weight_column=weight,
             directed=directed,
-            allow_negative_weights=allow_negative_weights
+            allow_negative_weights=allow_negative_weights,
         )
 
         network.vertex_properties["elem_id"] = network.new_vertex_property(
@@ -400,7 +400,7 @@ class Network(object):
         """
         return self.network
 
-    def shortest_path(self, src, dst, *args, **kwargs):
+    def shortest_path(self, src, dst, **kwargs):
         """
         Encuentra todos los caminos más cortos entre dos nodos en la red.
 
@@ -425,9 +425,14 @@ class Network(object):
 
         """
 
+        weights = kwargs.pop("weights", self._edge_weight)
         paths = list(
             graph_tool.topology.all_shortest_paths(
-                self.network, self.node_map[src], self.node_map[dst], *args, **kwargs
+                self.network,
+                self.node_map[src],
+                self.node_map[dst],
+                weights=weights,
+                **kwargs,
             )
         )
 
@@ -500,7 +505,11 @@ class Network(object):
             ).copy()
         else:
             raise ValueError("at least one filter must be specified")
-        
+
+        if remove_isolated:
+            degree = view.get_total_degrees(list(view.vertices()))
+            view = graph_tool.GraphView(view, vfilt=degree > 0).copy()
+
         if remove_isolated:
             degree = view.get_total_degrees(list(view.vertices()))
             view = graph_tool.GraphView(view, vfilt=degree > 0).copy()
@@ -581,7 +590,7 @@ class Network(object):
 
         return degree
 
-    def estimate_betweenness(self, weight=None, **kwargs):
+    def estimate_betweenness(self, **kwargs):
         """
         Estima la centralidad de intermediación (betweenness centrality) para nodos y aristas en el grafo.
         La centralidad de intermediación es una medida de centralidad que cuantifica la importancia de un nodo o arista basándose
@@ -605,11 +614,10 @@ class Network(object):
 
         """
 
-        if weight is None:
-            weight = self._edge_weight
+        weight = kwargs.pop("weight", self._edge_weight)
 
         node_centrality, edge_centrality = graph_tool.centrality.betweenness(
-            self.network, weight=weight, *kwargs
+            self.network, weight=weight, **kwargs
         )
 
         self.network.edge_properties["betweenness"] = edge_centrality
@@ -617,7 +625,7 @@ class Network(object):
 
         return node_centrality, edge_centrality
 
-    def estimate_pagerank(self, damping=0.85, weight=None, **kwargs):
+    def estimate_pagerank(self, **kwargs):
         """
         Calcula PageRank para cada nodo en la red.
         PageRank asigna una puntuación de importancia a cada nodo en función
@@ -628,10 +636,6 @@ class Network(object):
 
         Parameters
         ----------
-        damping : float, default=0.85, optional
-            El factor de amortiguación utilizado en el cálculo de PageRank. Especifica la
-            probabilidad de que un navegante aleatorio continúe en un nodo en lugar de
-            seguir un enlace saliente. Debe estar en el rango [0, 1].
         weight : PropertyMap, default=None
             Diccionario con el peso de cada arista
 
@@ -645,11 +649,10 @@ class Network(object):
             La puntuación de PageRank para cada nodo en la red.
 
         """
-        if weight is None:
-            weight = self._edge_weight
-        
+        weight = kwargs.pop("weight", self._edge_weight)
+
         node_centrality = graph_tool.centrality.pagerank(
-            self.network, weight=weight
+            self.network, weight=weight, **kwargs
         )
 
         self.network.vertex_properties["pagerank"] = node_centrality

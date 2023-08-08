@@ -20,14 +20,32 @@ def decode_column(
     index_dtype=np.float64,
 ):
     """
-    param :df: DataFrame del que leeremos una columna.
-    param :fname: nombre del archivo que contiene los valores a decodificar.
-    param :col_name: nombre de la columna que queremos decodificar.
-    param :index_col: nombre de la columna en el archivo @fname que tiene los índices que codifican @col_name
-    param :value_col: nombre de la columna en el archivo @fname que tiene los valores decodificados
-    param :sep: carácter que separa los valores en @fname.
-    param :encoding: identificación del _character set_ que utiliza el archivo. Usualmente es utf-8, si no funciona,
-                     se puede probar con iso-8859-1.
+    Decodifica los valores de una columna, reemplazando identificadores por su correspondiente valor según la tabla de códigos.
+
+    Parameters
+    ------------
+    df : pandas.dataframe
+        Dataframe del que se leerá una columna.
+    fname: string
+        Nombre del archivo que contiene los valores a decodificar.
+    col_name: string
+        Nombre de la columna que queremos decodificar.
+    index_col: string, default="Id"
+        Nombre de la columna en el archivo ` fname `  que tiene los índices que codifican ` col_name ` .
+    value_col: string, default=None
+        Nombre de la columna en el archivo ` fname `  que tiene los valores decodificados.
+    sep: string, default=";"
+        Caracter que separa los valores en ` fname ` .
+    encoding: string, default="utf-8"
+        Identificación del character set que utiliza el archivo. Usualmente es utf-8, si no funciona,
+          se puede probar con iso-8859-1. 
+    index_dtype: dtype, default=np.float64
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe decodificado en la columna señalada.
+    
     """
     if value_col is None:
         value_col = "value"
@@ -50,6 +68,30 @@ def decode_column(
 def read_trips(
     path=None, decode_columns=True, remove_invalid=True, fix_clock_times=True
 ):
+    """ 
+    Busca los archivos "viajes.csv", "ViajesDifusion.csv" y "DistanciaViaje.csv" dentro
+    del directorio especificado o en su defecto en el definido en la variable global "_EOD_PATH".
+    Unifica la información de estos archivos en un dataframe de pandas.
+    En el notebook ubicado en notebooks/gds-course/01-scl-travel-survey-maps.ipynb se pueden encontrar ejemplos de uso
+    de esta función.
+
+    Parameters
+    ----------
+    path : string, default=None
+        Ubicación de los archivos csv con la data de la encuesta origen destino.
+    decode_column: bool, default=True
+        Indica si se quiere decodificar el contenido de las columnas, reemplazando IDs por su significado
+        según las tablas de decodificación ubicadas en el directorio "Tablas_parametros".
+    remove_invalid: bool, default=True
+        Indica si se quiere eliminar filas que no tienen hora o que han sido inputadas.
+    fix_clock_times: bool, default=True
+        Indica si se desea estandarizar la hora de inicio al formato timedelta.
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe con la información de viajes de la encuesta origen-destino.
+    """
     if path is None:
         DATA_PATH = _EOD_PATH
     else:
@@ -138,6 +180,23 @@ def read_trips(
 
 
 def read_homes(path=None):
+    """
+    Carga el contenido del archivo "Hogares.csv", que contiene las respuestas sobre hogares participantes de la
+    encuesta origen destino, a un dataframe.
+    En el notebook ubicado en notebooks/gds-course/01-scl-travel-survey-maps.ipynb se pueden encontrar ejemplos de uso
+    de esta función.
+
+    Parameters
+    ----------
+    path: string, default=None
+        Ubicación de los archivos csv con la data de la encuesta origen destino.
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe con la información sobre hogares, con las columnas decodificadas.
+    
+    """
     if path is None:
         DATA_PATH = _EOD_PATH
     else:
@@ -155,6 +214,24 @@ def read_homes(path=None):
 
 
 def read_people(path=None, decode_columns=True):
+    """
+    Carga el contenido del archivo "personas.csv", que contiene información sobre las personas encuestadas, a un dataframe.
+    En el notebook ubicado en notebooks/gds-course/01-scl-travel-survey-maps.ipynb se pueden encontrar ejemplos de uso
+    de esta función.
+
+    Parameters
+    ----------
+    path: string, default=None
+        Ubicación de los archivos csv con la data de la encuesta origen destino.
+    decode_columns: bool, default=True
+        Indica si se quiere decodificar el contenido de las columnas, reemplazando IDs por su significado
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe con la información sobre personas.
+    
+    """
     if path is None:
         DATA_PATH = _EOD_PATH
     else:
@@ -187,6 +264,22 @@ def read_people(path=None, decode_columns=True):
 
 
 def read_transantiago_usage(path=None, decode_columns=True):
+    """
+    Crea un dataframe que contiene a las personas que no usaron el sistema Transantiago en su viaje y la razón.
+
+    Parameters
+    ----------
+    path: string, default=None
+        Ubicación de los archivos csv con la data de la encuesta origen destino.
+    decode_columns: bool, default=True
+        Indica si se quiere decodificar el contenido de las columnas, reemplazando IDs por su significado
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe con una fila por persona que no usó el Transantiago y su razón para no hacerlo.
+    
+    """
     if path is None:
         DATA_PATH = _EOD_PATH
     else:
@@ -213,6 +306,22 @@ def read_transantiago_usage(path=None, decode_columns=True):
 
 
 def read_zone_design(path=None):
+    """
+    Carga la geometría de la zonificación de las comunas participantes en la encuesta.
+    Podemos encontrar un tutorial de uso de esta función en el notebook ` notebooks/vis-course/03-python-mapas-preliminario.ipynb` 
+
+    Parameters
+    ----------
+    path: string, default=None
+        Ubicación del archivo shapefile que contiene la geometría de las comunas. Si no se especifica, se usará el valor
+        almacenado en la variable global _EOD_MAPS.
+    Returns
+    -------
+    geopandas.GeoDataFrame
+        GeoDataframe con la geometría de la zonificación de las comunas, el sistema de coordenadas usado es [`EPSG:32719`](https://epsg.io/32719)
+    
+    """
+    
     if path is None:
         DATA_PATH = _EOD_MAPS
     else:
@@ -222,6 +331,23 @@ def read_zone_design(path=None):
 
 
 def read_vehicles(path=None, decode_columns=True):
+    """
+    Carga el contenido del archivo "Vehiculo.csv", que contiene información sobre los vehículos de los
+    hogares encuestados.
+
+    Parameters
+    ----------
+    path: string, default=None
+        Ubicación de los archivos csv con la data de la encuesta origen destino.
+    decode_columns: bool, default=True
+        Indica si se quiere decodificar el contenido de las columnas, reemplazando IDs por su significado
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe con la información sobre personas.
+    
+    """
     if path is None:
         DATA_PATH = _EOD_PATH
     else:
@@ -237,7 +363,7 @@ def read_vehicles(path=None, decode_columns=True):
             DATA_PATH / "Tablas_parametros" / "TipoVeh.csv",
             value_col="vehiculo",
             col_name="TipoVeh",
-            index_dtype=str,
+            index_dtype=int,
             encoding="iso-8859-1",
         )
 

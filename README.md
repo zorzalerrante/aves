@@ -279,15 +279,14 @@ fig.tight_layout()
 
 ### Paso 1: Preparación
 
-Si usas Windows, te recomiendo instalar el [Windows Subsystem for Linux](https://docs.microsoft.com/es-es/windows/wsl/install-win10). Puede ser la versión 1 o 2 (recomiendo WSL2). Como distribución te recomiendo Ubuntu 22.04 (es la que uso yo). 
+Se recomienda usar sistema operativo Linux, o bien el [Windows Subsystem for Linux](https://docs.microsoft.com/es-es/windows/wsl/install-win10) en caso de usar Windows. En cuanto a distribución, se recomienda Ubuntu 22.04.  
 
-Abre la consola (_shell_) de Ubuntu y ejecuta el siguiente comando:
+
+Para instalar las bibliotecas necesarias para el funcionamiento de `aves`, abre la consola (_shell_) de Ubuntu y ejecuta el siguiente comando:
 
 ```sh
 sudo apt install make libxcursor1 libgdk-pixbuf2.0-dev libxdamage-dev osmctools gcc
 ```
-
-Esto instalará algunas bibliotecas que son necesarias para el funcionamiento de `aves` (particularmente de `graph-tool` que es usada por aves).
 
 Además, para administrar el entorno de ejecución de aves necesitas una instalación de `conda` ([Miniconda](https://docs.conda.io/en/latest/miniconda.html) es una buena alternativa) y de `mamba`. Primero debes instalar `conda`, y una vez que la tengas, puedes ejecutar:
 
@@ -300,14 +299,14 @@ conda install mamba
 
 ### Paso 2: Creación del Entorno
 
-Después de descargar o clonar el repositorio (utilizando el comando `git clone`), debes instalar el entorno de `conda` con los siguientes comandos:
+Descarga o clona el repositorio usando el comando `git clone`, luego accede al directorio `aves` desde la terminal e instala el entorno de `conda` con los siguientes comandos:
 
 ```sh
 make conda-create-env
 make install-package
 ```
 
-Ello creará un entorno llamado `aves` que puedes utilizar a través del comando `conda activate aves`. 
+Ello creará un entorno llamado `aves` que puedes utilizar a través del comando `conda activate aves`. Para dejar de trabajar en el entorno, usa el comando `conda deactivate`.
 
 ### Paso 3: Ejecución en Jupyter
 
@@ -319,7 +318,7 @@ Es posible que ya tengas un entorno de `conda` en el que ejecutes Jupyter. En es
 make install-kernel
 ```
 
-Así quedará habilitado acceder al entorno de aves desde Jupyter.
+Así quedará habilitado acceder al entorno de `aves` desde Jupyter.
 
 
 ## Actualización de Dependencias

@@ -40,6 +40,7 @@ dependencies:
   - pygeos<=0.10
   - h3-py==3.7.4
   - contextily
+  - sphinx
   - pip:
     - bezier
     - scattertext
@@ -55,3 +56,4 @@ dependencies:
     - s2sphere
     - pyrosm==0.6.1
     - lxml
+    - sphinx-rtd-theme

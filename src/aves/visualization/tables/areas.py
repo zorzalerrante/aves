@@ -4,6 +4,33 @@ from aves.features.utils import tfidf, normalize_rows, normalize_columns
 
 
 def stacked_areas(ax, df, baseline="zero", color_dict=None, **kwargs):
+    """
+    Dibuja la visualización de la distribución cumulativa de distintas categorías a lo largo de una variable continua y obtiene
+    los parámetros de la figura necesarios para generar un gráfico con la función `streamgraph`_.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes
+        El eje en el cual se dibujará el gráfico.
+    df : DataFrame
+        Un DataFrame que contiene los datos para generar el gráfico.
+    baseline : str, default="zero", opcional
+        El método utilizado para calcular la línea base de las áreas apiladas.
+    color_dict : dict, default=None, opcional
+        Un diccionario que mapea los nombres de las categorías a los colores a utilizar para rellenar las áreas corresppondientes.
+    **kwargs
+        Argumentos adicionales que permiten personalizar el gráfico.
+        Una lista completa de las opciones disponibles se encuentra en la documentación de `Matplotlib <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.fill_between.html>`_.
+
+    Returns
+    -------
+    x : ndarray
+        Arreglo que contiene los valores en el eje x del gráfico.
+    first_line : ndarray
+        Arreglo que contiene los valores de la primera línea base de las áreas apiladas.
+    stack : ndarray
+        Arreglo que contiene los valores de las áreas apiladas.
+     """
     stack = np.cumsum(df.T.values, axis=0)
     x = df.index.values
     y = df.T.values
@@ -42,6 +69,45 @@ def streamgraph(
     outline_labels=True,
     label_collision_args=None,
 ):
+    """
+    Genera un gráfico **streamgraph** a partir de los datos de un dataframe.
+    Este gráfico muestra el cambio de composición o distribución de distitnas categorías a lo largo del tiempo.
+    Cada categoría es representada por una franja de un color que fluye por el eje horizontal, que representa una variable continua
+    como por ejemplo el paso del tiempo. La altura de la franja en un punto representa la proporción relativa de esa categoría en ese momento.
+    Las franjas están apiladas una encima de la otra, por lo que la altura total de las franjas en un punto indica el cumulativo de todas las categorias.
+
+    En el notebook notebooks/vis-course/06-python-texto-guaguas.ipynb se encuentran ejemplos de uso de esta función.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes
+        El eje en el cual se dibujará el gráfico.
+    df : DataFrame
+        DataFrame que contiene los datos a visualizar.
+    baseline : str, default="wiggle", opcional
+        El método utilizado para calcular la línea base del streamgraph.
+    labels : bool, default=True, opcional
+        Indica si se deben mostrar etiquetas en el gráfico.
+    label_threshold : int, default=0, opcional
+        Umbral para posicionar las etiquetas en el gráfico.
+    label_args : dict, default=None, opcional
+        Argumentos adicionales para personalizar las etiquetas.
+        Una lista completa de las opciones disponibles se encuentra en la documentación de `Matplotlib <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.text.html>`_.
+    fig : Figure, default=None, opcional
+        La figura en la cual se genera el gráfico. Se utiliza para el manejo de colisiones de etiquetas.
+    area_colors : dict, default=None, opcional
+        Un diccionario que mapea los nombres de las categorías a los colores a utilizar para rellenar las áreas corresppondientes.
+    area_args : dict, default=None, opcional
+        Argumentos adicionales que permiten personalizar el gráfico.
+        Una lista completa de las opciones disponibles se encuentra en la documentación de `Matplotlib <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.fill_between.html>`_.
+    avoid_label_collisions : bool, default=False, opcional
+        Indica si se deben evitar colisiones de etiquetas en el gráfico.
+    outline_labels : bool, default=True, opcional
+        Indica si se deben resaltar las etiquetas mediante un contorno.
+    label_collision_args : dict, default=None, opcional
+        Argumentos adicionales para manejar las colisiones de etiquetas.
+        Una lista completa de las opciones disponibles se encuentra en la documentación de `AdjustText <https://adjusttext.readthedocs.io/en/latest/>`_.
+    """
     if label_args is None:
         label_args = {}
 

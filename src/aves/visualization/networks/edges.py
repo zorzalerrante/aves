@@ -103,7 +103,7 @@ class PlainEdges(EdgeStrategy):
             La transparencia de las aristas.
         **kwargs : dict
             Argumentos adicionales que permiten personalizar la visualización. Una lista completa
-            de las opciones disponibles se encuentra en la documentación de la librería `Matplotlib<https://matplotlib.org/stable/api/collections_api.html#matplotlib.collections.LineCollection>`_.
+            de las opciones disponibles se encuentra en la documentación de la librería `Matplotlib <https://matplotlib.org/stable/api/collections_api.html#matplotlib.collections.LineCollection>`_.
 
         Returns
         -------
@@ -253,7 +253,7 @@ class WeightedEdges(EdgeStrategy):
             Color a partir del cual crear la paleta de colores.
         **kwargs : optional
             Argumentos adicionales que permiten personalizar la visualización. Una lista completa
-            de las opciones disponibles se encuentra en la documentación de la librería `Matplotlib<https://matplotlib.org/stable/api/collections_api.html#matplotlib.collections.LineCollection>`_.
+            de las opciones disponibles se encuentra en la documentación de la librería `Matplotlib < https://matplotlib.org/stable/api/collections_api.html#matplotlib.collections.LineCollection>`_.
 
         Returns
         -------
@@ -355,12 +355,12 @@ class CommunityGradient(EdgeStrategy):
             Los ejes Matplotlib donde se dibujarán las aristas.
         *args : optional
             Argumentos posicionales adicionales para configurar la visualización. Una lista completa se encuentra en la documentación
-            de `Matplotlib<https://matplotlib.org/stable/api/collections_api.html#matplotlib.collections.LineCollection>`_.
+            de `Matplotlib <https://matplotlib.org/stable/api/collections_api.html#matplotlib.collections.LineCollection>`_.
         palette : string, default="plasma", optional
             Paleta de colores a usar en el trazado de las aristas.
         **kwargs : optional
             Argumentos adicionales para configurar la visualización. Una lista completa se encuentra en la documentación
-            de `Matplotlib<https://matplotlib.org/stable/api/collections_api.html#matplotlib.collections.LineCollection>`_.
+            de `Matplotlib <https://matplotlib.org/stable/api/collections_api.html#matplotlib.collections.LineCollection>`_.
         """
         community_colors = dict(
             zip(
@@ -451,14 +451,14 @@ class ODGradient(EdgeStrategy):
             Los ejes Matplotlib donde se dibujarán las aristas.
         *args : optional
             Argumentos posicionales adicionales para configurar la visualización. Una lista completa se encuentra en la documentación
-            de `Matplotlib<https://matplotlib.org/stable/api/collections_api.html#matplotlib.collections.LineCollection>`_.
+            de `Matplotlib <https://matplotlib.org/stable/api/collections_api.html#matplotlib.collections.LineCollection>`_.
         source_color : string, default="blue", optional
             Color que se usará para el extremo "origen" de la arista.
         target_color : string, default="red", optional
             Color que se usará para el extremo "destino" de la arista.
         **kwargs : optional
             Argumentos adicionales para configurar la visualización. Una lista completa se encuentra en la documentación
-            de `Matplotlib<https://matplotlib.org/stable/api/collections_api.html#matplotlib.collections.LineCollection>`_.
+            de `Matplotlib <https://matplotlib.org/stable/api/collections_api.html#matplotlib.collections.LineCollection>`_.
         """
 
         self.colored_curves.set_colors(

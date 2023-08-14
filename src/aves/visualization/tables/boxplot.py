@@ -9,8 +9,8 @@ def boxplot_stats(values: pd.Series, weights: pd.Series, label=None):
     """
     Calcula las estadísticas necesarias para generar un diagrama de caja (boxplot).
 
-    Parámetros
-    ----------
+    Parameters
+    ------------
     values : pd.Series
         Serie de valores numéricos.
     weights : pd.Series
@@ -79,7 +79,7 @@ def boxplot(
         En el notebook `notebooks/vis-course/02-python-tablas.ipynb` se pueden encontrar ejemplos de uso
         de esta función.
 
-        Parámetros
+        Parameters
         ----------
         ax : matplotlib.axes.Axes
             Ejes en los que se dibujará el gráfico.

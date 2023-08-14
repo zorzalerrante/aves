@@ -1,4 +1,4 @@
-aves.visualization package
+Visualizaciones
 ==========================
 
 Subpackages

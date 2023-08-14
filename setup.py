@@ -32,7 +32,7 @@ AUTHOR = metadata.get("author_name", "Eduardo Graells-Garrido")
 AUTHOR_EMAIL = metadata.get("author_email", "egraells@udd.cl")
 DESCRIPTION = metadata.get(
     "description",
-    "Module to support my Information Visualization course and my own work.",
+    "Module to support the courses 'Visualizacion de la Información' from Universidad del Desarrollo and  'Ciencia de Datos Geográficos'  from Universidad de Chile.",
 )
 
 

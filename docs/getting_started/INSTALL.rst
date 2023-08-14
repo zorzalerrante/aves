@@ -7,7 +7,7 @@
 Downloading and Installing
 ************************************************************************
 
-Module to support my Information Visualization course.
+Module to support the courses 'Visualizacion de la Información' from Universidad del Desarrollo and  'Ciencia de Datos Geográficos'  from Universidad de Chile.
 
 **Author**: Eduardo Graells-Garrido (`eduardo.graells@bsc.es <mailto:eduardo.graells@bsc.es>`_)
 
@@ -18,7 +18,7 @@ Downloading repository
 ======================
 
 This documentation is part of the repository
-`aves <https://github.com/carnby/aves>`_.
+`aves <https://github.com/zorzalerrante/aves>`_.
 
 To download the repository to your computer, follow the following commands.
 
@@ -26,7 +26,7 @@ To download the repository to your computer, follow the following commands.
 .. code-block:: text
 
     cd /path/to/where/you/want/to/download/repo
-    git clone https://github.com/carnby/aves.git aves
+    git clone https://github.com/zorzalerrante/aves.git aves
     cd aves
 
 
@@ -43,6 +43,6 @@ Project based on the
 
 
 .. |License| image:: https://img.shields.io/badge/License-MIT-blue.svg
-   :target: https://github.com/carnby/aves/blob/master/LICENSE
+   :target: https://github.com/zorzalerrante/aves/blob/master/LICENSE
    :alt: Project License
 

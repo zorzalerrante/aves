@@ -66,6 +66,6 @@ Project based on the
 
 
 .. |License| image:: https://img.shields.io/badge/License-MIT-blue.svg
-   :target: https://github.com/carnby/aves/blob/master/LICENSE
+   :target: https://github.com/zorzalerrante/aves/blob/master/LICENSE
    :alt: Project License
 

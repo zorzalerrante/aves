@@ -141,7 +141,26 @@ class NodeLink(object):
 
     def plot(self, ax, *args, **kwargs):
         """
-        plotea
+        Dibuja una red.
+        
+        Puedes encontrar ejemplos de uso de esta función en el notebook  `notebooks/vis-course/04-python-redes-preliminario.ipynb`.
+
+        Parameters
+        ----------
+        ax : Axes
+            El plano en el cual se dibujará la red.
+        **kwargs : dict
+            Argumentos clave adicionales pasados a los métodos de dibujo de nodos y aristas.
+            - nodes : dict, optional
+                Un diccionario que contiene argumentos que serán pasados al método :func:`~aves.visualization.networks.base.NodeLink.plot_nodes`  al dibujar los nodos.
+                Esto permite personalizar la apariencia y el comportamiento del proceso de dibujo de los nodos.
+            - edges : dict, optional
+                Un diccionario que contiene argumentos que serán pasados al método :func:`~aves.visualization.networks.base.NodeLink.plot_edges`  al dibujar las aristas.
+                Esto permite personalizar la apariencia y el comportamiento del proceso de dibujo de las aristas.
+            - zorder : int, optional
+                Z-order para el dibujo de los elementos. Esto indica la jerarquia visual en la cual mostrar los elementos en el plano, los elementos
+                con mayor z-order aparecerán "encima" de aquellos con menor z-order.
+
         """
         nodes = kwargs.get("nodes", {})
         edges = kwargs.get("edges", {})
@@ -150,6 +169,42 @@ class NodeLink(object):
         self.plot_nodes(ax, zorder=zorder, **nodes)
 
     def bundle_edges(self, method: str, *args, **kwargs):
+        """
+        Agrupa las aristas en la visualización de la red usando el método especificado.
+        El agrupamiento de aristas combina aristas cercanas en la visualización 
+        de una red para mejorar la claridad y reducir la sobrecarga visual.
+
+        Parameters
+        ------------
+        method : str
+            El método a usar. Actualmente están implementados:
+            - "force-directed": Agrupar las aristas usando el método `force directed`.
+            - "hierarchical": Agrupar las aristas usando el método jerárquico.
+        
+        tree: graph_tool.GraphView, optional
+            Solo se usa en el método jerárquico. Corresponde el árbol de jerarquia de comunidades de la red.
+            Si no se provee, se obtendrá de :attr:`~aves.visualization.networks.base.NodeLink.network`.
+
+        root_vertex: int
+            Solo se usa en el método jerárquico. Corresponde a la raíz del árbol de jerarquía.
+            Si no se provee, se obtendrá de :attr:`~aves.visualization.networks.base.NodeLink.network`.
+
+        *args, **kwargs
+            Argumentos adicionales para configurar la agrupación, esto dependerá del método especificado.
+            Para más información, ver la documentación de :class:`~aves.visualization.networks.fdeb.FDB` o
+            :attr:`~aves.visualization.networks.heb.HierarchicalEdgeBundling`.
+
+        Returns
+        -------
+        bundle_model : HierarchicalEdgeBundling o FDB
+            El modelo de agrupamiento de aristas creado según el método escogido.
+
+        Raises
+        ------
+        ValueError
+            Si el método especificado no está implementado.
+
+        """
         if method == "force-directed":
             self.bundle_model = FDB(self.network, *args, **kwargs)
         elif method == "hierarchical":
@@ -169,6 +224,28 @@ class NodeLink(object):
         return self.bundle_model
 
     def set_edge_drawing(self, method="plain", **kwargs):
+        """
+        Configura la estrategia de dibujo de aristas para la visualización de la red. Este método modifica los
+        atributos :attr:`~aves.visualization.networks.base.NodeLink.edge_strategy` y :attr:`~aves.visualization.networks.base.NodeLink.edge_strategy_args`.
+
+        Parameters
+        ----------
+        method : str, default="plain", optional
+            El método de visualización de aristas.
+            Actualmente están implementados: "weighted", "origin-destination", "community-gradient", "plain".
+        **kwargs : dict
+            Argumentos adicionales específicos para cada método de dibujo.
+            Para ver las opciones disponibles referirse a la documentación de :class:`~aves.visualization.networks.edges.EdgeStrategy`.
+
+        Raises
+        ------
+        ValueError
+           Si el método especificado no está implementado o si hay un problema al ejecutar la estrategia seleccionada.
+
+        Returns
+        -------
+        None
+        """
         if method == "weighted":
             self.edge_strategy = WeightedEdges(
                 self.network,
@@ -197,6 +274,28 @@ class NodeLink(object):
         self.edge_strategy_args = dict(**kwargs)
 
     def set_node_drawing(self, method="plain", **kwargs):
+        """
+        Configura la estrategia de dibujo de nodos para la visualización de la red. Este método modifica los
+        atributos :attr:`~aves.visualization.networks.base.NodeLink.node_strategy` y :attr:`~aves.visualization.networks.base.NodeLink.node_strategy_args`.
+
+        Parameters
+        ----------
+        method : str, default="plain", optional
+            El método de visualización de nodos.
+            Actualmente están implementados:  "plain", "labeled".
+        **kwargs : dict
+            Argumentos adicionales específicos para cada método de dibujo.
+            Para ver las opciones disponibles referirse a la documentación de :class:`~aves.visualization.networks.nodes.NodeStrategy`.
+
+        Raises
+        ------
+        ValueError
+           Si el método especificado no está implementado o si hay un problema al ejecutar la estrategia seleccionada.
+
+        Returns
+        -------
+        None
+        """
         if method == "plain":
             self.node_strategy = PlainNodes(self.network, **kwargs)
         elif method == "labeled":
@@ -208,6 +307,19 @@ class NodeLink(object):
         self.node_strategy_args = dict(**kwargs)
 
     def set_node_labels(self, func=None):
+        """
+        Configura las etiquetas de los nodos en la visualización de la red.
+
+        Parameters
+        ----------
+        func : function, default=None, optional
+            Una función que mapea el índice de un nodo a su etiqueta. 
+            Si no es provista, se usará el diccionario :attr:`~aves.models.network.base.Network.id_to_label` .
+
+        Returns
+        -------
+        None
+        """
         graph = self.network.graph
         self.labels = graph.new_vertex_property("string")
 

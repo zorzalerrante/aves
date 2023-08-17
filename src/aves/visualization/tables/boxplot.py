@@ -6,6 +6,26 @@ from aves.visualization.colors import categorical_color_legend
 
 
 def boxplot_stats(values: pd.Series, weights: pd.Series, label=None):
+    """
+    Calcula las estadísticas necesarias para generar un diagrama de caja (boxplot).
+
+    Parámetros
+    ----------
+    values : pd.Series
+        Serie de valores numéricos.
+    weights : pd.Series
+        Serie de pesos asociados a cada valor.
+    label : string, default=None, opcional
+        Etiqueta para identificar las estadísticas calculadas.
+
+    Returns
+    -------
+    pd.Series
+        Serie que contiene las estadísticas calculadas, incluyendo la mediana,
+        el primer cuartil, el tercer cuartil, el límite inferior del bigote,
+        el límite superior del bigote y los valores atípicos (fliers).
+
+    """
     w = DescrStatsW(values, weights)
     w_quants = w.quantile([0.25, 0.5, 0.75])
     w_iqr = w_quants[0.75] - w_quants[0.25]
@@ -51,6 +71,54 @@ def boxplot(
     boxplot_kwargs={},
     legend_kwargs={},
 ):
+    """
+        Genera un diagrama de caja (boxplot) utilizando los datos de un Dataframe. Este gráfico visualiza
+        grupos de datos numéricos mediante sus cuartiles. La caja se extiende desde el primer cuartil (Q1) hasta el tercer cuartil (Q3) del grupo,
+        con una línea que marca la mediana (Q2). De cada extremo de la caja  se extiende una línea que muestra el rango de los datos.
+        Los datos "outliers" o atípicos quedan fuera de este rango.
+        En el notebook `notebooks/vis-course/02-python-tablas.ipynb` se pueden encontrar ejemplos de uso
+        de esta función.
+
+        Parámetros
+        ----------
+        ax : matplotlib.axes.Axes
+            Ejes en los que se dibujará el gráfico.
+        df : pd.DataFrame
+            DataFrame que contiene los datos a visualizar.
+        group_column : str
+            Nombre de la columna que define los grupos categóricos a comparar.
+        value_column : str
+            Nombre de la columna que contiene los valores numéricos a representar.
+        weight_column : str
+            Nombre de la columna que contiene los pesos asociados a cada valor, o factor de expansión.
+        hue_column : str, default=None, opcional
+            Nombre de la columna que define la variable categórica para separar en subgrupos.
+        sort_by_value : bool, default=False, opcional
+            Indica si se deben ordenar los grupos según los valores de mediana.
+        sort_ascending : bool, default=True, opcional
+            Indica si el orden debe ser ascendente.
+        hue_order : list, default=None, opcional
+            Orden específico de las categorías para la variable categórica.
+        vert : bool, default=True, opcional
+            Indica si el diagrama de caja debe ser vertical (True) u horizontal (False).
+        showfliers : bool, default=False, opcional
+            Indica si se deben mostrar los valores atípicos (outliers).
+        palette : str, default="Set2", opcional
+            Paleta de colores a utilizar para los subgrupos en caso de haber.
+        hue_legend : bool, default=False, opcional
+            Indica si se debe mostrar una leyenda de la variable categórica en caso de graficar subgrupos.
+        boxplot_kwargs : dict, default={}, opcional
+            Argumentos adicionales para personalizar el gráfico que se pasan a la función `ax.bxp()` de matplotlib.
+        Una lista completa de todas las posibles especificaciones se encuentra en la documentación de `Matplotlib <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.bxp.html#matplotlib.axes.Axes.bxp>`_
+        legend_kwargs : dict, default={}, opcional
+            Argumentos adicionales para personalizar el estilo de la leyenda en caso de graficar subgrupos.
+
+        Returns
+        -------
+        None
+
+        """
+
     if not "boxprops" in boxplot_kwargs:
         boxplot_kwargs["boxprops"] = {}
 
@@ -106,7 +174,6 @@ def boxplot(
 
         offset = np.linspace(width * 0.25, 1 - width * 0.25, len(hue_values))
         offset -= offset.mean()
-        # print(width, offset, positions)
 
         for i, hue in enumerate(hue_values):
             boxplot_kwargs["boxprops"]["facecolor"] = colors[i]

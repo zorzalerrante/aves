@@ -12,6 +12,33 @@ import matplotlib.patches as mpatches
 
 
 def arc_patch(center, radius, theta1, theta2, resolution=50, **kwargs):
+    """
+    Genera un segmento circular insertable en figuras de Matplotlib. El arco se define por su centro, radio, ángulo inicial
+    y ángulo final. El número de puntos utilizados para aproximar el arco se puede ajustar mediante el parámetro de
+    resolución.
+
+    Parameters
+    ----------
+    center : tuple
+        Coordenadas (x, y) del centro del arco.
+    radius : float
+        Radio del arco.
+    theta1 : float
+        Ángulo inicial del arco en grados.
+    theta2 : float
+        Ángulo final del arco en grados.
+    resolution : int, default=50, opcional
+        Número de puntos que se utilizarán para aproximar el arco.
+    **kwargs : dict
+        Argumentos adicionales para personalizar el polígono. 
+        Una lista completa de todas las posibles especificaciones se encuentra en la documentación de `Matplotlib <https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.Polygon.html>`_
+
+    Returns
+    -------
+    mpatches.Polygon
+        Patch de matplotlib que representa el arco especificado y se puede insertar en una figura.
+
+    """
     theta = np.linspace(np.radians(theta1), np.radians(theta2), resolution)
     points = np.vstack(
         (radius * np.cos(theta) + center[0], radius * np.sin(theta) + center[1])
@@ -21,6 +48,23 @@ def arc_patch(center, radius, theta1, theta2, resolution=50, **kwargs):
 
 
 def build_dual_bubble(pos=[0, 0], left_percentage=50, radio=1):
+    """
+    Genera un círculo dividivo en dos segmentos circulares, según una proporción especificada.
+
+    Parameters
+    ----------
+    pos : list/tuple, defaul=[0,0], opcional
+        Coordenadas (x, y) de la posición del centro del círculo.
+    left_percentage : float, default=50, opcional
+        Porcentaje que abarca el área izquierda en relación al total del círculo.
+    radio : float, default=1, opcional
+        Radio del círculo.
+
+    Returns
+    -------
+    list
+        Lista de dos patches de matplotlib que en conjunto representan un círculo dividido.
+    """
     percentage = left_percentage
     angle = 90 - (90 / 50) * percentage
 
@@ -36,7 +80,6 @@ def bubble_plot(
     position_column,
     radius_column,
     label_column=None,
-    color_column=None,
     palette="plasma",
     n_bins=10,
     num_steps=50,
@@ -52,6 +95,72 @@ def bubble_plot(
     fontstyle=None,
     random_state=1990,
 ):
+    """
+    Crea un gráfico de burbujas a partir de los datos entregados.
+    Esta visualización muestra los datos en forma de burbujas o círculos de diferentes tamaños en un eje.
+    Cada burbuja representa una entidad o categoría y se posiciona en función
+    del valor de la variable asociada al eje ` x` , mientras que el tamaño de la burbuja indica la magnitud de una segunda variable.
+    Cuanto más grande sea la burbuja, mayor será el valor de la variable asociada.
+    Una burbuja también tendrá un color que representa su ubicación en el eje.
+    En este gráfico, la posición en el eje `y` de cada burbuja no es relevante.
+
+    En el notebook notebooks/vis-course/06-python-texto-guaguas.ipynb se encuentran ejemplos de uso de esta función.
+
+
+    Parameters
+    -------------
+    ax : matplotlib.axes
+        El eje en el cual se dibujará el gráfico.
+    df : DataFrame
+        DataFrame que contiene los datos a visualizar.
+    position_column : str
+        Nombre de la columna que contiene el valor usado para posicionar una burbuja en el eje.
+    radius_column : str
+        Nombre de la columna que contiene el valor usado para determinar el tamaño de una burbuja.
+    label_column : str, default=None, optional
+        Nombre de la columna que contiene las etiquetas de la burbuja.
+    palette : str, default="plasma", optional
+        Paleta de colores utilizada para el mapa de colores.
+    n_bins : int, default=10, optional
+        Número de bins utilizados para dividir el mapa de colores
+    num_steps : int, default=50, optional
+        Número de pasos utilizados para la simulación de las burbujas.
+    x_position_scaling : int, default=800, optional
+        Factor de escala para ajustar la posición de las burbujas en el eje x.
+    min_label_size : int, default=4, optional
+        Tamaño mínimo de las etiquetas de las burbujas.
+    max_label_size : int, default=64, optional
+        Tamaño máximo de las etiquetas de las burbujas.
+    starting_y_range : int, default=None, optional
+        Rango inicial para la posición aleatoria en el eje y de las burbujas.
+    margin : int, default=2, optional
+        Margen utilizado para ajustar el tamaño de las burbujas.
+    dual : bool, default=False, optional
+        Indicador de si se debe generar una representación de burbujas duales. Si es `True`, en vez de utilizar un mapa de color para colorear
+        una burbuja, esta estará coloreada por dos colores que representan cada extremo del eje. El área que abarca cada color en el círculo
+        es determinada por la ubicación de la burbuja en el eje.
+    dual_left_color : str, default="cornflowerblue", optional
+        Color utilizado para la representación de burbujas duales en el lado izquierdo.
+    dual_right_color : str, default="hotpink", optional
+        Color utilizado para la representación de burbujas duales en el lado derecho.
+    fontname : str, default=None, optional
+        Nombre de la fuente utilizada para las etiquetas de las burbujas.
+    fontstyle : str, default=None, optional
+        Estilo de la fuente utilizada para las etiquetas de las burbujas.
+    random_state : int, default=1990, optional
+        Estado aleatorio utilizado para la generación de las burbujas.
+
+    Returns
+    -----------
+    space : objeto Space de pymunk
+        El espacio de simulación de pymunk utilizado para las burbujas.
+    collection : objeto PatchCollection de matplotlib, opcional
+        La colección de parches utilizada para dibujar las burbujas en el gráfico. Devuelto solo si dual es False.
+    split_collection_l : objeto PatchCollection de matplotlib, opcional
+        La colección de parches utilizada para dibujar las burbujas duales en el lado izquierdo del gráfico. Devuelto solo si dual es True.
+    split_collection_r : objeto PatchCollection de matplotlib, opcional
+        La colección de parches utilizada para dibujar las burbujas duales en el lado derecho del gráfico. Devuelto solo si dual es True.
+    """
     np.random.seed(random_state)
     df = df.reset_index()
     space = pymunk.Space()

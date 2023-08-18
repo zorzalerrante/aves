@@ -57,3 +57,4 @@ dependencies:
     - pyrosm==0.6.1
     - lxml
     - sphinx-rtd-theme
+    - pyreadstat

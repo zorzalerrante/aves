@@ -296,10 +296,18 @@ conda install mamba -n base -c conda-forge
 
 ¿Por qué `mamba`? Es una versión más eficiente de `conda`. ¡Te ahorrará muchos minutos de instalación!
 
+Una vez que se ha instalado `conda` y `mamba`, es necesario modificar el archivo `.condarc` que está en la carpeta raíz de la cuenta de usuario/a del sistema. El archivo debe contener lo siguiente:
+
+```
+channels:
+  - conda-forge
+ssl_verify: true
+channel_priority: strict
+```
 
 ### Paso 2: Creación del Entorno
 
-Descarga o clona el repositorio usando el comando `git clone`, luego accede al directorio `aves` desde la terminal e instala el entorno de `conda` con los siguientes comandos:
+Descarga o clona el repositorio usando el comando `git clone`, luego accede al directorio `aves` desde la terminal e instala el entorno de desarrollo con los siguientes comandos:
 
 ```sh
 make conda-create-env

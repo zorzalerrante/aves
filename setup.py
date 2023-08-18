@@ -17,7 +17,7 @@ metadata = dict(conf.items("metadata"))
 
 def read(filename):
     filename = os.path.join(os.path.dirname(__file__), filename)
-    text_type = type(u"")
+    text_type = type("")
     with io.open(filename, mode="r", encoding="utf-8") as fd:
         return re.sub(text_type(r":[a-z]+:`~?(.*?)`"), text_type(r"``\1``"), fd.read())
 
@@ -29,7 +29,7 @@ PACKAGENAME = metadata.get("package_name", "aves")
 URL = metadata.get("url", "https://github.com/zorzalerrante/aves")
 LICENSE = metadata.get("license", "GPL3")
 AUTHOR = metadata.get("author_name", "Eduardo Graells-Garrido")
-AUTHOR_EMAIL = metadata.get("author_email", "egraells@udd.cl")
+AUTHOR_EMAIL = metadata.get("author_email", "egraells@dcc.uchile.cl")
 DESCRIPTION = metadata.get(
     "description",
     "Module to support my Information Visualization course and my own work.",

@@ -114,6 +114,10 @@ download-external:
 download-osm:
 	sh ./scripts/download_osm.sh
 
+# generate documentation
+html:
+	$(MAKE) -C docs html
+
 #################################################################################
 # PROJECT RULES                                                                 #
 #################################################################################

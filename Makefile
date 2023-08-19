@@ -83,7 +83,7 @@ endif
 conda-update-env:
 ifeq (True,$(HAS_CONDA))
 	@printf ">>> Updating '$(ENV_NAME)' conda environment. This could take a few minutes ...\n\n"
-	@$(CONDA) env update --name $(ENV_NAME) --file environment.yml --prune
+	@PIP_NO_DEPS=1 $(CONDA) env update --name $(ENV_NAME) --file environment.yml --prune
 	@printf ">>> Updated.\n\n"
 else
 	@printf ">>> conda command not found. Check out that conda has been installed properly."

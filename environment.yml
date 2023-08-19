@@ -22,7 +22,7 @@ dependencies:
   - networkx
   - spectra
   - descartes
-  - scikit-learn
+  - scikit-learn<=1.2.2
   - wordcloud
   - pip
   - graph-tool
@@ -32,7 +32,7 @@ dependencies:
   - gensim
   - python-rapidjson
   - umap-learn
-  - hdbscan
+  - hdbscan<=0.8.29
   - shapely<=1.7.1
   - numpy<=1.22.4
   - cython<=0.29.28
@@ -41,10 +41,12 @@ dependencies:
   - contextily
   - sphinx
   - spacy
+  - dask
+  - tqdm
+  - future
   - pip:
     - bezier
     - scattertext
-    - KDEpy
     - adjustText
     - matplotlib-scalebar
     - git+https://github.com/zorzalerrante/scikit-fusion
@@ -53,11 +55,12 @@ dependencies:
     - xlrd
     - shifterator
     - flashtext
-    - tqdm
     - alphashape
     - s2sphere
     - pyrosm==0.6.1
-    - cykhash=2.0.1
+    - cykhash==2.0.1
     - lxml
     - sphinx-rtd-theme
     - pyreadstat
+    - pyrobuf
+    - KDEpy

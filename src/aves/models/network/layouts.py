@@ -210,7 +210,7 @@ class RadialLayout(LayoutStrategy):
     Este algoritmo posiciona los nodos de un grafo en círculos concéntricos alrededor del nodo raíz,
     y coloca las conexiones de la raíz en el primer círculo alrededor de esta. Luego, para cada nodo en
     este círculo, coloca sus conexiones en círculos exteriores y así sucesivamente, siguiendo la jerarquía del árbol.
-    Este algoritmo se basa en el árbol recubridor mínomo (minimum spanning tree) del grafo.
+    Este algoritmo se basa en el árbol recubridor mínimo (minimum spanning tree) del grafo.
 
     Parameters
     ----------

@@ -37,6 +37,8 @@ class NodeLink(object):
     """
     def __init__(self, network: Network):
         """
+        Constructor de la clase.
+
         Parameters
         ----------
         network : Network
@@ -151,15 +153,15 @@ class NodeLink(object):
             El plano en el cual se dibujará la red.
         **kwargs : dict
             Argumentos clave adicionales pasados a los métodos de dibujo de nodos y aristas.
-            - nodes : dict, optional
-                Un diccionario que contiene argumentos que serán pasados al método :func:`~aves.visualization.networks.base.NodeLink.plot_nodes`  al dibujar los nodos.
-                Esto permite personalizar la apariencia y el comportamiento del proceso de dibujo de los nodos.
-            - edges : dict, optional
-                Un diccionario que contiene argumentos que serán pasados al método :func:`~aves.visualization.networks.base.NodeLink.plot_edges`  al dibujar las aristas.
-                Esto permite personalizar la apariencia y el comportamiento del proceso de dibujo de las aristas.
-            - zorder : int, optional
-                Z-order para el dibujo de los elementos. Esto indica la jerarquia visual en la cual mostrar los elementos en el plano, los elementos
-                con mayor z-order aparecerán "encima" de aquellos con menor z-order.
+                - nodes : dict, optional
+                    Un diccionario que contiene argumentos que serán pasados al método :func:`~aves.visualization.networks.base.NodeLink.plot_nodes`  al dibujar los nodos.
+                    Esto permite personalizar la apariencia y el comportamiento del proceso de dibujo de los nodos.
+                - edges : dict, optional
+                    Un diccionario que contiene argumentos que serán pasados al método :func:`~aves.visualization.networks.base.NodeLink.plot_edges`  al dibujar las aristas.
+                    Esto permite personalizar la apariencia y el comportamiento del proceso de dibujo de las aristas.
+                - zorder : int, optional
+                    Z-order para el dibujo de los elementos. Esto indica la jerarquia visual en la cual mostrar los elementos en el plano, los elementos
+                    con mayor z-order aparecerán "encima" de aquellos con menor z-order.
 
         """
         nodes = kwargs.get("nodes", {})

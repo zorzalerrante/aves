@@ -109,7 +109,7 @@ def boxplot(
             Indica si se debe mostrar una leyenda de la variable categórica en caso de graficar subgrupos.
         boxplot_kwargs : dict, default={}, opcional
             Argumentos adicionales para personalizar el gráfico que se pasan a la función `ax.bxp()` de matplotlib.
-        Una lista completa de todas las posibles especificaciones se encuentra en la documentación de `Matplotlib <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.bxp.html#matplotlib.axes.Axes.bxp>`_
+        Una lista completa de todas las posibles especificaciones se encuentra en la documentación de `Matplotlib <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.bxp.html#matplotlib.axes.Axes.bxp>`__
         legend_kwargs : dict, default={}, opcional
             Argumentos adicionales para personalizar el estilo de la leyenda en caso de graficar subgrupos.
 

@@ -16,34 +16,34 @@ from aves.models.network import Network
 
 class HierarchicalEdgeBundling(object):
     """
-        Construye la visualización de la red con agrupamiento de aristas según la jerarquía de comunidades.
-        Puedes encontrar ejemplos de uso de esta clase en el notebook `Introducción a la Visualización de Redes <https://github.com/zorzalerrante/aves/blob/master/notebooks/vis-course/04-python-redes-preliminario.ipynb>`_.
+    Construye la visualización de la red con agrupamiento de aristas según la jerarquía de comunidades.
+    Puedes encontrar ejemplos de uso de esta clase en el notebook `Introducción a la Visualización de Redes <https://github.com/zorzalerrante/aves/blob/master/notebooks/vis-course/04-python-redes-preliminario.ipynb>`__.
 
-        Attributes
-        -------------
-        network : Network
-            Grafo a visualizar.
-        nested_graph : graph_tool.Graph
-            El árbol de comunidades.
-        root_dist_map : Vertex property map
-            La distancia entre la raíz hasta cada nodo.
-        root_pred_map : Vertex property map
-            Listado de predecesores en el árbol de búsqueda.
-        radial_positions: 
-            Un arreglo que almacena las coordenadas radiales de cada nodo en el diseño.
-        node_to_radial_idx:
-            Un diccionario que mapea los vértices (nodos) del grafo original a sus índices en las posiciones radiales.
-        node_angles:
-            Un arreglo que almacena los ángulos en grados correspondientes a las posiciones radiales de los nodos en la visualización.
-        node_angles_dict:
-            Un diccionario que mapea los identificadores de los nodos a sus ángulos radiales en grados.
-        node_ratio:
-            Un valor que representa el radio de la posición radial de los nodos.
-        community_graph:
-            Una vista filtrada del grafo original, que incluye solo los nodos que representan comunidades y sus conexiones.
-        community_nodelink:
-            Un objeto de la clase NodeLink que representa la visualización de las comunidades y se configura con los atributos y posiciones radiales correspondientes.
-        
+    Attributes
+    -------------
+    network : Network
+        Grafo a visualizar.
+    nested_graph : graph_tool.Graph
+        El árbol de comunidades.
+    root_dist_map : Vertex property map
+        La distancia entre la raíz hasta cada nodo.
+    root_pred_map : Vertex property map
+        Listado de predecesores en el árbol de búsqueda.
+    radial_positions: 
+        Un arreglo que almacena las coordenadas radiales de cada nodo en el diseño.
+    node_to_radial_idx:
+        Un diccionario que mapea los vértices (nodos) del grafo original a sus índices en las posiciones radiales.
+    node_angles:
+        Un arreglo que almacena los ángulos en grados correspondientes a las posiciones radiales de los nodos en la visualización.
+    node_angles_dict:
+        Un diccionario que mapea los identificadores de los nodos a sus ángulos radiales en grados.
+    node_ratio:
+        Un valor que representa el radio de la posición radial de los nodos.
+    community_graph:
+        Una vista filtrada del grafo original, que incluye solo los nodos que representan comunidades y sus conexiones.
+    community_nodelink:
+        Un objeto de la clase NodeLink que representa la visualización de las comunidades y se configura con los atributos y posiciones radiales correspondientes.
+    
         """
     def __init__(
             
@@ -55,6 +55,8 @@ class HierarchicalEdgeBundling(object):
         path_smoothing_factor=0.8,
     ):
         """
+        a
+
         Parameters
         ----------
         network : Network
@@ -144,21 +146,21 @@ class HierarchicalEdgeBundling(object):
 
         Parameters
         --------------
-            control_points : list
-                Los puntos de control que definen la arista.
-            n_points : int
-                El número de puntos a lo largo de la curva suavizada.
-            smoothing_factor : float
-                El factor de suavizado para la curva. Debe estar en el rango [0.0, 1.0].
+        control_points : list
+            Los puntos de control que definen la arista.
+        n_points : int
+            El número de puntos a lo largo de la curva suavizada.
+        smoothing_factor : float
+            El factor de suavizado para la curva. Debe estar en el rango [0.0, 1.0].
         
         Returns
         ---------
-            np.ndarray
-                Un arreglo que representa la curva suavizada.
+        np.ndarray
+            Un arreglo que representa la curva suavizada.
 
         Raises
         --------
-            ValueError: Si no se puede construir una spline con los puntos dados.
+        ValueError: Si no se puede construir una spline con los puntos dados.
         """
         try:
             smooth_edge = bspline(
@@ -445,22 +447,22 @@ class HierarchicalEdgeBundling(object):
     def plot_community_labels(self, ax, level=None, ratio=None, offset=0.05):
         """
         Escribe las etiqueta de las comunidades alrededor del círculo de nodos.
-
+    
         Parameters
         ----------------
-            ax : matplotlib.axes.Axes
-                Los ejes en los cuales se está creando la visualización.
-            level : int, default=None, optional
-                El nivel de comunidades a visualizar, en referencia a la jerarquía de comunidades.
-                Si es None, se usará el nivel más alto.
-            ratio : float, default=None, optional
-                La distancia desde el centro a la cual colocar las etiquetas. Si es None, se calculará a partir de  `node_ratio` y el offset entregado.
-            offset : float, default=0.05, optiona
-                Desplazamiento de las etiquetas con respecto a los nodos. Se usa si no se entrega una posición radial.
+        ax : matplotlib.axes.Axes
+            Los ejes en los cuales se está creando la visualización.
+        level : int, default=None, optional
+            El nivel de comunidades a visualizar, en referencia a la jerarquía de comunidades.
+            Si es None, se usará el nivel más alto.
+        ratio : float, default=None, optional
+            La distancia desde el centro a la cual colocar las etiquetas. Si es None, se calculará a partir de  `node_ratio` y el offset entregado.
+        offset : float, default=0.05, optiona
+            Desplazamiento de las etiquetas con respecto a los nodos. Se usa si no se entrega una posición radial.
 
         Returns
         ----------
-            None
+        None
         """
         if ratio is None:
             ratio = self.node_ratio + offset
@@ -516,12 +518,12 @@ class HierarchicalEdgeBundling(object):
 
         Parameters
         ------------
-            ax : matplotlib.axes.Axes
-                Los ejes en los cuales generar la visualizació.
+        ax : matplotlib.axes.Axes
+            Los ejes en los cuales generar la visualizació.
 
         Returns
         ---------
-            None
+        None
         """
         self.community_nodelink.plot_nodes(ax, color="blue", marker="s")
         self.community_nodelink.plot_edges(ax, color="black", linewidth=2, alpha=0.8)

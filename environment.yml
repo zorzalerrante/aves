@@ -60,7 +60,7 @@ dependencies:
     - pyrosm==0.6.1
     - cykhash==2.0.1
     - lxml
-    - sphinx-rtd-theme
     - pyreadstat
     - pyrobuf
     - KDEpy
+    - pydata-sphinx-theme

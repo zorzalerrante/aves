@@ -186,7 +186,7 @@ class ForceDirectedLayout(LayoutStrategy):
         ------------
         **kwargs: keyword arguments
             Parámetros adicionales que permiten configurar la ejecución del algoritmo. Una lista completa de los argumentos
-            disponibles se encuentra en la documentación de `graph-tool <https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.draw.sfdp_layout.html#graph_tool.draw.sfdp_layout>`_.
+            disponibles se encuentra en la documentación de `graph-tool <https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.draw.sfdp_layout.html#graph_tool.draw.sfdp_layout>`__.
         """
         method = kwargs.pop("algorithm", "sfdp")
 
@@ -236,7 +236,7 @@ class RadialLayout(LayoutStrategy):
             
         **kwargs: keyword arguments
             Parámetros adicionales que permiten configurar la ejecución del algoritmo. Una lista completa de los argumentos
-            disponibles se encuentra en la documentación de `graph-tool <https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.draw.sfdp_layout.html#graph_tool.draw.radial_tree_layout>`_.
+            disponibles se encuentra en la documentación de `graph-tool <https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.draw.sfdp_layout.html#graph_tool.draw.radial_tree_layout>`__.
 
         Returns
         -------
@@ -305,15 +305,15 @@ class PrecomputedLayout(LayoutStrategy):
             Argumentos posicionales adicionales (sin uso).
         **kwargs : keyword arguments
             Argumentos de palabras clave adicionales.
-            - positions : numpy.ndarray
-                Un array de posiciones de nodos con forma `(num_nodos, 2)`.
-                Cada fila contiene las coordenadas (x, y) de un nodo.
-            - angles : numpy.ndarray, opcional
-                Un array de ángulos de nodos, donde cada ángulo representa la posición angular de un
-                nodo en el diseño. Si no se proporciona, se establecerá en `None`.
-            - ratios : numpy.ndarray, opcional
-                Un array de relaciones de nodos, donde cada relación representa la distancia de un nodo
-                desde la raíz del árbol. Si no se proporciona, se establecerá en `None`.
+                - positions : numpy.ndarray
+                    Un array de posiciones de nodos con forma `(num_nodos, 2)`.
+                    Cada fila contiene las coordenadas (x, y) de un nodo.
+                - angles : numpy.ndarray, opcional
+                    Un array de ángulos de nodos, donde cada ángulo representa la posición angular de un
+                    nodo en el diseño. Si no se proporciona, se establecerá en `None`.
+                - ratios : numpy.ndarray, opcional
+                    Un array de relaciones de nodos, donde cada relación representa la distancia de un nodo
+                    desde la raíz del árbol. Si no se proporciona, se establecerá en `None`.
 
         Raises
         ------

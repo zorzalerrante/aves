@@ -206,11 +206,10 @@ class PlainNodes(NodeStrategy):
 class LabeledNodes(PlainNodes):
     """
     Estrategia para renderizar nodos que los representa como puntos en el plano, junto a su etiqueta.
-
-Esta clase hereda de PlainNodes y añade la capacidad de agregar etiquetas de texto a los nodos en el gráfico.
+    Esta clase hereda de PlainNodes y añade la capacidad de agregar etiquetas de texto a los nodos en el gráfico.
 
     Attributes
-    ----------
+    ------------
     network : Network
         La red a visualizar.
     label_property : str

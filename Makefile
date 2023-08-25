@@ -63,7 +63,7 @@ clean:
 conda-create-env:
 ifeq (True,$(HAS_CONDA))
 	@printf ">>> Creating '$(ENV_NAME)' conda environment. This could take a few minutes ...\n\n"
-	@$(CONDA) env create --name $(ENV_NAME) --file environment.yml
+	@PIP_NO_DEPS=1 $(CONDA) env create --name $(ENV_NAME) --file environment.yml
 	@printf ">>> Adding the project to the environment...\n\n"
 else
 	@printf ">>> conda command not found. Check out that conda has been installed properly."
@@ -83,7 +83,7 @@ endif
 conda-update-env:
 ifeq (True,$(HAS_CONDA))
 	@printf ">>> Updating '$(ENV_NAME)' conda environment. This could take a few minutes ...\n\n"
-	@$(CONDA) env update --name $(ENV_NAME) --file environment.yml --prune
+	@PIP_NO_DEPS=1 $(CONDA) env update --name $(ENV_NAME) --file environment.yml --prune
 	@printf ">>> Updated.\n\n"
 else
 	@printf ">>> conda command not found. Check out that conda has been installed properly."
@@ -113,6 +113,10 @@ download-external:
 ## download OSM data
 download-osm:
 	sh ./scripts/download_osm.sh
+
+# generate documentation
+html:
+	$(MAKE) -C docs html
 
 #################################################################################
 # PROJECT RULES                                                                 #

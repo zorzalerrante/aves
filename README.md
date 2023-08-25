@@ -296,10 +296,18 @@ conda install mamba -n base -c conda-forge
 
 ¿Por qué `mamba`? Es una versión más eficiente de `conda`. ¡Te ahorrará muchos minutos de instalación!
 
+Una vez que se ha instalado `conda` y `mamba`, es necesario modificar el archivo `.condarc` que está en la carpeta raíz de la cuenta de usuario/a del sistema. El archivo debe contener lo siguiente:
+
+```
+channels:
+  - conda-forge
+ssl_verify: true
+channel_priority: strict
+```
 
 ### Paso 2: Creación del Entorno
 
-Descarga o clona el repositorio usando el comando `git clone`, luego accede al directorio `aves` desde la terminal e instala el entorno de `conda` con los siguientes comandos:
+Descarga o clona el repositorio usando el comando `git clone`, luego accede al directorio `aves` desde la terminal e instala el entorno de desarrollo con los siguientes comandos:
 
 ```sh
 make conda-create-env
@@ -333,7 +341,7 @@ Para añadir o actualizar dependencias:
 
 ### Personas y Contribuciones
 
-* Parte del tiempo dedicado a este código ha sido financiado por el proyecto **ANID Fondecyt de Iniciación 11180913** y **ANID Fondecyt de Iniciación #11220799**.
+* Parte del tiempo dedicado a este código ha sido financiado por el proyecto **ANID Fondecyt de Iniciación #11180913** de Eduardo Graells-Garrido, **ANID Fondecyt de Iniciación #11220799** de Daniela Opitz, y Fondo de Instalación FCFM de Eduardo Graells-Garrido.
 * La implementación de Force Directed Edge Bundling está inspirada en la versión de Javascript de esa técnica, y fue inicialmente desarrollada por [Vera Sativa](https://github.com/verasativa) y luego modificada por [Tabita Catalán](https://github.com/tabitaCatalan/s). Adapté esa versión inicial para que fuese 100% Python y funcionase con el resto de `aves`. 
 * El módulo `aves.features.twokenize` es una versión modificada de [ark-twokenize](https://github.com/myleott/ark-twokenize-py) de [Myle Ott](https://github.com/myleott).
 * Este repositorio fue creado gracias al template de _Cookie Cutter / Data Science with Conda_ hecho por [Patricio Reyes](https://github.com/pareyesv/).

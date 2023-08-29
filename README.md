@@ -2,7 +2,7 @@
 
 Por [Eduardo Graells-Garrido](http://datagramas.cl).
 
-Este repositorio contiene datos, código y notebooks relacionados con mi [curso de Visualización de Información](http://datagramas.cl/courses/infovis) y mi trabajo diario. Lo he estructurado en un paquete llamado `aves`, sigla descrita en el título de este documento. 
+Este repositorio contiene datos, código y notebooks relacionados con mis cursos (Visualización de Información, Ciencia de Datos Geográficos), mi trabajo diario, y el de personas con quienes colaboro, como Daniela Opitz. Lo he estructurado en un paquete llamado `aves`, sigla descrita en el título de este documento. 
 
 Todavía no existe una documentación exhaustiva para `aves`, ya que su uso es primariamente interno, pero estos ejemplos muestran cómo se utilizan sus funciones. En lo que respecta a visualización, se mantiene el esquema típico que se utiliza en `matplotlib` y `seaborn`, las bibliotecas de visualización de bajo nivel más utilizadas en Python. De cierto modo, `aves` es un conjunto de herramientas de bajos niveles de abstracción, es decir, utiliza un paradigma imperativo, donde le damos instrucciones específicas al programa (**cómo** hacerlo); en contraste, una herramienta de alto nivel se enfoca en **qué** hacer, ocultando los detalles de implementación.
 
@@ -339,9 +339,10 @@ Para añadir o actualizar dependencias:
 
 ## Créditos
 
+Parte del tiempo dedicado a este código ha sido financiado por el proyecto **ANID Fondecyt de Iniciación #11180913** de Eduardo Graells-Garrido, **ANID Fondecyt de Iniciación #11220799** de Daniela Opitz, y Fondo de Instalación FCFM de Eduardo Graells-Garrido.
+
 ### Personas y Contribuciones
 
-* Parte del tiempo dedicado a este código ha sido financiado por el proyecto **ANID Fondecyt de Iniciación #11180913** de Eduardo Graells-Garrido, **ANID Fondecyt de Iniciación #11220799** de Daniela Opitz, y Fondo de Instalación FCFM de Eduardo Graells-Garrido.
 * La implementación de Force Directed Edge Bundling está inspirada en la versión de Javascript de esa técnica, y fue inicialmente desarrollada por [Vera Sativa](https://github.com/verasativa) y luego modificada por [Tabita Catalán](https://github.com/tabitaCatalan/s). Adapté esa versión inicial para que fuese 100% Python y funcionase con el resto de `aves`. 
 * El módulo `aves.features.twokenize` es una versión modificada de [ark-twokenize](https://github.com/myleott/ark-twokenize-py) de [Myle Ott](https://github.com/myleott).
 * Este repositorio fue creado gracias al template de _Cookie Cutter / Data Science with Conda_ hecho por [Patricio Reyes](https://github.com/pareyesv/).

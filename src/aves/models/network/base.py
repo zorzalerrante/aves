@@ -69,6 +69,7 @@ class Network(object):
         directed=True,
         weight=None,
         allow_negative_weights=False,
+        properties=None,
     ):
         source_attr = f"{source}__mapped__"
         target_attr = f"{target}__mapped__"
@@ -100,6 +101,21 @@ class Network(object):
         result = cls(network)
         result.node_map = node_map
         result.id_to_label = itemmap(reversed, node_map)
+
+        if properties is not None:
+            for prop in properties:
+                if df[prop].dtype in (np.int8, np.int16, np.int32, np.int64):
+                    dtype = "int"
+                elif df[prop].dtype in (np.float16, np.float32, np.float64):
+                    dtype = "float"
+                else:
+                    raise ValueError(
+                        f"property {prop} has an unsupported dtype {dtype}"
+                    )
+                result.add_edge_property(
+                    df.set_index([source, target])[prop], dtype=dtype
+                )
+
         return result
 
     @classmethod
@@ -133,6 +149,23 @@ class Network(object):
             network.add_edge_list(df[[source_column, target_column]].values)
             # network.shrink_to_fit()
             return network
+
+    def add_edge_property(self, series, dtype="float"):
+        g = self.network
+        series_dict = series.to_dict()
+
+        prop_values = [
+            series_dict[
+                (
+                    self.id_to_label[int(e.source())],
+                    self.id_to_label[int(e.target())],
+                )
+            ]
+            for e in g.edges()
+        ]
+
+        series_prop = g.new_edge_property(dtype, vals=prop_values)
+        g.edge_properties[series.name] = series_prop
 
     def build_edge_data(self):
         if self.edge_data is None:

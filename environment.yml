@@ -1,27 +1,26 @@
 channels:
   - conda-forge
 dependencies:
-  - configparser
-  - graphviz
+  - configparser==5.3.0
+  - graphviz==7.0.5
   - black
-  - python>=3.8
-  - matplotlib=3.7.1
+  - python<=3.9.18
+  - matplotlib==3.7.1
   - ipympl
-  - seaborn
-  - gdal
-  - pandas
-  - geopandas<=0.9.0
-  - libpysal
-  - esda
-  - splot
-  - spreg
-  - spglm
-  - mgwr
-  - mapclassify
-  - statsmodels
-  - networkx
+  - seaborn==0.12.2
+  - gdal==3.6.0
+  - pandas==2.0.3
+  - geopandas==0.13.2
+  - libpysal==4.7.0
+  - esda==2.5.0
+  - splot==1.1.5.post1
+  - spreg==1.3.2
+  - spglm==1.0.8
+  - mgwr==2.1.2
+  - mapclassify==2.5.0
+  - statsmodels==0.14.0
   - spectra
-  - descartes
+  - descartes==1.1.0
   - scikit-learn<=1.2.2
   - wordcloud
   - pip
@@ -33,10 +32,10 @@ dependencies:
   - python-rapidjson
   - umap-learn
   - hdbscan<=0.8.29
-  - shapely<=1.7.1
+  - shapely<=1.8.2
   - numpy<=1.22.4
   - cython<=0.29.28
-  - pygeos<=0.10
+  - pygeos<=0.12
   - h3-py==3.7.4
   - contextily
   - sphinx
@@ -45,22 +44,23 @@ dependencies:
   - tqdm
   - future
   - pip:
-    - bezier
-    - scattertext
-    - adjustText
-    - matplotlib-scalebar
+    - Jinja2
+    - bezier==2023.7.28
+    - scattertext==0.1.19
+    - adjustText==0.8
+    - matplotlib-scalebar==0.8.1
     - git+https://github.com/zorzalerrante/scikit-fusion
-    - pymunk
-    - emoji
-    - xlrd
-    - shifterator
-    - flashtext
-    - alphashape
-    - s2sphere
+    - pymunk==6.5.1
+    - emoji==2.8.0
+    - xlrd==2.0.1
+    - shifterator==0.3.0
+    - flashtext==2.7
+    - alphashape==1.3.1
+    - s2sphere==0.2.5
     - pyrosm==0.6.1
     - cykhash==2.0.1
-    - lxml
+    - lxml==4.9.3
     - sphinx-rtd-theme
-    - pyreadstat
-    - pyrobuf
-    - KDEpy
+    - pyreadstat==1.2.3
+    - pyrobuf==0.9.3
+    - KDEpy==1.1.5

@@ -9,6 +9,7 @@ from matplotlib.collections import LineCollection
 from aves.models.network import Network
 from aves.visualization.collections import ColoredCurveCollection
 from aves.visualization.primitives import RenderStrategy
+from aves.visualization.colors.palettes import build_palette
 
 
 class EdgeStrategy(RenderStrategy):
@@ -74,15 +75,16 @@ class WeightedEdges(EdgeStrategy):
         self.weights = weights
         self.lines = None
         self.scheme = scheme
-        if not self.scheme in ('bins', 'quantiles', 'custom'):
-            raise ValueError('scheme must be bins, quantiles or custom')
+        if not self.scheme in ("bins", "quantiles", "custom"):
+            raise ValueError("scheme must be bins, quantiles or custom")
 
-        if self.scheme == 'custom':
+        if self.scheme == "custom":
             self.bins = np.array(bins)
             if len(bins) < 2:
-                raise ValueError('bins must have at least two elements')
+                raise ValueError("bins must have at least two elements")
             self.bins = bins
             self.k = len(self.bins) - 1
+            print(bins)
 
     def prepare_data(self):
         self.lines = []
@@ -94,7 +96,7 @@ class WeightedEdges(EdgeStrategy):
 
         weights = self.weights
 
-        print('lens', len(self.lines), len(weights))
+        print("lens", len(self.lines), len(weights))
 
         if type(weights) == str:
             if not weights in self.network.network.edge_properties:
@@ -108,35 +110,39 @@ class WeightedEdges(EdgeStrategy):
         if weights is not None and not type(weights) in (np.array, np.ndarray):
             raise ValueError(f"weights must be np.array instead of {type(weights)}.")
 
-        #weights: np.array = weights
+        # weights: np.array = weights
         print(self.scheme)
 
-        if self.scheme == 'bins':
-            groups, bins = pd.cut(weights, self.k, labels=False, retbins=True, duplicates='raise')
+        if self.scheme == "bins":
+            groups, bins = pd.cut(
+                weights, self.k, labels=False, retbins=True, duplicates="raise"
+            )
             self.bins = bins
-        elif self.scheme == 'quantiles':
-            groups, bins = pd.qcut(weights, self.k, labels=False, retbins=True, duplicates='raise')
+        elif self.scheme == "quantiles":
+            groups, bins = pd.qcut(
+                weights, self.k, labels=False, retbins=True, duplicates="raise"
+            )
             self.bins = bins
         else:
-            groups = pd.cut(weights, bins=self.bins, labels=False, retbins=False, duplicates='raise')
+            groups = pd.cut(
+                weights, bins=self.bins, labels=False, retbins=False, duplicates="raise"
+            )
         self.line_groups = groups
 
     def render(self, ax, *args, **kwargs):
-        palette = kwargs.pop("palette", None)
+        edge_colors = build_palette(
+            self.bins,
+            palette=kwargs.pop("palette", "#a7a7a7"),
+            palette_type=kwargs.pop("palette_type", "dark"),
+        )
 
-        if palette is None:
-            edge_colors = list(
-                reversed(
-                    sns.dark_palette(kwargs.pop("color", "#a7a7a7"), n_colors=self.k)
-                )
-            )
-        else:
-            edge_colors = sns.color_palette(palette, n_colors=self.k)
+        print(self.bins)
+        print("edge_colors", edge_colors)
 
         results = []
         for i in range(self.k):
-            print(len(self.lines), len(self.line_groups))
             coll_lines = self.lines[self.line_groups == i]
+            print(len(self.lines), len(self.line_groups), len(coll_lines))
 
             coll = LineCollection(
                 coll_lines,

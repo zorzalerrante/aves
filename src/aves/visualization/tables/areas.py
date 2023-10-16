@@ -20,7 +20,7 @@ def stacked_areas(ax, df, baseline="zero", color_dict=None, **kwargs):
         Un diccionario que mapea los nombres de las categorías a los colores a utilizar para rellenar las áreas corresppondientes.
     **kwargs
         Argumentos adicionales que permiten personalizar el gráfico.
-        Una lista completa de las opciones disponibles se encuentra en la documentación de `Matplotlib <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.fill_between.html>`_.
+        Una lista completa de las opciones disponibles se encuentra en la documentación de `Matplotlib <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.fill_between.html>`__.
 
     Returns
     -------
@@ -92,21 +92,21 @@ def streamgraph(
         Umbral para posicionar las etiquetas en el gráfico.
     label_args : dict, default=None, opcional
         Argumentos adicionales para personalizar las etiquetas.
-        Una lista completa de las opciones disponibles se encuentra en la documentación de `Matplotlib <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.text.html>`_.
+        Una lista completa de las opciones disponibles se encuentra en la documentación de `Matplotlib <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.text.html>`__.
     fig : Figure, default=None, opcional
         La figura en la cual se genera el gráfico. Se utiliza para el manejo de colisiones de etiquetas.
     area_colors : dict, default=None, opcional
         Un diccionario que mapea los nombres de las categorías a los colores a utilizar para rellenar las áreas corresppondientes.
     area_args : dict, default=None, opcional
         Argumentos adicionales que permiten personalizar el gráfico.
-        Una lista completa de las opciones disponibles se encuentra en la documentación de `Matplotlib <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.fill_between.html>`_.
+        Una lista completa de las opciones disponibles se encuentra en la documentación de `Matplotlib <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.fill_between.html>`__.
     avoid_label_collisions : bool, default=False, opcional
         Indica si se deben evitar colisiones de etiquetas en el gráfico.
     outline_labels : bool, default=True, opcional
         Indica si se deben resaltar las etiquetas mediante un contorno.
     label_collision_args : dict, default=None, opcional
         Argumentos adicionales para manejar las colisiones de etiquetas.
-        Una lista completa de las opciones disponibles se encuentra en la documentación de `AdjustText <https://adjusttext.readthedocs.io/en/latest/>`_.
+        Una lista completa de las opciones disponibles se encuentra en la documentación de `AdjustText <https://adjusttext.readthedocs.io/en/latest/>`__.
     """
     if label_args is None:
         label_args = {}

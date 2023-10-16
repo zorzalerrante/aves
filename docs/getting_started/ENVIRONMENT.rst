@@ -7,7 +7,7 @@
 Using the Project's environment
 ***********************************
 
-Module to support my Information Visualization course.
+Module to support the courses 'Visualizacion de la Información' from Universidad del Desarrollo and  'Ciencia de Datos Geográficos'  from Universidad de Chile.
 
 **Author**: Eduardo Graells-Garrido (`eduardo.graells@bsc.es <mailto:eduardo.graells@bsc.es>`_)
 
@@ -158,6 +158,6 @@ Project based on the
 
 
 .. |License| image:: https://img.shields.io/badge/License-MIT-blue.svg
-   :target: https://github.com/carnby/aves/blob/master/LICENSE
+   :target: https://github.com/zorzalerrante/aves/blob/master/LICENSE
    :alt: Project License
 

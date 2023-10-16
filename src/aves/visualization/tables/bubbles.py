@@ -31,7 +31,7 @@ def arc_patch(center, radius, theta1, theta2, resolution=50, **kwargs):
         Número de puntos que se utilizarán para aproximar el arco.
     **kwargs : dict
         Argumentos adicionales para personalizar el polígono. 
-        Una lista completa de todas las posibles especificaciones se encuentra en la documentación de `Matplotlib <https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.Polygon.html>`_
+        Una lista completa de todas las posibles especificaciones se encuentra en la documentación de `Matplotlib <https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.Polygon.html>`__
 
     Returns
     -------

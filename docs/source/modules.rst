@@ -5,4 +5,5 @@ Código
    :maxdepth: 4
 
    aves.data
-   aves.visualization.tables
+   aves.visualization
+   aves.models

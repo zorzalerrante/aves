@@ -15,7 +15,38 @@ from aves.models.network import Network
 
 
 class HierarchicalEdgeBundling(object):
+    """
+    Construye la visualización de la red con agrupamiento de aristas según la jerarquía de comunidades.
+    Puedes encontrar ejemplos de uso de esta clase en el notebook `Introducción a la Visualización de Redes <https://github.com/zorzalerrante/aves/blob/master/notebooks/vis-course/04-python-redes-preliminario.ipynb>`__.
+
+    Attributes
+    -------------
+    network : Network
+        Grafo a visualizar.
+    nested_graph : graph_tool.Graph
+        El árbol de comunidades.
+    root_dist_map : Vertex property map
+        La distancia entre la raíz hasta cada nodo.
+    root_pred_map : Vertex property map
+        Listado de predecesores en el árbol de búsqueda.
+    radial_positions: 
+        Un arreglo que almacena las coordenadas radiales de cada nodo en el diseño.
+    node_to_radial_idx:
+        Un diccionario que mapea los vértices (nodos) del grafo original a sus índices en las posiciones radiales.
+    node_angles:
+        Un arreglo que almacena los ángulos en grados correspondientes a las posiciones radiales de los nodos en la visualización.
+    node_angles_dict:
+        Un diccionario que mapea los identificadores de los nodos a sus ángulos radiales en grados.
+    node_ratio:
+        Un valor que representa el radio de la posición radial de los nodos.
+    community_graph:
+        Una vista filtrada del grafo original, que incluye solo los nodos que representan comunidades y sus conexiones.
+    community_nodelink:
+        Un objeto de la clase NodeLink que representa la visualización de las comunidades y se configura con los atributos y posiciones radiales correspondientes.
+    
+        """
     def __init__(
+            
         self,
         network: Network,
         hierarchy_tree: graph_tool.Graph,
@@ -23,6 +54,22 @@ class HierarchicalEdgeBundling(object):
         points_per_edge=50,
         path_smoothing_factor=0.8,
     ):
+        """
+        a
+
+        Parameters
+        ----------
+        network : Network
+            la red a visualizar.
+        hierarchy_tree : graph_tool.Graph
+            El árbol de comunidades.
+        root_idx : int, default=0, optional
+            El índice de la raíz en el árbol.
+        points_per_edge : int, default=50, optional
+            La cantidad de puntos usados al renderizar cada arista.
+        path_smoothing_factor : float, default=0.8, optional
+            Factor para suavizar los caminos de las aristas.
+        """
         self.network = network
 
         self.nested_graph = hierarchy_tree
@@ -38,6 +85,10 @@ class HierarchicalEdgeBundling(object):
         )
 
     def build_structure(self):
+        """
+        Construye la estructura jerárquica y calcula el posicionamiento de los nodos.
+        Esta función modifica los atributos radial_positions, community_graph, y community_nodelink.
+        """
         from aves.visualization.networks import NodeLink
 
         self.radial_positions = np.array(
@@ -90,6 +141,27 @@ class HierarchicalEdgeBundling(object):
         self.community_nodelink.set_edge_drawing(method="plain")
 
     def edge_to_spline(self, control_points, n_points, smoothing_factor):
+        """
+        Convierte una arista representada por puntos en una curva suavizada (spline) usando un algoritmo de interpolación.
+
+        Parameters
+        --------------
+        control_points : list
+            Los puntos de control que definen la arista.
+        n_points : int
+            El número de puntos a lo largo de la curva suavizada.
+        smoothing_factor : float
+            El factor de suavizado para la curva. Debe estar en el rango [0.0, 1.0].
+        
+        Returns
+        ---------
+        np.ndarray
+            Un arreglo que representa la curva suavizada.
+
+        Raises
+        --------
+        ValueError: Si no se puede construir una spline con los puntos dados.
+        """
         try:
             smooth_edge = bspline(
                 control_points, degree=min(len(control_points) - 1, 3), n=n_points
@@ -121,6 +193,23 @@ class HierarchicalEdgeBundling(object):
             raise ValueError(f"Could not build a spline in {control_points}. {ex}")
 
     def build_edges(self, n_points=50, smoothing_factor=0.8):
+        """
+        Construye curvas suavizadas a partir de las aristas del grafo jerárquico. Cada arista es convertida en un spline, cuyos puntos
+        son almacenados en el atributo `points` de la arista.
+
+        Parameters
+        --------------
+        n_points : int,  default=50
+            El número de puntos a lo largo de las curvas suavizadas.
+        smoothing_factor : float, default=0.8
+            El factor de suavizado para las curvas suavizadas. Debe estar en el rango [0.0, 1.0].
+        
+        Raises
+        ---------
+        Exception
+            Cuando una arista empieza y termina en un mismo vértice.
+
+        """
         edge_ids_per_source = defaultdict(list)
         built_edges = dict()
 
@@ -176,7 +265,50 @@ class HierarchicalEdgeBundling(object):
         label_func=None,
         label_kwargs=None,
     ):
+        """
+        Traza los `segmentos de comunidades` (community wedges) que representan las comunidades de nodos en el grafo. Estos segmentos son
+        bandas de colores que rodean el grafo agrupando los nodos según su comunidad.
 
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+                Los ejes en los cuales se está creando la visualización.
+        level : int, default=1, optional
+            El nivel de comunidades a visualizar, en referencia a la jerarquía de comunidades.
+        wedge_width : float, default=0.5, optional
+            El ancho de los segmentos.
+        wedge_ratio : float or None, default=None, optional
+            La distancia desde el centro hasta los segmentos.
+        wedge_offset : float, default=0.05, optional
+            El desplazamiento de los segmentos con respecto a la distancia establecida. Corresponde a la separación entre
+            los segmnetos y los nodos.
+        wedge_kwargs : dict or None, optional
+            Parámetros adicionales para configurar la visualización.
+        alpha : float, default=1.0, optional
+            Define la transparencia de los segmentos.
+        fill_gaps : bool, default=False, optional
+            Indica si es que el dibujo de los segmentos debe ser continuo (True) o si debe haber un espacio entre cada segmento de comunidad (False).
+        palette : str, dict, or None, default="plasma", optional
+            La paleta de colores con la cual colorear los segmentos.
+        label_func : function or None, default=None, optional
+            Una función para generar etiquetas para los segmentos de comunidad.
+        label_kwargs : dict or None, optional
+            Parámetros adicionales para personalizar las etiquetas.
+
+        Returns
+        -------
+        wedge_meta
+            Una lista con diccionarios que contienen la metdata de los segmentos.
+        collection
+            La colección de elementos a dibujar en la visualización.
+
+        Raises
+        -------
+        Value Error
+            Si al entregar una paleta personalizada esta no contiene los identificadores de todas las comunidades o si el numero
+            de colores no coincide con la cantidad de comunidades. O si el nombre de la paleta no existe dentro de las
+            posibilidades de Seaborn.
+        """
         if wedge_ratio is None:
             wedge_ratio = self.node_ratio + wedge_offset
 
@@ -313,6 +445,25 @@ class HierarchicalEdgeBundling(object):
         return wedge_meta, collection
 
     def plot_community_labels(self, ax, level=None, ratio=None, offset=0.05):
+        """
+        Escribe las etiqueta de las comunidades alrededor del círculo de nodos.
+    
+        Parameters
+        ----------------
+        ax : matplotlib.axes.Axes
+            Los ejes en los cuales se está creando la visualización.
+        level : int, default=None, optional
+            El nivel de comunidades a visualizar, en referencia a la jerarquía de comunidades.
+            Si es None, se usará el nivel más alto.
+        ratio : float, default=None, optional
+            La distancia desde el centro a la cual colocar las etiquetas. Si es None, se calculará a partir de  `node_ratio` y el offset entregado.
+        offset : float, default=0.05, optiona
+            Desplazamiento de las etiquetas con respecto a los nodos. Se usa si no se entrega una posición radial.
+
+        Returns
+        ----------
+        None
+        """
         if ratio is None:
             ratio = self.node_ratio + offset
 
@@ -361,5 +512,18 @@ class HierarchicalEdgeBundling(object):
             )
 
     def plot_community_network(self, ax):
+        """
+        Visualiza el árbol de jerarquía de comunidades de la red. Esta visualización se puede superponer sobre
+        la visualización de la red para entender cómo se relacionan las comunidades de nodos en distintos niveles.
+
+        Parameters
+        ------------
+        ax : matplotlib.axes.Axes
+            Los ejes en los cuales generar la visualizació.
+
+        Returns
+        ---------
+        None
+        """
         self.community_nodelink.plot_nodes(ax, color="blue", marker="s")
         self.community_nodelink.plot_edges(ax, color="black", linewidth=2, alpha=0.8)

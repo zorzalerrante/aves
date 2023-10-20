@@ -45,17 +45,17 @@ def scatterplot(
         Indica si se deben evitar las colisiones entre las etiquetas al agregarlas al gráfico.
     scatter_args: dict, default={}
         Argumentos adicionales que permiten personalizar el gráfico.
-        Una lista completa de las opciones disponibles se encuentra en la documentación de `SeaBorn <https://seaborn.pydata.org/generated/seaborn.scatterplot.html>`_.
+        Una lista completa de las opciones disponibles se encuentra en la documentación de `SeaBorn <https://seaborn.pydata.org/generated/seaborn.scatterplot.html>`__.
     label_args: dict, default={}
     Argumentos adicionales para personalizar las etiquetas.
-        Una lista completa de las opciones disponibles se encuentra en la documentación de `Matplotlib <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.text.html>`_.
+        Una lista completa de las opciones disponibles se encuentra en la documentación de `Matplotlib <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.text.html>`__.
     na_value: int or float, default=0
         Valor a utilizar para reemplazar los valores faltantes en el DataFrame, si se opta por no eliminar las filas con valores faltantes.
     drop_na: bool, default=False
         Indica si se deben eliminar las filas con valores faltantes del DataFrame.
     label_collision_args: dict, default={"lim": 5}
         Argumentos adicionales para manejar las colisiones de etiquetas.
-        Una lista completa de las opciones disponibles se encuentra en la documentación de `AdjustText <https://adjusttext.readthedocs.io/en/latest/>`_.
+        Una lista completa de las opciones disponibles se encuentra en la documentación de `AdjustText <https://adjusttext.readthedocs.io/en/latest/>`__.
     label_filter_func: function, default=None
         Una función que filtra el DataFrame antes de agregar las etiquetas. Si se proporciona, solo se agregarán etiquetas para las filas que cumplan con los criterios de esta función.
 

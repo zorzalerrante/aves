@@ -60,7 +60,7 @@ def barchart(
         Indica si se debe devolver el DataFrame utilizado en el gráfico. 
     **kwargs : dict
         Argumentos adicionales para personalizar el gráfico que se pasan a la función `plot.bar()` de pandas.
-        Una lista completa de todas las posibles especificaciones se encuentra en la documentación de `Matplotlib <https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.bar.html>`_
+        Una lista completa de todas las posibles especificaciones se encuentra en la documentación de `Matplotlib <https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.bar.html>`__
     
 
     Returns

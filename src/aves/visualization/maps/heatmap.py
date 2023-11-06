@@ -41,6 +41,7 @@ def heat_map(
     )
 
     norm_heat = heat[2] / heat[2].max()
+
     cmap = colormap_from_palette(palette, n_colors=n_levels)
 
     levels = np.linspace(low_threshold, max_threshold, n_levels)

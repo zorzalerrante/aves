@@ -51,7 +51,7 @@ def choropleth_map(
         geodf = geodf.assign(
             __bin__=lambda x: pd.cut(
                 x[column], bins=bins, include_lowest=True, labels=False
-            ).astype(np.int)
+            ).astype(int)
         )
     elif binning == "custom":
         if bins is None:
@@ -60,7 +60,7 @@ def choropleth_map(
         geodf = geodf.assign(
             __bin__=lambda x: pd.cut(
                 x[column], bins=bins, include_lowest=True, labels=False
-            ).astype(np.int)
+            ).astype(int)
         )
     else:
         raise ValueError(

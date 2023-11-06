@@ -119,7 +119,7 @@ def streamgraph(
             lim=25, arrowprops=dict(arrowstyle="-", color="k", lw=0.5)
         )
 
-    df = df.fillna(0).astype(np.float)
+    df = df.fillna(0).astype(float)
 
     stream_x, stream_first_line, stream_stack = stacked_areas(
         ax, df, color_dict=area_colors, baseline=baseline, **area_args

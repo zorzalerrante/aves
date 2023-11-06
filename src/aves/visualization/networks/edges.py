@@ -214,8 +214,6 @@ class WeightedEdges(EdgeStrategy):
 
         weights = self.weights
 
-        print("lens", len(self.lines), len(weights))
-
         if type(weights) == str:
             if not weights in self.network.network.edge_properties:
                 if weights == "betweenness":
@@ -268,15 +266,17 @@ class WeightedEdges(EdgeStrategy):
         list
             Una lista de objetos LineCollection que representan las aristas renderizadas para cada grupo.
         """
-        palette = kwargs.pop("palette", None)
+
+        if 'color' in kwargs:
+            palette = kwargs.pop('color')
+        else:
+            palette = kwargs.pop('palette', '#a7a7a7')
+
         edge_colors = build_palette(
             self.bins,
-            palette=kwargs.pop("palette", "#a7a7a7"),
+            palette=palette,
             palette_type=kwargs.pop("palette_type", "dark"),
         )
-
-        print(self.bins)
-        print("edge_colors", edge_colors)
 
         results = []
         for i in range(self.k):

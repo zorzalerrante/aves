@@ -11,7 +11,7 @@ dependencies:
   - gdal
   - pandas
   - geopandas
-  - libpysal
+  - libpysal<4.8.0
   - esda
   - splot
   - spreg

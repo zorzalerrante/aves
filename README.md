@@ -285,7 +285,7 @@ Se recomienda usar sistema operativo Linux, o bien el [Windows Subsystem for Lin
 Para instalar las bibliotecas necesarias para el funcionamiento de `aves`, abre la consola (_shell_) de Ubuntu y ejecuta el siguiente comando:
 
 ```sh
-sudo apt install make libxcursor1 libgdk-pixbuf2.0-dev libxdamage-dev osmctools gcc libarchive-dev
+sudo apt install make libxcursor1 libgdk-pixbuf2.0-dev libxdamage-dev osmctools gcc libarchive-dev libxcomposite-dev
 ```
 
 Además, para administrar el entorno de ejecución de aves necesitas una instalación de `conda` ([Miniconda](https://docs.conda.io/en/latest/miniconda.html) es una buena alternativa) y de `mamba`. Primero debes instalar `conda`, y una vez que la tengas, puedes ejecutar:

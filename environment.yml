@@ -16,6 +16,7 @@ dependencies:
   - splot
   - spreg
   - spglm
+  - access
   - mgwr
   - mapclassify
   - statsmodels

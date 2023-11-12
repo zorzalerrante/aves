@@ -64,6 +64,50 @@ def decode_column(
 
     return src_df.join(values_df, on=col_name)[value_col]
 
+# Etiqueta el tipo de día en viajes csv
+def etiquetar_tipo_dia(row):
+    if pd.notna(row['FactorLaboralNormal']):
+        return 'Laboral'
+    if pd.notna(row['FactorDomingoNormal']):
+        return 'Domingo'
+    if pd.notna(row['FactorSabadoNormal']):
+        return 'Sábado'
+    if pd.notna(row['FactorLaboralEstival']):
+        return 'LaboralEstival'
+    if pd.notna(row['FactorFindesemanaEstival']):
+        return 'FindesemanaEstival'
+    else:
+        return 'No Definido'
+    
+#Funcion para asignar tipo de día
+def etiquetar_tipo_dia(row):
+    if pd.notna(row['FactorLaboralNormal']):
+        return 'Laboral'
+    if pd.notna(row['FactorDomingoNormal']):
+        return 'Domingo'
+    if pd.notna(row['FactorSabadoNormal']):
+        return 'Sábado'
+    if pd.notna(row['FactorLaboralEstival']):
+        return 'LaboralEstival'
+    if pd.notna(row['FactorFindesemanaEstival']):
+        return 'FindesemanaEstival'
+    else:
+        return 'No Definido'
+
+#Funcion para asignar Factor Externo
+def etiquetar_FactorExp(row):
+    if pd.notna(row['FactorLaboralNormal']):
+        return row['FactorLaboralNormal']
+    if pd.notna(row['FactorDomingoNormal']):
+        return row['FactorDomingoNormal']
+    if pd.notna(row['FactorSabadoNormal']):
+        return row['FactorSabadoNormal']
+    if pd.notna(row['FactorLaboralEstival']):
+        return row['FactorLaboralEstival']
+    if pd.notna(row['FactorFindesemanaEstival']):
+        return row['FactorFindesemanaEstival']
+    else:
+        return None
 
 def read_trips(
     path=None, decode_columns=True, remove_invalid=True, fix_clock_times=True
@@ -176,8 +220,136 @@ def read_trips(
 
     if fix_clock_times:
         df["HoraIni"] = pd.to_timedelta(df["HoraIni"] + ":00")
+
+    # Aplicamos la función a cada fila y creamos una nueva columna llamada 'TipoDia'
+    df['TipoDia'] = df.apply(etiquetar_tipo_dia, axis=1)
+
+    df['FactorExpansion'] = df.apply(etiquetar_FactorExp, axis=1)
+
+    df['num_viajes'] = df.groupby('Persona')['Viaje'].transform('count')
+
     return df
 
+def read_trips_stages(
+    path=None, decode_columns=True, remove_invalid=True, fix_clock_times=True
+):
+    """ 
+    Busca los archivos "viajes.csv", "Etapas.csv" y "DistanciaViaje.csv" dentro
+    del directorio especificado o en su defecto en el definido en la variable global "_EOD_PATH".
+    Unifica la información de estos archivos en un dataframe de pandas.
+    En el notebook ubicado en notebooks/gds-course/01-scl-travel-survey-maps.ipynb se pueden encontrar ejemplos de uso
+    de esta función.
+
+    Parameters
+    ----------
+    path : string, default=None
+        Ubicación de los archivos csv con la data de la encuesta origen destino.
+    decode_column: bool, default=True
+        Indica si se quiere decodificar el contenido de las columnas, reemplazando IDs por su significado
+        según las tablas de decodificación ubicadas en el directorio "Tablas_parametros".
+    remove_invalid: bool, default=True
+        Indica si se quiere eliminar filas que no tienen hora o que han sido inputadas.
+    fix_clock_times: bool, default=True
+        Indica si se desea estandarizar la hora de inicio al formato timedelta.
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe con la información de viajes de la encuesta origen-destino.
+    """
+    if path is None:
+        DATA_PATH = _EOD_PATH
+    else:
+        DATA_PATH = Path(path)
+
+ 
+    df = pd.read_csv(DATA_PATH / "Etapas.csv", sep=';', encoding='latin-1')
+
+    EstacionMetroCambioCSV = pd.read_csv(DATA_PATH / "Tablas_parametros" / "EstacionMetroCambio.csv", delimiter=';')
+    # Crear un diccionario de mapeo entre las letras y los IDs
+    EstacionMetroCambio_ID = {EstacionMetroCambio: ID for ID, EstacionMetroCambio in zip(EstacionMetroCambioCSV['Id'],
+                                                                                         EstacionMetroCambioCSV['Campo2'])}
+
+    # Crear una nueva columna 'id' en el DataFrame original utilizando el diccionario de mapeo
+    df['EstacionMetroCambio'] = (df['EstacionMetroCambio'].map(EstacionMetroCambio_ID))
+    df['EstacionMetroCambio'] = pd.to_numeric(df['EstacionMetroCambio'], errors='coerce').astype('Int64')
+    
+    if decode_columns:
+        df["UsoHabitualBicicleta"] = decode_column(
+            df,
+            DATA_PATH / "Tablas_parametros" / "UsoHabitualBicicleta.csv",
+            "UsoHabitualBicicleta",
+            encoding="latin-1",
+            index_col="ID",
+        )
+        '''
+        df["EstacionMetroCambio"] = decode_column(
+            df,
+            DATA_PATH / "Tablas_parametros" / "EstacionMetroCambio.csv",
+            "EstacionMetroCambio",
+            value_col="estacion_metro_cambio",
+            index_col="ID",
+        )
+        '''
+        df["Modo"] = decode_column(
+            df,
+            DATA_PATH / "Tablas_parametros" / "Modo.csv",col_name="Modo"
+        )
+        df["EstacionaBicicleta"] = decode_column(
+            df,
+            DATA_PATH / "Tablas_parametros" / "EstacionaBicicleta.csv",
+            "EstacionaBicicleta",
+            encoding="latin-1",
+            value_col="Campo1",
+            index_col="ID",
+        )
+        df["Estaciona"] = decode_column(
+            df,
+            DATA_PATH / "Tablas_parametros" / "Estaciona.csv",
+            "Estaciona",
+            encoding="latin-1",
+            index_col="ID",
+        )
+        df["PropiedadBicicleta"] = decode_column(
+            df,
+            DATA_PATH / "Tablas_parametros" / "PropiedadBicicleta.csv",
+            "PropiedadBicicleta",
+            encoding="latin-1",
+            index_col="ID",
+        )
+        df["RecorridoTransantiago"] = decode_column(
+            df,
+            DATA_PATH / "Tablas_parametros" / "RecorridoTransantiago.csv",
+            "RecorridoTransantiago",
+            encoding="latin-1",
+            index_col="ID",
+        )
+        df["UsaCiclovia"] = decode_column(
+            df,
+            DATA_PATH / "Tablas_parametros" / "UsaCiclovia.csv",
+            "UsaCiclovia",
+            encoding="latin-1",
+            index_col="ID",
+        )
+        '''
+        df["HorarioMetro"] = decode_column(
+            df,
+            DATA_PATH / "Tablas_parametros" / "HorarioMetro.csv",
+            "HorarioMetro",
+            encoding="latin-1",
+            index_col="ID",
+        )
+        '''
+        df["CirculacionBicicleta"] = decode_column(
+            df,
+            DATA_PATH / "Tablas_parametros" / "CirculacionBicicleta.csv",
+            "CirculacionBicicleta",
+            encoding="latin-1",
+            index_col="ID",
+        )
+        
+
+    return df
 
 def read_homes(path=None):
     """

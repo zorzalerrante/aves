@@ -226,6 +226,8 @@ def read_trips(
 
     df['FactorExpansion'] = df.apply(etiquetar_FactorExp, axis=1)
 
+    df['num_viajes'] = df.groupby('Persona')['Viaje'].transform('count')
+
     return df
 
 def read_trips_stages(

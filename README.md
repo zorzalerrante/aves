@@ -1,8 +1,6 @@
 # 🐦 `aves`: Análisis y Visualización, Educación y Soporte
 
-Por [Eduardo Graells-Garrido](http://datagramas.cl).
-
-Este repositorio contiene datos, código y notebooks relacionados con mis cursos (Visualización de Información, Ciencia de Datos Geográficos), mi trabajo diario, y el de personas con quienes colaboro, como Daniela Opitz. Lo he estructurado en un paquete llamado `aves`, sigla descrita en el título de este documento. 
+Este repositorio contiene datos, código y notebooks relacionados con cursos (Visualización de Información, Ciencia de Datos Geográficos) y el trabajo diario de [Eduardo Graells-Garrido](http://www.datagramas.cl) y [Daniela Opitz](https://calipsotornasol.github.io/). 
 
 Todavía no existe una documentación exhaustiva para `aves`, ya que su uso es primariamente interno, pero estos ejemplos muestran cómo se utilizan sus funciones. En lo que respecta a visualización, se mantiene el esquema típico que se utiliza en `matplotlib` y `seaborn`, las bibliotecas de visualización de bajo nivel más utilizadas en Python. De cierto modo, `aves` es un conjunto de herramientas de bajos niveles de abstracción, es decir, utiliza un paradigma imperativo, donde le damos instrucciones específicas al programa (**cómo** hacerlo); en contraste, una herramienta de alto nivel se enfoca en **qué** hacer, ocultando los detalles de implementación.
 

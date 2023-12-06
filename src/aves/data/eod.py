@@ -173,7 +173,7 @@ def read_trips(
     if remove_invalid:
         df = df[pd.notnull(df["HoraIni"])]
         df = df[df["Imputada"] == 0].copy()
-        df = df[df["DistManhattan"] != -1]
+        df = df[df["DistManhattan"] != -1].copy()
 
     if fix_clock_times:
         df["HoraIni"] = pd.to_timedelta(df["HoraIni"] + ":00")

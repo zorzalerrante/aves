@@ -3,6 +3,7 @@ from pathlib import Path
 import geopandas as gpd
 import pandas as pd
 import numpy as np
+import dask.dataframe as dd
 
 _DATA_PATH = Path(__file__).resolve().parent.parent.parent.parent / "data"
 _CENSUS_MAPS = _DATA_PATH / "external" / "censo_2017/geometria"
@@ -18,7 +19,7 @@ def read_census_map(level, path=None):
     return gpd.read_file(DATA_PATH / "{}_C17.shp".format(level.upper()))
 
 
-def read_comuna(path=None):
+def read_comuna(region, path=None):
     """
     Carga la geometría de las comunas de la Región Metropolitana definidas en el censo
     2017, a partir del archivo "COMUNA_C17.shp".
@@ -40,10 +41,10 @@ def read_comuna(path=None):
     else:
         DATA_PATH = Path(path)
 
-    return gpd.read_file(DATA_PATH / "COMUNA_C17.shp")
+    return gpd.read_file(DATA_PATH / f"R{region:0>2}" / "COMUNA_C17.shp")
 
 
-def read_distrito(path=None):
+def read_distrito(region, path=None):
     """
     Carga la geometría de los distritos de la Región Metropolitana definidos en el censo
     2017, a partir del archivo "DISTRITO_C17.shp".
@@ -66,10 +67,10 @@ def read_distrito(path=None):
     else:
         DATA_PATH = Path(path)
 
-    return gpd.read_file(DATA_PATH / "DISTRITO_C17.shp")
+    return gpd.read_file(DATA_PATH / f"R{region:0>2}" / "DISTRITO_C17.shp")
 
 
-def read_region(path=None):
+def read_region(region, path=None):
     """
     Carga la geometría de la Región Metropolitana definida en el Censo 2017 a partir del archivo "REGION_C17.shp".
 
@@ -88,11 +89,12 @@ def read_region(path=None):
         DATA_PATH = _CENSUS_MAPS
     else:
         DATA_PATH = Path(path)
+    
 
-    return gpd.read_file(DATA_PATH / "REGION_C17.shp")
+    return gpd.read_file(DATA_PATH / f"R{region:0>2}" / "REGION_C17.shp")
 
 
-def read_localidad(path=None):
+def read_localidad(region, path=None):
     """
     Carga la geometría de las localidades de la Región Metropolitana definidas en el censo
     2017, a partir del archivo "LOCALIDAD_C17.shp".
@@ -115,10 +117,10 @@ def read_localidad(path=None):
     else:
         DATA_PATH = Path(path)
 
-    return gpd.read_file(DATA_PATH / "LOCALIDAD_C17.shp")
+    return gpd.read_file(DATA_PATH / f"R{region:0>2}" / "LOCALIDAD_C17.shp")
 
 
-def read_provincia(path=None):
+def read_provincia(region, path=None):
     """
     Carga la geometría de las provincias de la Región Metropolitana definidas en el censo
     2017, a partir del archivo "PROVINCIA_C17.shp".
@@ -140,10 +142,10 @@ def read_provincia(path=None):
     else:
         DATA_PATH = Path(path)
 
-    return gpd.read_file(DATA_PATH / "PROVINCIA_C17.shp")
+    return gpd.read_file(DATA_PATH / f"R{region:0>2}" / "PROVINCIA_C17.shp")
 
 
-def read_zona(path=None):
+def read_zona(region, path=None):
     """
     Carga la geometría de las zonas de la Región Metropolitana definidas en el censo
     2017, a partir del archivo "ZONA_C17.shp".
@@ -166,7 +168,7 @@ def read_zona(path=None):
     else:
         DATA_PATH = Path(path)
 
-    return gpd.read_file(DATA_PATH / "ZONA_C17.shp")
+    return gpd.read_file(DATA_PATH / f"R{region:0>2}" / "ZONA_C17.shp")
 
 
 def read_entidad(path=None):
@@ -366,7 +368,7 @@ def decode_column(
         encoding=encoding,
     )
 
-    src_df = df.loc[:, (col_name,)]
+    src_df = df.loc[:, (col_name,)].astype(index_dtype)
 
     return src_df.join(values_df, on=col_name)[value_col]
 
@@ -427,16 +429,128 @@ def read_hogares(
         DATA_PATH = _CENSUS_PATH
     else:
         DATA_PATH = Path(path)
+    print(DATA_PATH)
     try:
         df = pd.read_parquet(
         DATA_PATH / "Hogares.parquet", columns=columnas)
+        print(df.head(4))
     except FileNotFoundError:
         process_hogares(path)
     if regiones:
         if type(regiones) is not list:
             regiones = [regiones]
-            df = df[df.REGION.isin(regiones)]
+        df = df[df.REGION.isin(regiones)]
     elif comunas:
         if type(comunas) is not list:
-                    comunas = [comunas]
-                    df = df[df.REGION.isin(comunas)]
+            comunas = [comunas]
+        df = df[df.COMUNA.isin(comunas)]
+    return df
+
+
+def load_personas(
+        path=None
+):
+    """
+    Carga el contenido del archivo "Personas.csv" y lo almacena en un
+    archivo de formato Parquet dentro del mismo directorio entregado.
+
+    Parameters
+    ------------
+    path: string, default=None
+        Ubicación del archivo Personas.csv con la data del censo 2017.
+    
+    """
+    if path is None:
+        DATA_PATH = _CENSUS_PATH
+    else:
+        DATA_PATH = Path(path)
+    parquet_file = DATA_PATH/"Personas.parquet"
+    df = dd.read_csv(DATA_PATH/"Personas.csv", sep=";")
+    df['P07']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/P07.csv", index_col="id", col_name="P07", sep=',')
+    df['P08']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/P08.csv", index_col="id", col_name="P08", sep=',')
+    df['P10']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/P10.csv", index_col="id", col_name="P10", sep=',')
+    df['P10COMUNA']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/COMUNA.csv", index_col="COMUNA", col_name="P10COMUNA", sep=';')
+    df['P11COMUNA']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/COMUNA.csv", index_col="COMUNA", col_name="P11COMUNA", sep=';')
+    df['P12COMUNA']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/COMUNA.csv", index_col="COMUNA", col_name="P12COMUNA", sep=';')
+    df['P10PAIS']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/PAIS.csv", index_col="id", col_name="P10PAIS", sep=',')
+    df['P11PAIS']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/PAIS.csv", index_col="id", col_name="P11PAIS", sep=',')
+    df['P12PAIS']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/PAIS.csv", index_col="id", col_name="P12PAIS", sep=',')
+    df['P11']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/P11.csv", index_col="id", col_name="P11", sep=',')
+    df['P12']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/P12.csv", index_col="id", col_name="P12", sep=',')
+    df['P12A_TRAMO']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/P12A_TRAMO.csv", index_col="id", col_name="P12A_TRAMO", sep=',')
+    df['P13']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/P13.csv", index_col="id", col_name="P13", sep=',')
+    df['P14']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/P14.csv", index_col="id", col_name="P14", sep=',')
+    df['P15']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/P15.csv", index_col="id", col_name="P15", sep=',')
+    df['P15A']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/P15A.csv", index_col="id", col_name="P15A", sep=',')
+    df['P16']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/P16.csv", index_col="id", col_name="P16", sep=',')
+    df['P16A']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/P16A.csv", index_col="id", col_name="P16A", sep=',')
+    df['P16A_OTRO']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/P16A_OTRO.csv", index_col="id", col_name="P16A_OTRO", sep=',')
+    df['P16A_GRUPO']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/P16A_GRUPO.csv", index_col="id", col_name="P16A_GRUPO", sep=',')
+    df['P17']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/P17.csv", index_col="id", col_name="P17", sep=',')
+    #df['P18']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/P18.csv", index_col="id", col_name="P18", sep=',', index_dtype=object)
+    df['P21M']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/P21M.csv", index_col="id", col_name="P21M", sep=',')
+    df['P10PAIS_GRUPO']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/PAIS_GRUPO.csv", index_col="id", col_name="P10PAIS_GRUPO", sep=',')
+    df['P11PAIS_GRUPO']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/PAIS_GRUPO.csv", index_col="id", col_name="P11PAIS_GRUPO", sep=',')
+    df['P12PAIS_GRUPO']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/PAIS_GRUPO.csv", index_col="id", col_name="P12PAIS_GRUPO", sep=',')
+    """
+    traduccion = pd.read_csv(DATA_PATH/"Tablas_parametros/traduccion_nuble.csv")
+    cols_to_replace = ["COMUNA", "REGION", "PROVINCIA"]
+    for col in cols_to_replace:
+        df[col] = df['ID_ZONA_LOC'].map(traduccion.set_index('ID_ZONA_LOC')[col])
+    df['NOM_COMUNA']=decode_column(df, fname=DATA_PATH/"Tablas_parametros/COMUNA.csv", index_col="COMUNA", col_name="COMUNA", sep=';')
+"""
+    df.to_parquet(parquet_file, write_index=False, overwrite=True)
+
+
+def read_personas(path=None, filters=None, columns=None):
+    if path is None:
+        DATA_PATH = _CENSUS_PATH
+    else:
+        DATA_PATH = Path(path)
+    df = pd.read_parquet(DATA_PATH/"Personas.parquet", filters=filters, columns=columns)
+    return df
+
+
+def intersect_zoning(zoning, path=None):
+    """
+    Iterate over all regional zoning and intersect with input zoning
+    """
+    intersecting_regions = []
+    for i in range(1, 17):
+        df_region = read_region(i, path=path)
+        spatial_index2 = df_region.sindex
+        overlap = zoning.geometry.apply(lambda x: any(spatial_index2.intersection(x.bounds)))
+        if overlap.any():
+            intersecting_regions.append(i)
+    return intersecting_regions
+
+
+def aggregate_by_zoning(zoning, criteria):
+    """
+    zoning crs has to be set
+    """
+    # determine regions to load
+    regiones = intersect_zoning(zoning)
+    #TODO: load person data, define criteria
+    census_data = read_personas(filters=[("REGION", "in", regiones)], columns=criteria)
+    # load and concat census geometry from regiones
+    censo_zoning_by_region = []
+    for r in regiones:
+        censo_zoning_by_region.append(read_zona(r))
+        censo_zoning_by_region.append(read_localidad(r))
+    censo_zoning = pd.concat(censo_zoning_by_region)
+    censo_zoning.COMUNA=censo_zoning.COMUNA.astype("int")
+    #TODO: merge census data with census geometry
+    census_data_geo = censo_zoning.merge(census_data, left_on=['COMUNA', 'DISTRITO','LOC_ZON'], 
+                                         right_on=['COMUNA', 'DC', "ZC_LOC"], suffixes=["map", None]
+                                         )
+
+    # spatial join between two zonings, convert crs
+    merged_zoning = gpd.sjoin(census_data_geo, zoning, how='inner', predicate='intersects')
+    #TODO: group by zoning and aggregate criteria
+    res = merged_zoning.groupby('right_index').agg({criteria[0]: 'count'})
+
+    grouped_data_geo = zoning.merge(res, left_on='right_index', right_index=True)
+
+    df = None
+    return df

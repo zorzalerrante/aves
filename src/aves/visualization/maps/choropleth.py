@@ -60,8 +60,17 @@ def choropleth_map(
         geodf = geodf.assign(
             __bin__=lambda x: pd.cut(
                 x[column], bins=bins, include_lowest=True, labels=False
-            ).astype(int)
+            )
         )
+
+        if pd.isnull(geodf["__bin__"]).sum() > 0:
+            raise ValueError(
+                "bins do not contain all possible values",
+                geodf[column].min(),
+                geodf[column].max(),
+            )
+
+        geodf["__bin__"] = geodf["__bin__"].astype(int)
     else:
         raise ValueError(
             "only fisher_jenks, quantiles and uniform binning are supported"

@@ -46,6 +46,7 @@ dependencies:
   - future
   - pyrosm==0.6.2
   - r5py
+  - python-ternary
   - pip:
     - bezier
     - scattertext

@@ -1,4 +1,4 @@
-def read_concat_date(start_date, end_date, data_path):
+def read_trips(start_date, end_date, data_path):
     """
     Recibe la fecha desde la cual se quiere leer los viajes (start_date) hasta (end_date),
     los concatena y devuelve el DataFrame resultante.

@@ -90,26 +90,30 @@ def read_region(region, path=None):
     else:
         DATA_PATH = Path(path)
     
-
     return gpd.read_file(DATA_PATH / f"R{region:0>2}" / "REGION_C17.shp")
 
 
-def read_localidad(region, path=None):
+def read_localidad(region, path=None, translation_path=None):
     """
-    Carga la geometría de las localidades de la Región Metropolitana definidas en el censo
+    Carga la geometría de las localidades de la región indicada definidas en el censo
     2017, a partir del archivo "LOCALIDAD_C17.shp".
 
     Parameters
     ----------
+    region: int
+        Identificador numérico de la región a cargar.
     path: string, default=None
         Ubicación del archivo "LOCALIDAD_C17.shp" que contiene las geometrías.
+    translation_path: string, default=None
+        Ubicación del archivo "microdato_censo2017-geografia.csv" que contiene la tabla
+        de traducción de comunas del censo.
 
     Returns
     -------
     gpd.GeoDataFrame
-        Dataframe con la geometría de cada localidad de la Región Metropolitana,
-        su nombre, el distrito, comuna, provincia y región a la que pertenece,
-        y el área que abarca.
+        Dataframe con la geometría de cada localidad de la región,
+        su nombre, la localidad, comuna, provincia y región a la que pertenece,
+        el área que abarca y el identificador asociado a los microdatos del censo.
     
     """
     if path is None:
@@ -117,12 +121,61 @@ def read_localidad(region, path=None):
     else:
         DATA_PATH = Path(path)
 
-    return gpd.read_file(DATA_PATH / f"R{region:0>2}" / "LOCALIDAD_C17.shp")
+    if translation_path is None:
+        T_DATA_PATH = _CENSUS_PATH
+    else:
+        T_DATA_PATH = Path(translation_path)
+    
+    traduccion = pd.read_csv(T_DATA_PATH / "Tablas_parametros/microdato_censo2017-geografia.csv",  sep=";")
+    shape = gpd.read_file(DATA_PATH / f"R{region:0>2}" / "LOCALIDAD_C17.shp")
+    shape.COMUNA=shape.COMUNA.astype("int")
+    result = shape.merge(traduccion[["ID_ZONA_LOC", 'COMUNA', 'DC', "ZC_LOC"]], left_on=['COMUNA', 'DISTRITO','LOC_ZON'], right_on=['COMUNA', 'DC', "ZC_LOC"]).drop(["DC", "ZC_LOC"],axis=1)
+    return result
+
+
+def read_zona(region, path=None, translation_path=None):
+    """
+    Carga la geometría de las zonas de la región indicada definidas en el censo
+    2017, a partir del archivo "ZONA_C17.shp".
+
+    Parameters
+    ----------
+    region: int
+        Identificador numérico de la región a cargar.
+    path: string, default=None
+        Ubicación del archivo "ZONA_C17.shp" que contiene las geometrías.
+    translation_path: string, default=None
+        Ubicación del archivo "microdato_censo2017-geografia.csv" que contiene la tabla
+        de traducción de comunas del censo.
+
+    Returns
+    -------
+    gpd.GeoDataFrame
+        Dataframe con la geometría de cada zona de la región,
+        su nombre, la localidad, comuna, provincia y región a la que pertenece,
+        el área que abarca y el identificador asociado a los microdatos del censo.
+    
+    """
+    if path is None:
+        DATA_PATH = _CENSUS_MAPS
+    else:
+        DATA_PATH = Path(path)
+    
+    if translation_path is None:
+        T_DATA_PATH = _CENSUS_PATH
+    else:
+        T_DATA_PATH = Path(translation_path)
+    
+    traduccion = pd.read_csv(T_DATA_PATH/"Tablas_parametros/microdato_censo2017-geografia.csv",  sep=";")
+    shape = gpd.read_file(DATA_PATH / f"R{region:0>2}" / "ZONA_C17.shp")
+    shape.COMUNA=shape.COMUNA.astype("int")
+    result = shape.merge(traduccion[["ID_ZONA_LOC", 'COMUNA', 'DC', "ZC_LOC"]], left_on=['COMUNA', 'DISTRITO','LOC_ZON'], right_on=['COMUNA', 'DC', "ZC_LOC"]).drop(["DC", "ZC_LOC"],axis=1)
+    return result
 
 
 def read_provincia(region, path=None):
     """
-    Carga la geometría de las provincias de la Región Metropolitana definidas en el censo
+    Carga la geometría de las provincias de la región indicada definidas en el censo
     2017, a partir del archivo "PROVINCIA_C17.shp".
 
     Parameters
@@ -133,7 +186,7 @@ def read_provincia(region, path=None):
     Returns
     -------
     gpd.GeoDataFrame
-        Dataframe con la geometría de cada provincia de la Región Metropolitana,
+        Dataframe con la geometría de cada provincia de la región,
         su nombre, la región a la que pertenece, y el área que abarca.
     
     """
@@ -143,32 +196,6 @@ def read_provincia(region, path=None):
         DATA_PATH = Path(path)
 
     return gpd.read_file(DATA_PATH / f"R{region:0>2}" / "PROVINCIA_C17.shp")
-
-
-def read_zona(region, path=None):
-    """
-    Carga la geometría de las zonas de la Región Metropolitana definidas en el censo
-    2017, a partir del archivo "ZONA_C17.shp".
-
-    Parameters
-    ----------
-    path: string, default=None
-        Ubicación del archivo "ZONA_C17.shp" que contiene las geometrías.
-
-    Returns
-    -------
-    gpd.GeoDataFrame
-        Dataframe con la geometría de cada zona de la Región Metropolitana,
-        su nombre, la localidad, comuna, provincia y región a la que pertenece,
-        y el área que abarca.
-    
-    """
-    if path is None:
-        DATA_PATH = _CENSUS_MAPS
-    else:
-        DATA_PATH = Path(path)
-
-    return gpd.read_file(DATA_PATH / f"R{region:0>2}" / "ZONA_C17.shp")
 
 
 def read_entidad(path=None):
@@ -373,52 +400,123 @@ def decode_column(
     return src_df.join(values_df, on=col_name)[value_col]
 
 
-def process_hogares(
+def process_viviendas(
         path=None
 ):
     """
-    Procesa el contenido del archivo "Hogares.csv" y lo almacena en un
+    Procesa el contenido del archivo "Viviendas.csv" y lo almacena en un
     archivo de formato Parquet.
+
+    Parameters
+    ----------
+    path: string, default=None
+        Ubicación del archivo csv con los datos de viviendas del censo 2017.
     
     """
     if path is None:
         DATA_PATH = _CENSUS_PATH
     else:
         DATA_PATH = Path(path)
-    df = pd.read_csv(
-        DATA_PATH / "Hogares.csv", sep=";", decimal=",", encoding="utf-8")
-    df['TIPO_OPERATIVO']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/TIPO_OPERATIVO.csv", index_col="Id", col_name="TIPO_OPERATIVO", sep=',')
-    df['TIPO_HOGAR']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/TIPO_HOGAR.csv", index_col="Id", col_name="TIPO_HOGAR", sep=',')
-    traduccion = pd.read_csv(DATA_PATH/"Tablas_parametros/traduccion_nuble.csv")
+    df = dd.read_csv(
+        DATA_PATH / "Viviendas.csv", sep=";", decimal=",", encoding="utf-8")
+    traduccion = pd.read_csv(DATA_PATH/"Tablas_parametros/microdato_censo2017-geografia.csv",  sep=";")
     cols_to_replace = ["COMUNA", "REGION", "PROVINCIA"]
     for col in cols_to_replace:
         df[col] = df['ID_ZONA_LOC'].map(traduccion.set_index('ID_ZONA_LOC')[col])
     df['NOM_COMUNA']=decode_column(df, fname=DATA_PATH/"Tablas_parametros/COMUNA.csv", index_col="COMUNA", col_name="COMUNA", sep=';')
 
-    df.to_parquet(DATA_PATH/"Hogares.parquet", index=False)
+    df.to_parquet(DATA_PATH/"Viviendas.parquet", write_index=False)
+
+
+def read_viviendas(
+    path=None,
+    columnas=None,
+    filtros=None
+):
+    """
+    Carga el contenido del archivo "Viviendas.parquet", que contiene las respuestas sobre viviendas, a un dataframe.
+
+    Ejemplo de uso: read_viviendas(columnas=['REGION', 'PROVINCIA', 'COMUNA', 'DC', 'AREA', 'ZC_LOC', 'ID_ZONA_LOC', 'NVIV'], filtros=[('COMUNA', "==", 13101)])
+
+    Parameters
+    ----------
+    path: string, default=None
+        Ubicación del archivo parquet con los datos del censo 2017.
+    columnas: list, default=None
+        Si no es None, solo se cargarán las columnas especificadas.
+    filtros: List[Tuple] or List[List[Tuple]], default=None
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe con la información sobre viviendas, con las columnas decodificadas. 
+    """
+    if path is None:
+        DATA_PATH = _CENSUS_PATH
+    else:
+        DATA_PATH = Path(path)
+    print(DATA_PATH)
+    try:
+        df = pd.read_parquet(
+        DATA_PATH / "Viviendas.parquet", columns=columnas, filters=filtros)
+    except FileNotFoundError:
+        process_hogares(path)
+        df = pd.read_parquet(
+        DATA_PATH / "Viviendas.parquet", columns=columnas, filters=filtros)
+    return df
+
+
+def process_hogares(
+        path=None
+):
+    """
+    Procesa el contenido del archivo "Hogares.csv" y lo almacena en un
+    archivo de formato Parquet.
+
+    Parameters
+    ----------
+    path: string, default=None
+        Ubicación del archivo csv con los datos de hogares del censo 2017.
+    
+    """
+    if path is None:
+        DATA_PATH = _CENSUS_PATH
+    else:
+        DATA_PATH = Path(path)
+    df = dd.read_csv(
+        DATA_PATH / "Hogares.csv", sep=";", decimal=",", encoding="utf-8")
+    df['TIPO_OPERATIVO']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/TIPO_OPERATIVO.csv", index_col="Id", col_name="TIPO_OPERATIVO", sep=',')
+    df['TIPO_HOGAR']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/TIPO_HOGAR.csv", index_col="Id", col_name="TIPO_HOGAR", sep=',')
+    traduccion = pd.read_csv(DATA_PATH/"Tablas_parametros/microdato_censo2017-geografia.csv",  sep=";")
+    cols_to_replace = ["COMUNA", "REGION", "PROVINCIA"]
+    for col in cols_to_replace:
+        df[col] = df['ID_ZONA_LOC'].map(traduccion.set_index('ID_ZONA_LOC')[col])
+    df['NOM_COMUNA']=decode_column(df, fname=DATA_PATH/"Tablas_parametros/COMUNA.csv", index_col="COMUNA", col_name="COMUNA", sep=';')
+
+    df.to_parquet(DATA_PATH/"Hogares.parquet", write_index=False)
 
 
 def read_hogares(
     path=None,
-    regiones=None,
-    comunas=None,
-    columnas=None
+    #regiones=None,
+    #comunas=None,
+    columnas=None,
+    filtros=None
 ):
     """
     Carga el contenido del archivo "Hogares.parquet", que contiene las respuestas sobre hogares, a un dataframe.
     Los hogares corresponden a la manera de organización de las personas dentro de las viviendas
     particulares y constituyen por derecho propio una unidad de empadronamiento en sí mismos.
 
+    Ejemplo de uso: read_hogares(columnas=['REGION', 'PROVINCIA', 'COMUNA', 'DC', 'AREA', 'ZC_LOC', 'ID_ZONA_LOC', 'NVIV'], filtros=[('COMUNA', "==", 13101)])
+
     Parameters
     ----------
     path: string, default=None
-        Ubicación del archivo parquet con la data del censo 2017.
-    regiones: list, default=None
-        Las regiones a incluir. Si no se especifica, se cargarán todas
-    comunas: list, default=None
-        Las comunas a incluir. Si no se especifica, se cargarán todas
+        Ubicación del archivo parquet con los datos del censo 2017.
     columnas: list, default=None
         Si no es None, solo se cargarán las columnas especificadas.
+    filtros: List[Tuple] or List[List[Tuple]], default=None
 
     Returns
     -------
@@ -432,32 +530,28 @@ def read_hogares(
     print(DATA_PATH)
     try:
         df = pd.read_parquet(
-        DATA_PATH / "Hogares.parquet", columns=columnas)
-        print(df.head(4))
+        DATA_PATH / "Hogares.parquet", columns=columnas, filters=filtros)
     except FileNotFoundError:
         process_hogares(path)
-    if regiones:
-        if type(regiones) is not list:
-            regiones = [regiones]
-        df = df[df.REGION.isin(regiones)]
-    elif comunas:
-        if type(comunas) is not list:
-            comunas = [comunas]
-        df = df[df.COMUNA.isin(comunas)]
+        df = pd.read_parquet(
+        DATA_PATH / "Hogares.parquet", columns=columnas, filters=filtros)
+    
     return df
 
 
-def load_personas(
+def process_personas(
         path=None
 ):
     """
-    Carga el contenido del archivo "Personas.csv" y lo almacena en un
-    archivo de formato Parquet dentro del mismo directorio entregado.
+    Procesa el contenido del archivo "Personas.csv" y lo almacena en un
+    archivo de formato Parquet dentro del mismo directorio entregado,
+    con las respuestas decodificadas. El archivo Parquet resultante
+    está particionado según Región.
 
     Parameters
     ------------
     path: string, default=None
-        Ubicación del archivo Personas.csv con la data del censo 2017.
+        Ubicación del archivo Personas.csv con los microdatos del censo 2017.
     
     """
     if path is None:
@@ -487,52 +581,104 @@ def load_personas(
     df['P16A_OTRO']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/P16A_OTRO.csv", index_col="id", col_name="P16A_OTRO", sep=',')
     df['P16A_GRUPO']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/P16A_GRUPO.csv", index_col="id", col_name="P16A_GRUPO", sep=',')
     df['P17']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/P17.csv", index_col="id", col_name="P17", sep=',')
-    #df['P18']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/P18.csv", index_col="id", col_name="P18", sep=',', index_dtype=object)
+    df['P18']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/P18.csv", index_col="id", col_name="P18", sep=',', index_dtype=str)
     df['P21M']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/P21M.csv", index_col="id", col_name="P21M", sep=',')
     df['P10PAIS_GRUPO']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/PAIS_GRUPO.csv", index_col="id", col_name="P10PAIS_GRUPO", sep=',')
     df['P11PAIS_GRUPO']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/PAIS_GRUPO.csv", index_col="id", col_name="P11PAIS_GRUPO", sep=',')
     df['P12PAIS_GRUPO']= decode_column(df, fname=DATA_PATH/"Tablas_parametros/PAIS_GRUPO.csv", index_col="id", col_name="P12PAIS_GRUPO", sep=',')
-    """
-    traduccion = pd.read_csv(DATA_PATH/"Tablas_parametros/traduccion_nuble.csv")
+    
+    traduccion = pd.read_csv(DATA_PATH/"Tablas_parametros/microdato_censo2017-geografia.csv",  sep=";")
     cols_to_replace = ["COMUNA", "REGION", "PROVINCIA"]
     for col in cols_to_replace:
         df[col] = df['ID_ZONA_LOC'].map(traduccion.set_index('ID_ZONA_LOC')[col])
     df['NOM_COMUNA']=decode_column(df, fname=DATA_PATH/"Tablas_parametros/COMUNA.csv", index_col="COMUNA", col_name="COMUNA", sep=';')
-"""
-    df.to_parquet(parquet_file, write_index=False, overwrite=True)
+
+    df.to_parquet(parquet_file, write_index=False, overwrite=True, partition_on="REGION")
 
 
-def read_personas(path=None, filters=None, columns=None):
+def read_personas(path=None, filtros=None, columnas=None):
+    """
+    Carga el contenido del archivo "Personas.parquet", que contiene las respuestas sobre personas, a un dataframe.
+    Las personas corresponden a todos los individuos comprendidos en el censo.
+
+    Ejemplo de uso: read_personas(columnas=['REGION', 'PROVINCIA', 'COMUNA', 'ID_ZONA_LOC', 'P08', 'P09'], filtros=[('COMUNA', "==", 13101)])
+
+    Parameters
+    ----------
+    path: string, default=None
+        Ubicación del archivo parquet con los datos del censo 2017.
+    columnas: list, default=None
+        Si no es None, solo se cargarán las columnas especificadas.
+    filtros: List[Tuple] or List[List[Tuple]], default=None
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe con la información sobre hogares, con las columnas decodificadas. 
+    """
     if path is None:
         DATA_PATH = _CENSUS_PATH
     else:
         DATA_PATH = Path(path)
-    df = pd.read_parquet(DATA_PATH/"Personas.parquet", filters=filters, columns=columns)
+    try:
+        df = pd.read_parquet(
+        DATA_PATH / "Personas.parquet", columns=columnas, filters=filtros)
+    except FileNotFoundError:
+        process_personas(path)
+        df = dd.read_parquet(
+        DATA_PATH / "Personas.parquet", columns=columnas, filters=filtros)
     return df
 
 
-def intersect_zoning(zoning, path=None):
+def regions_in_geometry(geometry_df, path=None):
     """
-    Iterate over all regional zoning and intersect with input zoning
+    Retorna el listado de las regiones de Chile que intersectan la geometría entregada.
+
+    Parameters
+    ----------
+    geometry_df: geopandas.dataframe
+        Dataframe que contiene la geometría que se quiere analizar, en la columna "geometry".
+    path: string, default=None
+        Ubicación de los shapefiles del censo 2017.
+
+    Returns
+    -------
+    List(int)
+        Lista con los códigos numéricos de cada región presente en la geometría entregada.
     """
+    #TODO: heurísitca para agilizar proceso
     intersecting_regions = []
     for i in range(1, 17):
         df_region = read_region(i, path=path)
-        spatial_index2 = df_region.sindex
-        overlap = zoning.geometry.apply(lambda x: any(spatial_index2.intersection(x.bounds)))
+        overlap = geometry_df.to_crs(df_region.crs).unary_union.intersects(df_region.geometry)
+        #spatial_index2 = df_region.sindex
+        #overlap = zoning.geometry.apply(lambda x: any(spatial_index2.intersection(x.bounds)))
         if overlap.any():
             intersecting_regions.append(i)
     return intersecting_regions
 
 
-def aggregate_by_zoning(zoning, criteria):
+def overlay_zoning(zoning):
     """
-    zoning crs has to be set
+    Segmenta la zonificación del censo 2017 a partir de una zonificación entregada, generando una nueva geometría
+    a partir de la superposición de ambas.
+
+    En el notebook `notebooks/census-wrapper/demography_by_zoning.ipynb` se encuentra un ejemplo de uso de esta función.
+
+    Parameters
+    ----------
+    zoning: geopandas.dataframe
+        Dataframe que contiene la zonificación que se intersectará con la del censo, en la columna `geometry`.
+    
+    Returns
+    -------
+    geopandas.dataframe
+        Dataframe que contiene la geometría resultante de la intersección. Este dataframe incluye
+        la columna `percentage_overlap` que indica la proporción de área censal cubierta por cada geometría
+        resultante.
     """
     # determine regions to load
-    regiones = intersect_zoning(zoning)
-    #TODO: load person data, define criteria
-    census_data = read_personas(filters=[("REGION", "in", regiones)], columns=criteria)
+    regiones = regions_in_geometry(zoning)
     # load and concat census geometry from regiones
     censo_zoning_by_region = []
     for r in regiones:
@@ -540,17 +686,199 @@ def aggregate_by_zoning(zoning, criteria):
         censo_zoning_by_region.append(read_localidad(r))
     censo_zoning = pd.concat(censo_zoning_by_region)
     censo_zoning.COMUNA=censo_zoning.COMUNA.astype("int")
+    censo_zoning['area_censo'] = censo_zoning.to_crs('EPSG:3857').area
+    # overlay two zonings, convert crs
+    merged_zoning =  gpd.overlay(zoning.to_crs('EPSG:3857'),censo_zoning.to_crs('EPSG:3857'), how='intersection',keep_geom_type=False)
+    merged_zoning['area_m2'] = merged_zoning.to_crs('EPSG:3857').area
+    # Add column indicating how much of the censal area is covered
+    merged_zoning['percentage_overlap'] = (merged_zoning.area_m2 / merged_zoning.area_censo).fillna(0)
+    # Delete insignificant areas
+    merged_zoning = merged_zoning[merged_zoning['area_m2'] > 100000]
+    return merged_zoning
+
+
+def aggregate_by_zoning(zoning, df, df_id, columns, zoning_unique_id):
+    census_data = zoning.merge(df, on=df_id)
+    for label in columns:
+        census_data[label] = census_data[label] * census_data['percentage_overlap']
+    grouped_by_zone = census_data.groupby(zoning_unique_id)[columns].sum()
+    grouped_by_zone.reset_index(inplace=True)
+    return grouped_by_zone
+
+
+def population_by_zoning(intersected_zoning, zoning_unique_id):
+    """
+    Obtiene un estimado de la cantidad de personas en una zonificación geográfica.
+
+    En el notebook demography_by_zoning.ipynb se encuentra un ejemplo de uso de esta función.
+
+    Parameters
+    ----------
+    intersected_zoning: geopandas.dataframe
+        Dataframe que contiene la zonificación objetivo intersectada con la del censo,
+        resultante de llamar la función :func:`~aves.data.census.overlay_zoning`.
+    zoning_unique_id: int or String
+        Nombre de la columna de `intersected_zoning` que contiene el identificador único
+        de cada zona.
+    
+    Returns
+    -------
+    pandas.dataframe
+        Dataframe que contiene el estimado de población por zona.
+    """
+    region_list = intersected_zoning.REGION.unique()
+    # get personal_data
+    df = read_personas(columnas=['ID_ZONA_LOC', 'PERSONAN'], filtros=[("REGION", "in", region_list)])
+    agg_count = pd.NamedAgg(column='PERSONAN', aggfunc="count")
+    reduced_df = df.groupby("ID_ZONA_LOC").agg(poblacion=agg_count)
+    grouped_by_zone = aggregate_by_zoning(intersected_zoning, reduced_df, "ID_ZONA_LOC", ['poblacion'], zoning_unique_id)
+    
+    return grouped_by_zone
+
+
+def sex_by_zoning(intersected_zoning, zoning_unique_id):
+    """
+    Obtiene la distribución por sexo de la población segmentada en una zonificación geográfica.
+
+    En el notebook demography_by_zoning.ipynb se encuentra un ejemplo de uso de esta función.
+
+    Parameters
+    ----------
+    intersected_zoning: geopandas.dataframe
+        Dataframe que contiene la zonificación objetivo intersectada con la del censo,
+        resultante de llamar la función :func:`~aves.data.census.overlay_zoning`.
+    zoning_unique_id: int or String
+        Nombre de la columna de `intersected_zoning` que contiene el identificador único
+        de cada zona.
+    
+    Returns
+    -------
+    pandas.dataframe
+        Dataframe que contiene el estimado de población masculina y femenina por cada zona.
+    """
+    region_list = intersected_zoning.REGION.unique()
+    sex_by_region = read_personas(columnas=['ID_ZONA_LOC', 'P08'], filtros=[("REGION", "in", region_list)])
+    reduced_df = sex_by_region.groupby(["ID_ZONA_LOC"])['P08'].value_counts().unstack(fill_value=0)
+    reduced_df.reset_index(inplace=True)
+    grouped_by_zone = aggregate_by_zoning(intersected_zoning, reduced_df, "ID_ZONA_LOC", ["Mujer", "Hombre"], zoning_unique_id)
+    return grouped_by_zone
+
+
+def age_by_zoning(intersected_zoning, zoning_unique_id):
+    """
+    Obtiene la distribución por edad de la población segmentada en una zonificación geográfica.
+
+    En el notebook demography_by_zoning.ipynb se encuentra un ejemplo de uso de esta función.
+
+    Parameters
+    ----------
+    intersected_zoning: geopandas.dataframe
+        Dataframe que contiene la zonificación objetivo intersectada con la del censo,
+        resultante de llamar la función :func:`~aves.data.census.overlay_zoning`.
+    zoning_unique_id: int or String
+        Nombre de la columna de `intersected_zoning` que contiene el identificador único
+        de cada zona.
+    
+    Returns
+    -------
+    pandas.dataframe
+        Dataframe que contiene el estimado de población correspondiente a cada grupo etario por zona.
+    """
+    # TODO: incluir parámetro de binning
+    region_list = intersected_zoning.REGION.unique()
+    age_by_region = read_personas(columnas=['ID_ZONA_LOC', 'P09'], filtros=[("REGION", "in", region_list)])
+    bins = [0, 18, 65, 100, 101]
+    labels = ["Menor de edad","Mayor de edad","Adulto mayor", "100 años y más"]
+    age_by_region['age_group'] = pd.cut(age_by_region['P09'], bins=bins, labels=labels, include_lowest=True, right=False)
+    reduced_df = age_by_region.groupby(["ID_ZONA_LOC"])['age_group'].value_counts().unstack(fill_value=0)
+    reduced_df.reset_index(inplace=True)
+    grouped_by_zone = aggregate_by_zoning(intersected_zoning, reduced_df, "ID_ZONA_LOC", labels, zoning_unique_id)
+
+    return grouped_by_zone
+
+
+def inmigrants_by_zoning(intersected_zoning, zoning_unique_id):
+    """
+    Obtiene un estimado de la cantidad de migrantes en una zonificación geográfica.
+
+    En el notebook demography_by_zoning.ipynb se encuentra un ejemplo de uso de esta función.
+
+    Parameters
+    ----------
+    intersected_zoning: geopandas.dataframe
+        Dataframe que contiene la zonificación objetivo intersectada con la del censo,
+        resultante de llamar la función :func:`~aves.data.census.overlay_zoning`.
+    zoning_unique_id: int or String
+        Nombre de la columna de `intersected_zoning` que contiene el identificador único
+        de cada zona.
+    
+    Returns
+    -------
+    pandas.dataframe
+        Dataframe que contiene el estimado de población migrante por zona.
+    """
+    # TODO: incluir zonas con 0
+    region_list = intersected_zoning.REGION.unique()
+    # get personal_data
+    inmigrants_by_region = read_personas(columnas=['ID_ZONA_LOC', 'P10','P12'], filtros=[("REGION", "in", region_list)])
+    condition_birth = ~inmigrants_by_region['P12'].isin(['Missing', "En esta comuna", "En otra comuna"])
+    condition_residence = inmigrants_by_region['P10'] != 'En otro país'
+    inmigrants_by_region = inmigrants_by_region[condition_birth & condition_residence]
+    agg_count = pd.NamedAgg(column='P12', aggfunc="count")
+    reduced_df = inmigrants_by_region.groupby("ID_ZONA_LOC").agg(inmigrantes=agg_count)
+    grouped_by_zone = aggregate_by_zoning(intersected_zoning, reduced_df, "ID_ZONA_LOC", ['inmigrantes'], zoning_unique_id)
+    
+    return grouped_by_zone
+
+
+def schooling_by_zoning(intersected_zoning, zoning_unique_id):
+    """
+    Obtiene la distribución por años de escolaridad de la población segmentada en una zonificación geográfica.
+
+    En el notebook demography_by_zoning.ipynb se encuentra un ejemplo de uso de esta función.
+
+    Parameters
+    ----------
+    intersected_zoning: geopandas.dataframe
+        Dataframe que contiene la zonificación objetivo intersectada con la del censo,
+        resultante de llamar la función :func:`~aves.data.census.overlay_zoning`.
+    zoning_unique_id: int or String
+        Nombre de la columna de `intersected_zoning` que contiene el identificador único
+        de cada zona.
+    
+    Returns
+    -------
+    pandas.dataframe
+        Dataframe que contiene el estimado de población y años de escolaridad por cada zona.
+    """
+    region_list = intersected_zoning.REGION.unique()
+    schooling_by_region = read_personas(columnas=['ID_ZONA_LOC', 'ESCOLARIDAD'], filtros=[("REGION", "in", region_list)])
+    columns = list(schooling_by_region.ESCOLARIDAD.unique())
+    reduced_df = schooling_by_region.groupby(["ID_ZONA_LOC"])['ESCOLARIDAD'].value_counts().unstack(fill_value=0)
+    reduced_df.reset_index(inplace=True)
+    grouped_by_zone = aggregate_by_zoning(intersected_zoning, reduced_df, "ID_ZONA_LOC", columns, zoning_unique_id)
+    return grouped_by_zone
+
+
+"""
+def aggregate_by_zoning(zoning, criteria):
+    
+    #TODO: load person data, define criteria
+    columns = ["NOM_COMUNA", 'REGION', 'PROVINCIA', 'COMUNA', 'DC', 'AREA', 'ZC_LOC', 'ID_ZONA_LOC']
+    columns.append(criteria)
+    census_data = read_personas(filtros=[("REGION", "in", regiones)], columnas=columns)
     #TODO: merge census data with census geometry
     census_data_geo = censo_zoning.merge(census_data, left_on=['COMUNA', 'DISTRITO','LOC_ZON'], 
                                          right_on=['COMUNA', 'DC', "ZC_LOC"], suffixes=["map", None]
                                          )
 
-    # spatial join between two zonings, convert crs
-    merged_zoning = gpd.sjoin(census_data_geo, zoning, how='inner', predicate='intersects')
     #TODO: group by zoning and aggregate criteria
     res = merged_zoning.groupby('right_index').agg({criteria[0]: 'count'})
 
     grouped_data_geo = zoning.merge(res, left_on='right_index', right_index=True)
 
     df = None
-    return df
+    return df"""
+
+
+

@@ -860,6 +860,38 @@ def schooling_by_zoning(intersected_zoning, zoning_unique_id):
     return grouped_by_zone
 
 
+def indigenous_by_zoning(intersected_zoning, zoning_unique_id):
+    """
+    Obtiene un estimado de la cantidad de personas que se identifican como pertenecientes a un
+    pueblo originario en una zonificación geográfica.
+
+    En el notebook demography_by_zoning.ipynb se encuentra un ejemplo de uso de esta función.
+
+    Parameters
+    ----------
+    intersected_zoning: geopandas.dataframe
+        Dataframe que contiene la zonificación objetivo intersectada con la del censo,
+        resultante de llamar la función :func:`~aves.data.census.overlay_zoning`.
+    zoning_unique_id: int or String
+        Nombre de la columna de `intersected_zoning` que contiene el identificador único
+        de cada zona.
+    
+    Returns
+    -------
+    pandas.dataframe
+        Dataframe que contiene el estimado de población por zona.
+    """
+    region_list = intersected_zoning.REGION.unique()
+    # get personal_data
+    df = read_personas(columnas=['ID_ZONA_LOC', 'P16'], filtros=[("REGION", "in", region_list)])
+    df = df[df['P16']=='Sí']
+    agg_count = pd.NamedAgg(column='P16', aggfunc="count")
+    reduced_df = df.groupby("ID_ZONA_LOC").agg(pueblo_originario=agg_count)
+    reduced_df.reset_index(inplace=True)
+    grouped_by_zone = aggregate_by_zoning(intersected_zoning, reduced_df, "ID_ZONA_LOC", ['pueblo_originario'], zoning_unique_id)
+    
+    return grouped_by_zone
+
 """
 def aggregate_by_zoning(zoning, criteria):
     

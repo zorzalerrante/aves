@@ -172,31 +172,34 @@ def add_ranged_color_legend(
     if bbox_transform is None:
         bbox_transform = ax.transAxes
 
-    if location != "out":
-        cbar_ax = inset_axes(
-            ax,
-            width=width,
-            height=height,
-            loc=location,
-            bbox_to_anchor=bbox_to_anchor,
-            bbox_transform=bbox_transform,
-        )
-    else:
-        divider = make_axes_locatable(ax)
-        cbar_main = divider.append_axes(
-            "bottom" if orientation == "horizontal" else "right",
-            size=height if orientation == "horizontal" else width,
-        )
-        cbar_main.set_axis_off()
-        cbar_ax = inset_axes(
-            cbar_main,
-            width=width,
-            height=height,
-            loc="center",
-            bbox_to_anchor=(0.0, 0.0, 1.0, 1.0),
-            bbox_transform=cbar_main.transAxes,
-            borderpad=0,
-        )
+    cbar_ax = kwargs.pop("cbar_ax", None)
+
+    if cbar_ax is None:
+        if location != "out":
+            cbar_ax = inset_axes(
+                ax,
+                width=width,
+                height=height,
+                loc=location,
+                bbox_to_anchor=bbox_to_anchor,
+                bbox_transform=bbox_transform,
+            )
+        else:
+            divider = make_axes_locatable(ax)
+            cbar_main = divider.append_axes(
+                "bottom" if orientation == "horizontal" else "right",
+                size=height if orientation == "horizontal" else width,
+            )
+            cbar_main.set_axis_off()
+            cbar_ax = inset_axes(
+                cbar_main,
+                width=width,
+                height=height,
+                loc="center",
+                bbox_to_anchor=(0.0, 0.0, 1.0, 1.0),
+                bbox_transform=cbar_main.transAxes,
+                borderpad=0,
+            )
 
     color_legend(
         cbar_ax,

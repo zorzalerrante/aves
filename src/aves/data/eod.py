@@ -64,7 +64,36 @@ def decode_column(
 
     return src_df.join(values_df, on=col_name)[value_col]
 
+#Funcion para asignar tipo de día
+def etiquetar_tipo_dia(row):
+    if pd.notna(row['FactorLaboralNormal']):
+        return 'Laboral'
+    if pd.notna(row['FactorDomingoNormal']):
+        return 'Domingo'
+    if pd.notna(row['FactorSabadoNormal']):
+        return 'Sábado'
+    if pd.notna(row['FactorLaboralEstival']):
+        return 'LaboralEstival'
+    if pd.notna(row['FactorFindesemanaEstival']):
+        return 'FindesemanaEstival'
+    else:
+        return 'No Definido'
 
+#Funcion para asignar Factor Externo
+def etiquetar_FactorExp(row):
+    if pd.notna(row['FactorLaboralNormal']):
+        return row['FactorLaboralNormal']
+    if pd.notna(row['FactorDomingoNormal']):
+        return row['FactorDomingoNormal']
+    if pd.notna(row['FactorSabadoNormal']):
+        return row['FactorSabadoNormal']
+    if pd.notna(row['FactorLaboralEstival']):
+        return row['FactorLaboralEstival']
+    if pd.notna(row['FactorFindesemanaEstival']):
+        return row['FactorFindesemanaEstival']
+    else:
+        return None
+    
 def read_trips(
     path=None, decode_columns=True, remove_invalid=True, fix_clock_times=True
 ):
@@ -173,9 +202,16 @@ def read_trips(
     if remove_invalid:
         df = df[pd.notnull(df["HoraIni"])]
         df = df[df["Imputada"] == 0].copy()
+        df = df[df["DistManhattan"] != -1].copy()
 
     if fix_clock_times:
         df["HoraIni"] = pd.to_timedelta(df["HoraIni"] + ":00")
+
+    # Aplicamos la función a cada fila y creamos una nueva columna llamada 'TipoDia'
+    df['TipoDia'] = df.apply(etiquetar_tipo_dia, axis=1)
+
+    df['FactorExpansion'] = df.apply(etiquetar_FactorExp, axis=1)
+
     return df
 
 

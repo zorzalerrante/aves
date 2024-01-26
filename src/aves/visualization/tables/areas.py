@@ -1,6 +1,6 @@
 import numpy as np
 from aves.visualization.collections import LabelCollection
-from aves.features.utils import tfidf, normalize_rows, normalize_columns
+import seaborn as sns
 
 
 def stacked_areas(ax, df, baseline="zero", color_dict=None, **kwargs):
@@ -30,7 +30,7 @@ def stacked_areas(ax, df, baseline="zero", color_dict=None, **kwargs):
         Arreglo que contiene los valores de la primera línea base de las áreas apiladas.
     stack : ndarray
         Arreglo que contiene los valores de las áreas apiladas.
-     """
+    """
     stack = np.cumsum(df.T.values, axis=0)
     x = df.index.values
     y = df.T.values
@@ -48,7 +48,6 @@ def stacked_areas(ax, df, baseline="zero", color_dict=None, **kwargs):
     ax.fill_between(x, first_line, stack[0, :], facecolor=color, **kwargs)
 
     for i in range(len(y) - 1):
-
         color = color_dict[df.columns[i + 1]] if color_dict is not None else None
         ax.fill_between(x, stack[i, :], stack[i + 1, :], facecolor=color, **kwargs)
 
@@ -63,6 +62,10 @@ def streamgraph(
     label_threshold=0,
     label_args=None,
     fig=None,
+    facecolor=None,
+    edgecolor=None,
+    linewidth=None,
+    palette=None,
     area_colors=None,
     area_args=None,
     avoid_label_collisions=False,
@@ -83,7 +86,7 @@ def streamgraph(
     ax : matplotlib.axes
         El eje en el cual se dibujará el gráfico.
     df : DataFrame
-        DataFrame que contiene los datos a visualizar.
+        DataFrame que contiene los datos a visualizar. Cada columna es una categoría.
     baseline : str, default="wiggle", opcional
         El método utilizado para calcular la línea base del streamgraph.
     labels : bool, default=True, opcional
@@ -95,6 +98,14 @@ def streamgraph(
         Una lista completa de las opciones disponibles se encuentra en la documentación de `Matplotlib <https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.text.html>`__.
     fig : Figure, default=None, opcional
         La figura en la cual se genera el gráfico. Se utiliza para el manejo de colisiones de etiquetas.
+    facecolor: string, default=None, opcional
+        Un color para pintar todas las áreas. Su uso anula el de palette y area_colors.
+    edgecolor: string, default=None, opcional
+        Un color para pintar los bordes de las áreas.
+    linewidth: float, default=None, opcional
+        El grosor de la línea borde de cada área.
+    palette: string, default=None, opcional
+        Un nombre de paleta de colores para colorear cada área. Solo se utiliza si area_colors es None.
     area_colors : dict, default=None, opcional
         Un diccionario que mapea los nombres de las categorías a los colores a utilizar para rellenar las áreas corresppondientes.
     area_args : dict, default=None, opcional
@@ -120,6 +131,11 @@ def streamgraph(
         )
 
     df = df.fillna(0).astype(float)
+
+    if area_colors is None and palette is not None:
+        area_colors = dict(
+            zip(df.columns.values, sns.color_palette(palette, n_colors=len(df)))
+        )
 
     stream_x, stream_first_line, stream_stack = stacked_areas(
         ax, df, color_dict=area_colors, baseline=baseline, **area_args

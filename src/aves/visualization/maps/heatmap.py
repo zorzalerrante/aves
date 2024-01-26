@@ -18,7 +18,7 @@ def heat_map(
     kernel="cosine",
     norm=2,
     bandwidth=1e-2,
-    grid_points=2 ** 6,
+    grid_points=2**6,
     return_heat=False,
     cbar_label=None,
     cbar_width=2.4,
@@ -42,7 +42,10 @@ def heat_map(
 
     norm_heat = heat[2] / heat[2].max()
 
-    cmap = colormap_from_palette(palette, n_colors=n_levels)
+    if type(palette) == str:
+        cmap = colormap_from_palette(palette, n_colors=n_levels)
+    else:
+        cmap = palette
 
     levels = np.linspace(low_threshold, max_threshold, n_levels)
 

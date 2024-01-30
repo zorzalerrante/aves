@@ -13,7 +13,9 @@ import geopandas as gpd
 import contextily as cx
 from sklearn.preprocessing import minmax_scale
 from matplotlib import colorbar
-from matplotlib_scalebar.scalebar import ScaleBar # https://github.com/ppinard/matplotlib-scalebar/
+from matplotlib_scalebar.scalebar import ScaleBar
+
+from aves.data.census import analysis # https://github.com/ppinard/matplotlib-scalebar/
 
 get_ipython().run_line_magic('matplotlib', 'inline')
 get_ipython().run_line_magic('config', "InlineBackend.figure_format = 'retina'")
@@ -22,7 +24,7 @@ sns.set(context='paper', font='Fira Sans Extra Condensed', style='ticks', palett
 
 
 # %%
-from aves.data import DATA_PATH, eod, census
+from aves.data import DATA_PATH, eod
 from aves.features.utils import normalize_rows
 from aves.features.geo import to_point_geodataframe, clip_area_geodataframe
 from aves.features.weights import weighted_mean
@@ -245,7 +247,7 @@ tighten_figure(fig);
 
 
 # %%
-comunas = census.read_census_map('comuna').to_crs(zones.crs)
+comunas = analysis.read_census_map('comuna').to_crs(zones.crs)
 comunas.plot()
 
 # %%

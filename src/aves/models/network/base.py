@@ -184,7 +184,7 @@ class Network(object):
                     dtype = "float"
                 else:
                     raise ValueError(
-                        f"property {prop} has an unsupported dtype {dtype}"
+                        f"property {prop} has an unsupported dtype {prop.dtype}"
                     )
                 result.add_edge_property(
                     df.set_index([source, target])[prop], dtype=dtype

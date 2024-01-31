@@ -198,7 +198,7 @@ def read_provincia(region, path=None):
     return gpd.read_file(DATA_PATH / f"R{region:0>2}" / "PROVINCIA_C17.shp")
 
 
-def read_entidad(path=None):
+def read_entidad(region, path=None):
     #TODO: averiguar qué es esto, hay categorias como Parcela de Agrado ,Parcela-Hijuela  , Caserío y cantidad de viviendas/habitantes
     """
 
@@ -218,12 +218,12 @@ def read_entidad(path=None):
     else:
         DATA_PATH = Path(path)
 
-    return gpd.read_file(DATA_PATH / "ENTIDAD_IND_C17.shp")
+    return gpd.read_file(DATA_PATH / f"R{region:0>2}"/ "ENTIDAD_IND_C17.shp")
 
 
-def read_limite(path=None):
+def read_limite(region, path=None):
     """
-    Carga la geometría de los limites _____ Región Metropolitana definidos en el censo
+    Carga la geometría de los limites urbanos definidos en el censo
     2017, a partir del archivo "LIM_DPA_CENSAL_C17.shp".
 
     Parameters
@@ -242,12 +242,12 @@ def read_limite(path=None):
     else:
         DATA_PATH = Path(path)
 
-    return gpd.read_file(DATA_PATH / "LIM_DPA_CENSAL_C17.shp")
+    return gpd.read_file(DATA_PATH/ f"R{region:0>2}" / "LIM_DPA_CENSAL_C17.shp")
 
 
-def read_limite_urbano_censal(path=None):
+def read_limite_urbano_censal(region, path=None):
     """
-    Carga la geometría de los limites _____ Región Metropolitana definidos en el censo
+    Carga la geometría de los limites urbans definidos en el censo
     2017, a partir del archivo "LIMITE_URBANO_CENSAL_C17.shp".
 
     Parameters
@@ -266,7 +266,7 @@ def read_limite_urbano_censal(path=None):
     else:
         DATA_PATH = Path(path)
 
-    return gpd.read_file(DATA_PATH / "LIMITE_URBANO_CENSAL_C17.shp")
+    return gpd.read_file(DATA_PATH / f"R{region:0>2}" / "LIMITE_URBANO_CENSAL_C17.shp")
 
 
 def read_manzana_aldea(path=None):

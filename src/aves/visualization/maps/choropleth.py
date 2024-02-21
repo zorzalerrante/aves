@@ -164,16 +164,22 @@ def bivariate_choropleth_map(
     col1,
     col2,
     palette="PiYG",
+    edgecolor="white",
     k=3,
     binning="uniform",
     xlabel=None,
     ylabel=None,
     cbar_ax=None,
     cbar_args={},
+    palette_args={},
+    linewidth=1,
+    alpha=1,
+    zorder=1,
     **kwargs,
 ):
-    full_palette = sns.color_palette(palette, n_colors=2 * k - 1)
-    bivariate_palette = bivariate_matrix_from_palette(palette, n_colors=k)
+    bivariate_palette = bivariate_matrix_from_palette(
+        palette, n_colors=k, **palette_args
+    )
 
     if binning == "uniform":
         col1_binned, col1_bins = pd.cut(geodf[col1], bins=k, labels=False, retbins=True)
@@ -193,16 +199,31 @@ def bivariate_choropleth_map(
         col1_bins = np.insert(col1_binning.bins, 0, geodf[col1].min())
         col2_bins = np.insert(col2_binning.bins, 0, geodf[col2].min())
     else:
-        raise Exception("binning not supported")
+        raise Exception(f"{binning} binning not supported")
 
-    binned_geodf = geodf[["geometry"]].join(col1_binned).join(col2_binned)
+    binned_geodf = geodf.join(col1_binned, how="inner").join(col2_binned)[
+        [f"{col1}_bin_", f"{col2}_bin_", "geometry"]
+    ]
 
     for i in range(k):
         for j in range(k):
-            binned_geodf[
+            color_geodf = binned_geodf[
                 (binned_geodf[f"{col1}_bin_"] == i)
                 & (binned_geodf[f"{col2}_bin_"] == j)
-            ].plot(color=bivariate_palette[(j, i)], ax=ax, edgecolor="none")
+            ]
+            if color_geodf.empty:
+                continue
+
+            color_geodf.plot(
+                ax=ax,
+                color=np.clip(bivariate_palette[(j, i)], 0.0, 1.0),
+                linewidth=linewidth,
+                edgecolor=edgecolor,
+                alpha=alpha,
+                zorder=zorder,
+                aspect=None,
+                **kwargs,
+            )
 
     # legend
     if cbar_ax is None:
@@ -219,21 +240,21 @@ def bivariate_choropleth_map(
     # cbar_ax.yaxis.set_major_formatter(StrMethodFormatter("{x:,.2f}"))
 
     cbar_ax.set_xlabel(
-        xlabel if xlabel else col1, fontsize=cbar_args.get("font_size", "x-small")
+        xlabel if xlabel else col1, fontsize=cbar_args.get("label_size", "x-small")
     )
     cbar_ax.set_ylabel(
-        ylabel if ylabel else col2, fontsize=cbar_args.get("font_size", "x-small")
+        ylabel if ylabel else col2, fontsize=cbar_args.get("label_size", "x-small")
     )
 
     cbar_ax.set_xticks(
         np.arange(k + 1) - 0.5,
-        labels=list(map(lambda x: f"{x:.2f}", col1_bins)),
-        fontsize="xx-small",
+        labels=list(map(lambda x: f"{x:.0f}", col1_bins)),
+        fontsize=cbar_args.get("font_size", "x-small"),
     )
     cbar_ax.set_yticks(
         np.arange(k + 1) - 0.5,
-        labels=list(map(lambda x: f"{x:.2f}", col2_bins)),
-        fontsize="xx-small",
+        labels=list(map(lambda x: f"{x:.0f}", col2_bins)),
+        fontsize=cbar_args.get("font_size", "x-small"),
     )
 
     cbar_ax.imshow(bivariate_palette, origin="lower")

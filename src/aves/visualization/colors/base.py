@@ -97,7 +97,9 @@ def color_legend(
     return ax
 
 
-def bivariate_matrix_from_palette(palette_name="PiYG", n_colors=3):
+def bivariate_matrix_from_palette(
+    palette_name="PiYG", n_colors=3, darken_initial_value=-15
+):
     full_palette = sns.color_palette(palette_name, n_colors=(n_colors - 1) * 2 + 1)
 
     cmap_x = full_palette[n_colors - 1 :]
@@ -111,7 +113,7 @@ def bivariate_matrix_from_palette(palette_name="PiYG", n_colors=3):
             y = spectra.rgb(*cmap_y[j][0:3])
 
             if i == j and i == 0:
-                cmap_xy.append(x.darken(3).rgb)
+                cmap_xy.append(x.darken(darken_initial_value).rgb)
 
             elif i == 0:
                 cmap_xy.append(y.rgb)

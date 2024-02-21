@@ -2,6 +2,7 @@ import matplotlib.patheffects as path_effects
 from matplotlib_scalebar.scalebar import (
     ScaleBar,
 )
+import contextily as cx
 
 
 def geographical_labels(
@@ -89,3 +90,28 @@ def north_arrow(
 
 def geographical_scale(ax, location="lower left"):
     ax.add_artist(ScaleBar(1, location="lower left"))
+
+
+def add_basemap(
+    ax,
+    file_path,
+    geocontext,
+    interpolation="hanning",
+    zorder=0,
+    reset_extent=False,
+    **kwargs
+):
+    bounds = geocontext.total_bounds
+    cx.add_basemap(
+        ax,
+        crs=geocontext.crs.to_string(),
+        source=file_path,
+        interpolation=interpolation,
+        zorder=zorder,
+        reset_extent=reset_extent,
+        **kwargs
+    )
+
+    if not reset_extent:
+        ax.set_xlim((bounds[0], bounds[2]))
+        ax.set_ylim((bounds[1], bounds[3]))

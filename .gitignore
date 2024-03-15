@@ -122,6 +122,7 @@ venv.bak/
 
 # mkdocs documentation
 /site
+docs/_build
 
 # mypy
 .mypy_cache/
@@ -136,9 +137,12 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# other
 data/external/OSM/chile-latest.osm.pbf
 data/external/OSM/clipped-scl-osm.pbf
 data/external/censo_2017/Hogares.csv
 data/external/censo_2017/Personas.csv
 bfg-1.14.0.jar
 data/external/censo_2017/geometria/*/CALLES_PAIS_C17.*
+

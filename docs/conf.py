@@ -15,7 +15,8 @@
 import os
 import sys
 import datetime
-import sphinx_rtd_theme
+
+# import sphinx_rtd_theme
 
 # Get configuration information from setup.cfg
 try:

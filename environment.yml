@@ -47,6 +47,7 @@ dependencies:
   - pyrosm==0.6.2
   - r5py
   - python-ternary
+  - python-dotenv
   - pip:
     - bezier
     - scattertext
@@ -61,6 +62,7 @@ dependencies:
     - alphashape
     - s2sphere
     - lxml
-    - sphinx-rtd-theme
+    - sphinx-basic-ng
+    - furo
     - pyreadstat
     - KDEpy

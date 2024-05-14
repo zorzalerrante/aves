@@ -34,6 +34,10 @@ def choropleth_map(
     cbar_args={},
     **kwargs,
 ):
+    # grid ingresa este parámetro que NO usamos
+    if 'color' in kwargs:
+        del kwargs['color']
+
     geodf = geodf[pd.notnull(geodf[column])].copy()
     min_value, max_value = geodf[column].min(), geodf[column].max()
 

@@ -29,7 +29,7 @@ class HierarchicalEdgeBundling(object):
         La distancia entre la raíz hasta cada nodo.
     root_pred_map : Vertex property map
         Listado de predecesores en el árbol de búsqueda.
-    radial_positions: 
+    radial_positions:
         Un arreglo que almacena las coordenadas radiales de cada nodo en el diseño.
     node_to_radial_idx:
         Un diccionario que mapea los vértices (nodos) del grafo original a sus índices en las posiciones radiales.
@@ -43,10 +43,10 @@ class HierarchicalEdgeBundling(object):
         Una vista filtrada del grafo original, que incluye solo los nodos que representan comunidades y sus conexiones.
     community_nodelink:
         Un objeto de la clase NodeLink que representa la visualización de las comunidades y se configura con los atributos y posiciones radiales correspondientes.
-    
-        """
+
+    """
+
     def __init__(
-            
         self,
         network: Network,
         hierarchy_tree: graph_tool.Graph,
@@ -152,7 +152,7 @@ class HierarchicalEdgeBundling(object):
             El número de puntos a lo largo de la curva suavizada.
         smoothing_factor : float
             El factor de suavizado para la curva. Debe estar en el rango [0.0, 1.0].
-        
+
         Returns
         ---------
         np.ndarray
@@ -203,7 +203,7 @@ class HierarchicalEdgeBundling(object):
             El número de puntos a lo largo de las curvas suavizadas.
         smoothing_factor : float, default=0.8
             El factor de suavizado para las curvas suavizadas. Debe estar en el rango [0.0, 1.0].
-        
+
         Raises
         ---------
         Exception
@@ -314,6 +314,9 @@ class HierarchicalEdgeBundling(object):
 
         nodes = np.array(list(map(int, self.network.vertices)))
         community_ids = sorted(set(self.network.communities_per_level[level]))
+
+        if len(community_ids) <= 1:
+            raise ValueError("the community level must have more than one community")
 
         if isinstance(palette, dict):
             if len(palette) != len(community_ids):
@@ -447,7 +450,7 @@ class HierarchicalEdgeBundling(object):
     def plot_community_labels(self, ax, level=None, ratio=None, offset=0.05):
         """
         Escribe las etiqueta de las comunidades alrededor del círculo de nodos.
-    
+
         Parameters
         ----------------
         ax : matplotlib.axes.Axes

@@ -11,6 +11,8 @@ from aves.visualization.collections import ColoredCurveCollection
 from aves.visualization.primitives import RenderStrategy
 from aves.visualization.colors.palettes import build_palette
 
+from .bezier_edges import curved_edges
+
 
 class EdgeStrategy(RenderStrategy):
     """Una interfaz para los métodos de visualziación de aristas."""
@@ -28,6 +30,7 @@ class EdgeStrategy(RenderStrategy):
 
         """
         self.network = network
+        self.curved_lines = kwargs.get("curved", False)
         super().__init__(self.network.edge_data)
 
     def name(self):
@@ -42,11 +45,25 @@ class EdgeStrategy(RenderStrategy):
         """
         return "strategy-name"
 
+    def build_lines(self, edge_data, bezier_args=None):
+        if self.curved_lines:
+            if bezier_args is None:
+                bezier_args = {}
+            lines = curved_edges(edge_data, **bezier_args)
+        else:
+            lines = []
+            for edge in edge_data:
+                lines.append(edge.points)
+
+            lines = np.array(lines)
+
+        return lines
+
 
 class PlainEdges(EdgeStrategy):
     """Estrategia para renderizar las aristas del grafo en la cual las aristas tienen un aspecto uniforme."""
 
-    def __init__(self, network, **kwargs):
+    def __init__(self, network, curved, **kwargs):
         """
         Inicializa una estrategia de visualización de aristas con un único color y aspecto uniforme.
 
@@ -58,25 +75,20 @@ class PlainEdges(EdgeStrategy):
             Argumentos adicionales (sin uso).
 
         """
-        super().__init__(network)
+        super().__init__(network, curved=curved)
         self.lines = None
 
     def prepare_data(self):
         """
         Prepara los datos de las aristas para su visualización.
-        
+
         Extrae las coordenadas de las aristas y las almacena en el atributo `lines`.
 
         Returns
         -------
         None
         """
-        self.lines = []
-
-        for edge in self.data:
-            self.lines.append(edge.points)
-
-        self.lines = np.array(self.lines)
+        self.lines = self.build_lines(self.data)
 
     def render(
         self,
@@ -146,7 +158,7 @@ class WeightedEdges(EdgeStrategy):
 
     """
 
-    def __init__(self, network, weights, k, scheme, bins, **kwargs):
+    def __init__(self, network, weights, k, scheme, bins, curved, **kwargs):
         """
         Inicializa el objeto WeightedEdges.
 
@@ -166,14 +178,14 @@ class WeightedEdges(EdgeStrategy):
 
         **kwargs : dict, opcional
             Argumentos adicionales. (sin uso)
-        
+
         Raises
         --------
         ValueErrror
             Si `scheme` no corresponde a los valores aceptados.
             Si la configuración personalizada resulta en un grupo con menos de dos aristas.
         """
-        super().__init__(network)
+        super().__init__(network, curved=curved)
         # self.edge_data_per_group = {i: [] for i in range(k)}
         # self.strategy_per_group = {
         #    i: PlainEdges(self.edge_data_per_group[i]) for i in range(k)
@@ -192,7 +204,7 @@ class WeightedEdges(EdgeStrategy):
                 raise ValueError("bins must have at least two elements")
             self.bins = bins
             self.k = len(self.bins) - 1
-            print(bins)
+            # print(bins)
 
     def prepare_data(self):
         """
@@ -205,12 +217,12 @@ class WeightedEdges(EdgeStrategy):
             Si el atributo `weights` no corresponde a una propiedad de las aristas del grafo (en caso de ser un string)
             o si no se almacena como un np.array.
         """
-        self.lines = []
+        self.lines = self.build_lines(self.data)
 
-        for edge in self.data:
-            self.lines.append(edge.points)
+        # for edge in self.data:
+        #    self.lines.append(edge.points)
 
-        self.lines: np.array = np.array(self.lines)
+        # self.lines: np.array = np.array(self.lines)
 
         weights = self.weights
 
@@ -245,6 +257,9 @@ class WeightedEdges(EdgeStrategy):
             )
         self.line_groups = groups
 
+        print(self.lines.shape, weights.shape)
+        print(self.line_groups)
+
     def render(self, ax, *args, **kwargs):
         """
         Renderiza las aristas en la visualización de la red
@@ -267,10 +282,10 @@ class WeightedEdges(EdgeStrategy):
             Una lista de objetos LineCollection que representan las aristas renderizadas para cada grupo.
         """
 
-        if 'color' in kwargs:
-            palette = kwargs.pop('color')
+        if "color" in kwargs:
+            palette = kwargs.pop("color")
         else:
-            palette = kwargs.pop('palette', '#a7a7a7')
+            palette = kwargs.pop("palette", "#a7a7a7")
 
         edge_colors = build_palette(
             self.bins,
@@ -354,7 +369,7 @@ class CommunityGradient(EdgeStrategy):
 
     def render(self, ax, *args, **kwargs):
         """
-        Renderiza las aristas de la red en una visualización. 
+        Renderiza las aristas de la red en una visualización.
 
         Parameters
         ------------
@@ -393,7 +408,7 @@ class ODGradient(EdgeStrategy):
     Estrategia para renderizar aristas de una red en la cual el color de cada extremo de la arista
     indica si el nodo correspondiente es el origen o el destino de la arista. Este método solo funciona
     en visualizaciones de grafos dirigidos.
-    
+
     Attributes
     ------------
     network : Network
@@ -450,7 +465,7 @@ class ODGradient(EdgeStrategy):
 
     def render(self, ax, *args, **kwargs):
         """
-        Renderiza las aristas de la red en una visualización. 
+        Renderiza las aristas de la red en una visualización.
 
         Parameters
         ------------

@@ -35,6 +35,7 @@ class NodeLink(object):
         Las etiquetas utilizadas en la visualización.
 
     """
+
     def __init__(self, network: Network):
         """
         Constructor de la clase.
@@ -144,7 +145,7 @@ class NodeLink(object):
     def plot(self, ax, *args, **kwargs):
         """
         Dibuja una red.
-        
+
         Puedes encontrar ejemplos de uso de esta función en el notebook  `notebooks/vis-course/04-python-redes-preliminario.ipynb`.
 
         Parameters
@@ -173,7 +174,7 @@ class NodeLink(object):
     def bundle_edges(self, method: str, *args, **kwargs):
         """
         Agrupa las aristas en la visualización de la red usando el método especificado.
-        El agrupamiento de aristas combina aristas cercanas en la visualización 
+        El agrupamiento de aristas combina aristas cercanas en la visualización
         de una red para mejorar la claridad y reducir la sobrecarga visual.
 
         Parameters
@@ -182,7 +183,7 @@ class NodeLink(object):
             El método a usar. Actualmente están implementados:
             - "force-directed": Agrupar las aristas usando el método `force directed`.
             - "hierarchical": Agrupar las aristas usando el método jerárquico.
-        
+
         tree: graph_tool.GraphView, optional
             Solo se usa en el método jerárquico. Corresponde el árbol de jerarquia de comunidades de la red.
             Si no se provee, se obtendrá de :attr:`~aves.visualization.networks.base.NodeLink.network`.
@@ -248,6 +249,9 @@ class NodeLink(object):
         -------
         None
         """
+
+        curved_edges = kwargs.get("curved", False)
+
         if method == "weighted":
             self.edge_strategy = WeightedEdges(
                 self.network,
@@ -255,6 +259,7 @@ class NodeLink(object):
                 kwargs.get("k", 5),
                 kwargs.get("scheme", "bins"),
                 kwargs.get("bins", None),
+                curved_edges,
             )
         elif method == "origin-destination":
             if not self.network.is_directed:
@@ -269,7 +274,7 @@ class NodeLink(object):
                 self.network, node_communities=communities
             )
         elif method == "plain":
-            self.edge_strategy = PlainEdges(self.network)
+            self.edge_strategy = PlainEdges(self.network, curved_edges)
         else:
             raise ValueError(f"{method} is not supported")
 
@@ -315,7 +320,7 @@ class NodeLink(object):
         Parameters
         ----------
         func : function, default=None, optional
-            Una función que mapea el índice de un nodo a su etiqueta. 
+            Una función que mapea el índice de un nodo a su etiqueta.
             Si no es provista, se usará el diccionario :attr:`~aves.models.network.base.Network.id_to_label` .
 
         Returns

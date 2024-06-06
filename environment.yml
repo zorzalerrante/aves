@@ -7,7 +7,7 @@ dependencies:
   - python
   - matplotlib
   - ipympl
-  - seaborn
+  - seaborn>=0.13
   - gdal
   - pandas
   - geopandas
@@ -48,6 +48,7 @@ dependencies:
   - r5py
   - python-ternary
   - python-dotenv
+  - scipy<1.13
   - pip:
     - bezier
     - scattertext

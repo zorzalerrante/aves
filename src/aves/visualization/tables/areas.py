@@ -127,7 +127,7 @@ def streamgraph(
 
     if label_collision_args is None:
         label_collision_args = dict(
-            lim=25, arrowprops=dict(arrowstyle="-", color="k", lw=0.5)
+            iter_lim=25, arrowprops=dict(arrowstyle="-", color="k", lw=0.5)
         )
 
     df = df.fillna(0).astype(float)
@@ -175,7 +175,7 @@ def streamgraph(
             fig=fig,
             color=label_args.get("color", "white"),
             fontweight=label_args.get("fontweight", "bold"),
-            fontsize=label_args.get("fontsize", "xx-large"),
+            fontsize=label_args.get("fontsize", "medium"),
             outline=outline_labels,
             avoid_collisions=avoid_label_collisions,
             adjustment_args=label_collision_args,

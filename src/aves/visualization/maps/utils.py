@@ -17,8 +17,11 @@ def geographical_labels(
     outline_width=2,
     format_func=None,
     bounds=None,
+    displacements=None,
 ):
     labels = []
+    if not displacements:
+        displacements = {}
     for idx, row in geodf.iterrows():
         centroid = row.geometry.centroid
 
@@ -35,9 +38,11 @@ def geographical_labels(
         if format_func is not None:
             label = format_func(label)
 
+        disp = displacements.get(label, (0, 0))
+
         t = ax.text(
-            centroid.x,
-            centroid.y,
+            centroid.x + disp[0],
+            centroid.y + disp[1],
             label,
             va="center",
             horizontalalignment="center",
@@ -89,7 +94,7 @@ def north_arrow(
 
 
 def geographical_scale(ax, location="lower left"):
-    ax.add_artist(ScaleBar(1, location="lower left"))
+    ax.add_artist(ScaleBar(1, location=location))
 
 
 def add_basemap(

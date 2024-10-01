@@ -42,6 +42,7 @@ def color_legend(
     remove_axes=False,
     bin_spacing="proportional",
     tick_labels=None,
+    **kwargs,
 ):
     if bins is None:
         if type(color_list) == colors.ListedColormap:
@@ -61,7 +62,7 @@ def color_legend(
                 color=color_list,
                 edgecolor=color_list,
             )
-            ax.set_xticks(bins, labels=tick_labels)
+            ax.set_xticks(bins, labels=tick_labels, **kwargs)
         else:
             ax.barh(
                 bins[:-1],
@@ -71,7 +72,7 @@ def color_legend(
                 color=color_list,
                 edgecolor=color_list,
             )
-            ax.set_yticks(bins, labels=tick_labels)
+            ax.set_yticks(bins, labels=tick_labels, **kwargs)
     else:
         cbar_norm = colors.BoundaryNorm(bins, len(bins) - 1)
         if type(color_list) == colors.ListedColormap:
@@ -85,6 +86,7 @@ def color_legend(
             ticks=bins,
             spacing=bin_spacing,
             orientation=orientation,
+            **kwargs,
         )
         if tick_labels:
             cb.set_ticklabels(tick_labels)

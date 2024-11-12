@@ -91,15 +91,15 @@ endif
 
 ## install package in editable mode
 install-package:
-	conda run --name '$(ENV_NAME)' python -m pip install --editable .
+	$(CONDA) run --name '$(ENV_NAME)' python -m pip install -e .
 
 ## uninstall package
 uninstall-package:
-	conda run --name '$(ENV_NAME)' python -m pip uninstall --yes '$(PACKAGE_NAME)'
+	$(CONDA) run --name '$(ENV_NAME)' python -m pip uninstall --yes '$(PACKAGE_NAME)'
 
 ## install jupyter notebook kernel
 install-kernel:
-	conda run --name '$(ENV_NAME)' python -m ipykernel install --user --name '$(ENV_NAME)' --display-name "Python ($(ENV_NAME))"
+	$(CONDA) run --name '$(ENV_NAME)' python -m ipykernel install --user --name '$(ENV_NAME)' --display-name "Python ($(ENV_NAME))"
 
 ## download data from external sources
 download-external:
@@ -117,6 +117,12 @@ download-osm:
 # generate documentation
 html:
 	$(MAKE) -C docs html
+
+pytorch-gpu:
+	$(CONDA) install --name '$(ENV_NAME)' pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia
+
+sentence-transformers:
+	$(CONDA) run --name '$(ENV_NAME)' pip install git+https://github.com/UKPLab/sentence-transformers.git
 
 #################################################################################
 # PROJECT RULES                                                                 #

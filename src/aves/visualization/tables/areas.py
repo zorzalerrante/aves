@@ -71,6 +71,7 @@ def streamgraph(
     avoid_label_collisions=False,
     outline_labels=True,
     label_collision_args=None,
+    label_rolling_window=None,
 ):
     """
     Genera un gráfico **streamgraph** a partir de los datos de un dataframe.
@@ -142,8 +143,13 @@ def streamgraph(
     )
 
     if labels:
-        x_to_idx = dict(zip(df.index, range(len(df))))
-        max_x = df.idxmax().map(x_to_idx)
+        if label_rolling_window is not None:
+            _df = df.rolling(label_rolling_window).median()
+        else:
+            _df = df
+
+        x_to_idx = dict(zip(_df.index, range(len(df))))
+        max_x = _df.idxmax().map(x_to_idx)
 
         label_collection = LabelCollection()
 

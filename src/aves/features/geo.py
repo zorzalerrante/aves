@@ -11,6 +11,12 @@ def clip_point_geodataframe(geodf, bounding_box, buffer=0):
     return geodf[geodf.within(bounds)]
 
 
+def bounding_box(geodf):
+    return gpd.GeoDataFrame(
+        {"geometry": [shapely.geometry.box(*geodf.total_bounds)]}, crs=geodf.crs
+    )
+
+
 def clip_area_geodataframe(geodf, bounding_box, buffer=0):
     # bounding box should be in same crs
 
@@ -49,7 +55,7 @@ def kde_from_points(
     kernel="gaussian",
     norm=2,
     bandwidth=1e-2,
-    grid_points=2 ** 9,
+    grid_points=2**9,
     weight_column=None,
 ):
     # La variable grid_points define la cantidad de puntos en el espacio en el que se estimará la densidad

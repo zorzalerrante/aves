@@ -11,6 +11,7 @@ def barchart(
     palette="plasma",
     stacked=False,
     normalize=False,
+    horizontal=False,
     sort_items=False,
     sort_categories=False,
     fill_na_value=None,
@@ -20,10 +21,10 @@ def barchart(
     return_df=False,
     **kwargs
 ):
-    """ 
+    """
     Crea un gráfico de barras a partir de los datos del dataframe. Un gráfico de barras muestra comparaciones entre categorías
     discretas. Uno de los ejes del gráfico muestra las categorías específicas que se están comparando,
-    y el otro eje corresponde a un valor numérico medido. Cada rectánguo del gráfico representa una categoría, y su altura
+    y el otro eje corresponde a un valor numérico medido. Cada rectángulo del gráfico representa una categoría, y su altura
     es proporcional al valor que toma esa categoría.
 
     En el notebook `notebooks/vis-course/02-python-tablas.ipynb` se pueden encontrar ejemplos de uso
@@ -44,6 +45,8 @@ def barchart(
         dividirá en segmentos que representan una categoría o variable diferente
     normalize : bool, default=False, opcional
         Indica si se deben normalizar los valores en el DataFrame.
+    horizontal: bool, default=False, opcional
+        Indica si las barras deben estar orientadas de manera horizontal (acostadas), o vertical (de pie).
     sort_items : bool, default=False, opcional
         Indica si se deben ordenar las barras por el primer valor de columna.
     sort_categories : bool, default=False, opcional
@@ -57,11 +60,11 @@ def barchart(
     legend_args : dict, default=None, opcional
         Argumentos adicionales para personalizar la leyenda.
     return_df : bool, default=None, opcional
-        Indica si se debe devolver el DataFrame utilizado en el gráfico. 
+        Indica si se debe devolver el DataFrame utilizado en el gráfico.
     **kwargs : dict
         Argumentos adicionales para personalizar el gráfico que se pasan a la función `plot.bar()` de pandas.
         Una lista completa de todas las posibles especificaciones se encuentra en la documentación de `Matplotlib <https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.bar.html>`__
-    
+
 
     Returns
     -------
@@ -86,7 +89,9 @@ def barchart(
     if sort_items:
         df = df.sort_values(df.columns[0])
 
-    df.plot.bar(
+    func_name = "bar" if not horizontal else "barh"
+
+    getattr(df.plot, func_name)(
         ax=ax,
         stacked=stacked,
         width=bar_width,
@@ -103,11 +108,16 @@ def barchart(
         handles, labels = map(reversed, ax.get_legend_handles_labels())
         ax.legend(handles, labels, **legend_args)
 
-    ax.ticklabel_format(axis="y", useOffset=False, style="plain")
+    ax.ticklabel_format(
+        axis="y" if not horizontal else "x", useOffset=False, style="plain"
+    )
     sns.despine(ax=ax, left=True)
 
     if normalize:
-        ax.set_ylim([0, 1])
+        if not horizontal:
+            ax.set_ylim([0, 1])
+        else:
+            ax.set_xlim([0, 1])
 
     if return_df:
         return df

@@ -49,8 +49,8 @@ dependencies:
   - python-ternary
   - python-dotenv
   - scipy<1.13
-  - libbezier
   - pip:
+    - bezier
     - scattertext
     - adjustText
     - matplotlib-scalebar

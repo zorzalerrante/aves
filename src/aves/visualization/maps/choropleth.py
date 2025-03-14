@@ -32,6 +32,7 @@ def choropleth_map(
     linewidth=1,
     zorder=1,
     cbar_args={},
+    sqrt_transform=False,
     **kwargs,
 ):
     # grid ingresa este parámetro que NO usamos
@@ -42,11 +43,20 @@ def choropleth_map(
     min_value, max_value = geodf[column].min(), geodf[column].max()
 
     if binning in ("fisher_jenks", "quantiles"):
-        if binning == "fisher_jenks":
-            binning_method = FisherJenks(geodf[column], k=k)
+        if sqrt_transform:
+            values = geodf[column].pipe(np.sqrt)
         else:
-            binning_method = Quantiles(geodf[column], k=k)
-        bins = np.insert(binning_method.bins, 0, geodf[column].min())
+            values = geodf[column]
+
+        if binning == "fisher_jenks":
+            binning_method = FisherJenks(values, k=k)
+        else:
+            binning_method = Quantiles(values, k=k)
+
+        if sqrt_transform:
+            bins = np.insert(np.power(binning_method.bins, 2), 0, geodf[column].min())
+        else:
+            bins = np.insert(binning_method.bins, 0, geodf[column].min())
         geodf = geodf.assign(__bin__=binning_method.yb)
     elif binning == "uniform":
         bins = np.linspace(

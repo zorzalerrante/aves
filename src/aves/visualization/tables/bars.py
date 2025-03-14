@@ -14,8 +14,11 @@ def barchart(
     horizontal=False,
     sort_items=False,
     sort_categories=False,
+    sort_ascending=False,
     fill_na_value=None,
     bar_width=0.9,
+    annotate=False,
+    annotate_args=None,
     legend=True,
     legend_args=None,
     return_df=False,
@@ -83,7 +86,7 @@ def barchart(
         df = df.pipe(normalize_rows)
 
     if sort_categories:
-        sort_values = df.mean(axis=0).sort_values(ascending=False)
+        sort_values = df.mean(axis=0).sort_values(ascending=sort_ascending)
         df = df[sort_values.index].copy()
 
     if sort_items:
@@ -91,7 +94,7 @@ def barchart(
 
     func_name = "bar" if not horizontal else "barh"
 
-    getattr(df.plot, func_name)(
+    plot = getattr(df.plot, func_name)(
         ax=ax,
         stacked=stacked,
         width=bar_width,
@@ -100,13 +103,24 @@ def barchart(
         **kwargs
     )
 
+    if annotate:
+        if annotate_args is None:
+            annotate_args = dict()
+
+        for container in ax.containers:
+            print(container.datavalues)
+            ax.bar_label(container, **annotate_args)
+
     if legend:
         if legend_args is None:
             legend_args = dict(
-                bbox_to_anchor=(1.0, 0.5), loc="center left", frameon=False
+                bbox_to_anchor=(1.0, 0.5),
+                loc="center left",
+                frameon=False,
+                reverse=True,
             )
-        handles, labels = map(reversed, ax.get_legend_handles_labels())
-        ax.legend(handles, labels, **legend_args)
+        # handles, labels = map(reversed, ax.get_legend_handles_labels())
+        ax.legend(**legend_args)
 
     ax.ticklabel_format(
         axis="y" if not horizontal else "x", useOffset=False, style="plain"

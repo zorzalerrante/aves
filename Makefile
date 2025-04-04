@@ -1,4 +1,4 @@
-.PHONY: .check_yesno owner-git owner-github clean conda-create-env conda-update-env install-pre-commit uninstall-pre-commit
+.PHONY: .check_yesno owner-git owner-github clean create-env update-env delete-env install-package
 
 #################################################################################
 # GLOBALS                                                                       #
@@ -8,24 +8,35 @@ SHELL=/bin/bash
 
 PROJECT_DIR := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 PROFILE = default
-PROJECT_NAME = AVES: Analysis & Visualization Educational Support
+PROJECT_NAME = AVES: Analysis, Visualization and Educational Support
 PACKAGE_NAME = aves
 ENV_NAME = aves
 SRC_CODE_FOLDER = src/aves
 PYTHON_INTERPRETER = python
 CURRENT_ENV := $(CONDA_DEFAULT_ENV)
 
+# Check for package managers in order of preference: mamba, micromamba, conda
+MAMBA_CMD := $(shell command -v mamba 2>/dev/null)
+MICROMAMBA_CMD := $(shell command -v micromamba 2>/dev/null)
+CONDA_CMD := $(shell command -v conda 2>/dev/null)
 
-ifeq (,$(shell which mamba))
-HAS_CONDA=False
+# Determine which package manager to use
+ifdef MAMBA_CMD
+    PKG_MGR := $(MAMBA_CMD)
+    HAS_PKG_MGR := True
+    PKG_MGR_NAME := mamba
+else ifdef MICROMAMBA_CMD
+    PKG_MGR := $(MICROMAMBA_CMD)
+    HAS_PKG_MGR := True
+    PKG_MGR_NAME := micromamba
+else ifdef CONDA_CMD
+    PKG_MGR := $(CONDA_CMD)
+    HAS_PKG_MGR := True
+    PKG_MGR_NAME := conda
+    @printf ">>> Utilizando conda, se sugiere instalar mamba\n"
 else
-HAS_CONDA=True
-CONDA := $(shell which mamba)
-ifeq ($(CONDA_DEFAULT_ENV),$(ENV_NAME))
-ENV_IS_ACTIVE=True
-else
-ENV_IS_ACTIVE=False
-endif
+    HAS_PKG_MGR := False
+    PKG_MGR_NAME := none
 endif
 
 #################################################################################
@@ -60,46 +71,58 @@ clean:
 	find . -name "*.pyc" -exec rm {} \;
 
 ## create conda environment
-conda-create-env:
-ifeq (True,$(HAS_CONDA))
-	@printf ">>> Creating '$(ENV_NAME)' conda environment. This could take a few minutes ...\n\n"
-	@PIP_NO_DEPS=1 $(CONDA) env create --name $(ENV_NAME) --file environment.yml
+create-env:
+ifeq (True,$(HAS_PKG_MGR))
+	@printf ">>> Creating '$(ENV_NAME)' environment using $(PKG_MGR_NAME). This could take a few minutes ...\n\n"
+	@PIP_NO_DEPS=1 $(PKG_MGR) env create --name $(ENV_NAME) --file environment.yml
 	@printf ">>> Adding the project to the environment...\n\n"
 else
-	@printf ">>> conda command not found. Check out that conda has been installed properly."
+	@printf ">>> No package manager found. Please install mamba, micromamba, or conda first.\n"
 endif
 
 ## delete conda environment
-conda-delete-env:
-ifeq (True,$(HAS_CONDA))
-	@printf ">>> Deleting '$(ENV_NAME)' conda environment. This could take a few minutes ...\n\n"
-	@$(CONDA) env remove --name $(ENV_NAME)
+delete-env:
+ifeq (True,$(HAS_PKG_MGR))
+	@printf ">>> Deleting '$(ENV_NAME)' environment using $(PKG_MGR_NAME). This could take a few minutes ...\n\n"
+	@$(PKG_MGR) env remove --name $(ENV_NAME)
 	@printf ">>> Done.\n\n"
 else
-	@printf ">>> conda command not found. Check out that conda has been installed properly."
+	@printf ">>> No package manager found. Please install mamba, micromamba, or conda first.\n"
 endif
 
 ## update conda environment
-conda-update-env:
-ifeq (True,$(HAS_CONDA))
-	@printf ">>> Updating '$(ENV_NAME)' conda environment. This could take a few minutes ...\n\n"
-	@PIP_NO_DEPS=1 $(CONDA) env update --name $(ENV_NAME) --file environment.yml --prune
+update-env:
+ifeq (True,$(HAS_PKG_MGR))
+	@printf ">>> Updating '$(ENV_NAME)' environment using $(PKG_MGR_NAME). This could take a few minutes ...\n\n"
+	@PIP_NO_DEPS=1 $(PKG_MGR) env update --name $(ENV_NAME) --file environment.yml --prune
 	@printf ">>> Updated.\n\n"
 else
-	@printf ">>> conda command not found. Check out that conda has been installed properly."
+	@printf ">>> No package manager found. Please install mamba, micromamba, or conda first.\n"
 endif
 
 ## install package in editable mode
 install-package:
-	$(CONDA) run --name '$(ENV_NAME)' python -m pip install -e .
+ifeq (True,$(HAS_PKG_MGR))
+	$(PKG_MGR) run --name '$(ENV_NAME)' python -m pip install --editable . --config-settings editable_mode=compat
+else
+	@printf ">>> No package manager found. Please install mamba, micromamba, or conda first.\n"
+endif
 
 ## uninstall package
 uninstall-package:
-	$(CONDA) run --name '$(ENV_NAME)' python -m pip uninstall --yes '$(PACKAGE_NAME)'
+ifeq (True,$(HAS_PKG_MGR))
+	$(PKG_MGR) run --name '$(ENV_NAME)' python -m pip uninstall --yes '$(PACKAGE_NAME)'
+else
+	@printf ">>> No package manager found. Please install mamba, micromamba, or conda first.\n"
+endif
 
 ## install jupyter notebook kernel
 install-kernel:
-	$(CONDA) run --name '$(ENV_NAME)' python -m ipykernel install --user --name '$(ENV_NAME)' --display-name "Python ($(ENV_NAME))"
+ifeq (True,$(HAS_PKG_MGR))
+	$(PKG_MGR) run --name '$(ENV_NAME)' python -m ipykernel install --user --name '$(ENV_NAME)' --display-name "Python ($(ENV_NAME))"
+else
+	@printf ">>> No package manager found. Please install mamba, micromamba, or conda first.\n"
+endif
 
 ## download data from external sources
 download-external:
@@ -118,11 +141,12 @@ download-osm:
 html:
 	$(MAKE) -C docs html
 
-pytorch-gpu:
-	$(CONDA) install --name '$(ENV_NAME)' pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia
-
 sentence-transformers:
-	$(CONDA) run --name '$(ENV_NAME)' pip install git+https://github.com/UKPLab/sentence-transformers.git
+ifeq (True,$(HAS_PKG_MGR))
+	$(PKG_MGR) run --name '$(ENV_NAME)' pip install git+https://github.com/UKPLab/sentence-transformers.git
+else
+	@printf ">>> No package manager found. Please install mamba, micromamba, or conda first.\n"
+endif
 
 #################################################################################
 # PROJECT RULES                                                                 #

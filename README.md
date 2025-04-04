@@ -273,7 +273,7 @@ fig.tight_layout()
 
 ![](reports/figures/example_bubbleplot.png)
 
-## Configuración y Requisitos
+## Configuración y requisitos
 
 ### Paso 1: Preparación
 
@@ -303,12 +303,12 @@ ssl_verify: true
 channel_priority: strict
 ```
 
-### Paso 2: Creación del Entorno
+### Paso 2: Creación del entorno
 
 Descarga o clona el repositorio usando el comando `git clone`, luego accede al directorio `aves` desde la terminal e instala el entorno de desarrollo con los siguientes comandos:
 
 ```sh
-make conda-create-env
+make create-env
 make install-package
 ```
 
@@ -327,7 +327,7 @@ make install-kernel
 Así quedará habilitado acceder al entorno de `aves` desde Jupyter.
 
 
-## Actualización de Dependencias
+## Actualización de dependencias
 
 Para añadir o actualizar dependencias:
 
@@ -337,15 +337,15 @@ Para añadir o actualizar dependencias:
 
 ## Créditos
 
-Parte del tiempo dedicado a este código ha sido financiado por el proyecto **ANID Fondecyt de Iniciación #11180913** de Eduardo Graells-Garrido, **ANID Fondecyt de Iniciación #11220799** de Daniela Opitz, y Fondo de Instalación FCFM de Eduardo Graells-Garrido.
+Parte del tiempo dedicado a este código ha sido financiado por el proyecto **ANID Fondecyt de Iniciación #11180913** de Eduardo Graells-Garrido, **ANID Fondecyt de Iniciación #11220799** de Daniela Opitz y Fondo de Instalación FCFM de Eduardo Graells-Garrido.
 
-### Personas y Contribuciones
+### Personas y contribuciones
 
 * La implementación de Force Directed Edge Bundling está inspirada en la versión de Javascript de esa técnica, y fue inicialmente desarrollada por [Vera Sativa](https://github.com/verasativa) y luego modificada por [Tabita Catalán](https://github.com/tabitaCatalan/s). Adapté esa versión inicial para que fuese 100% Python y funcionase con el resto de `aves`. 
 * El módulo `aves.features.twokenize` es una versión modificada de [ark-twokenize](https://github.com/myleott/ark-twokenize-py) de [Myle Ott](https://github.com/myleott).
 * Este repositorio fue creado gracias al template de _Cookie Cutter / Data Science with Conda_ hecho por [Patricio Reyes](https://github.com/pareyesv/).
-* Gran parte de la funcionalidad de `aves` es proporcionada por las bibliotecas `matplotlib`, `seaborn`, `pandas`, `geopandas`, `contextily`, `graph-tool`, `scikit-learn`, `pysal`, `scikit-fusion` y más. 
-* Para los notebooks de mapas: Map tiles by [Stamen Design](http://stamen.com/), under [CC BY 3.0](http://creativecommons.org/licenses/by/3.0). Data by [OpenStreetMap](http://openstreetmap.org/), under [ODbL](http://www.openstreetmap.org/copyright).
+* Gran parte de la funcionalidad de `aves` es proporcionada por las bibliotecas `matplotlib`, `seaborn`, `pandas`, `geopandas`, `contextily`, `graph-tool`, `scikit-learn`, `pysal`, `scikit-fusion` y otras. 
+* Para los notebooks de mapas: Data by [OpenStreetMap](http://openstreetmap.org/), under [ODbL](http://www.openstreetmap.org/copyright).
 
 ### Datasets
 
@@ -356,14 +356,3 @@ Este repositorio incluye los siguientes datasets:
 * Shapefiles del [Censo 2017 de Chile](http://www.censo2017.cl/servicio-de-mapas/) para la Región Metropolitana. En [este repositorio de Diego Caro](https://github.com/diegocaro/chile_census_2017_shapefiles) pueden encontrar todas las regiones del país.
 * Inscripciones de nombres en el Registro Civil de Chile a través del dataset [guaguas](https://github.com/rivaquiroga/guaguas) preparado por [Riva Quiroga](https://twitter.com/rivaquiroga).
 
-## Otros Asuntos
-
-### Tipogafías
-
-En los notebooks me gusta utilizar la familia de fuentes [Fira Sans](https://bboxtype.com/typefaces/FiraSans/#!layout=specimen) y [Fira Code](https://github.com/tonsky/FiraCode). Copia la fuente en la carpeta `.fonts` de tu directorio principal y luego ejecuta esto en un intérprete de Python o en un notebook:
-
-```python
-from matplotlib.font_manager import FontManager; FontManager().findfont('Fira Sans Extra Condensed', rebuild_if_missing=True)
-```
-
-Después de copiar las fuentes, debes eliminar este fichero: `~/.cache/matplotlib/fontlist-v330.json`.

@@ -1,5 +1,7 @@
 channels:
   - conda-forge
+  - pytorch
+  - nvidia
 dependencies:
   - configparser
   - graphviz
@@ -22,7 +24,7 @@ dependencies:
   - statsmodels
   - spectra
   - descartes
-  - scikit-learn
+  - scikit-learn<1.6
   - wordcloud
   - pip
   - graph-tool
@@ -49,16 +51,19 @@ dependencies:
   - python-ternary
   - python-dotenv
   - scipy<1.13
+  - py-xgboost-gpu 
+  - shap
+  - pytorch
+  - pytorch-cuda
+  - regex
+  - nltk
   - pip:
     - bezier
     - scattertext
     - adjustText
     - matplotlib-scalebar
-    - git+https://github.com/zorzalerrante/scikit-fusion
     - pymunk
-    - emoji
     - xlrd
-    - shifterator
     - flashtext
     - alphashape
     - s2sphere
@@ -67,3 +72,6 @@ dependencies:
     - furo
     - pyreadstat
     - KDEpy
+    - formulaic
+    - interface_meta
+    - pysentimiento

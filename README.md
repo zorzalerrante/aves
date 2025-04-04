@@ -341,7 +341,7 @@ Parte del tiempo dedicado a este código ha sido financiado por el proyecto **AN
 
 ### Personas y contribuciones
 
-* La implementación de Force Directed Edge Bundling está inspirada en la versión de Javascript de esa técnica, y fue inicialmente desarrollada por [Vera Sativa](https://github.com/verasativa) y luego modificada por [Tabita Catalán](https://github.com/tabitaCatalan/s). Adapté esa versión inicial para que fuese 100% Python y funcionase con el resto de `aves`. 
+* Han contribuido código y documentación: [Natalia Meza](https://www.linkedin.com/in/natalia-meza-m-4a0124253/), [Matilde Rivas](https://cl.linkedin.com/in/matilde-rivas), [Daniela Campos Fischer](https://www.linkedin.com/in/daniela-campos-fischer/), [Tabita Catalán](https://github.com/tabitaCatalan/), [Vera Sativa](https://github.com/verasativa).
 * El módulo `aves.features.twokenize` es una versión modificada de [ark-twokenize](https://github.com/myleott/ark-twokenize-py) de [Myle Ott](https://github.com/myleott).
 * Este repositorio fue creado gracias al template de _Cookie Cutter / Data Science with Conda_ hecho por [Patricio Reyes](https://github.com/pareyesv/).
 * Gran parte de la funcionalidad de `aves` es proporcionada por las bibliotecas `matplotlib`, `seaborn`, `pandas`, `geopandas`, `contextily`, `graph-tool`, `scikit-learn`, `pysal` y otras. 

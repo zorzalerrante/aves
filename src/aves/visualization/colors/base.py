@@ -217,7 +217,7 @@ def add_ranged_color_legend(
 
     sns.despine(ax=cbar_ax, left=True, top=True, bottom=True, right=True)
     if label:
-        cbar_ax.set_title(label, loc="left", fontsize=title_size)
+        cbar_ax.set_title(label, loc=title_align, fontsize=title_size)
 
     cbar_ax.tick_params(labelsize=label_size)
 

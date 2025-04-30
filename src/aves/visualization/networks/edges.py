@@ -10,6 +10,7 @@ from aves.models.network import Network
 from aves.visualization.collections import ColoredCurveCollection
 from aves.visualization.primitives import RenderStrategy
 from aves.visualization.colors.palettes import build_palette
+from aves.visualization.colors import add_ranged_color_legend
 
 from .bezier_edges import curved_edges
 
@@ -195,6 +196,8 @@ class WeightedEdges(EdgeStrategy):
         self.weights = weights
         self.lines = None
         self.scheme = scheme
+        self.cbar_ax = None
+
         if not self.scheme in ("bins", "quantiles", "custom"):
             raise ValueError("scheme must be bins, quantiles or custom")
 
@@ -239,7 +242,7 @@ class WeightedEdges(EdgeStrategy):
             raise ValueError(f"weights must be np.array instead of {type(weights)}.")
 
         # weights: np.array = weights
-        print(self.scheme)
+        # print(self.scheme)
 
         if self.scheme == "bins":
             groups, bins = pd.cut(
@@ -257,8 +260,8 @@ class WeightedEdges(EdgeStrategy):
             )
         self.line_groups = groups
 
-        print(self.lines.shape, weights.shape)
-        print(self.line_groups)
+        # print(self.lines.shape, weights.shape)
+        # print(self.line_groups)
 
     def render(self, ax, *args, **kwargs):
         """
@@ -287,6 +290,9 @@ class WeightedEdges(EdgeStrategy):
         else:
             palette = kwargs.pop("palette", "#a7a7a7")
 
+        legend = kwargs.pop("weight_legend", False)
+        cbar_args = kwargs.pop("weight_legend_args", {})
+
         edge_colors = build_palette(
             self.bins,
             palette=palette,
@@ -296,7 +302,7 @@ class WeightedEdges(EdgeStrategy):
         results = []
         for i in range(self.k):
             coll_lines = self.lines[self.line_groups == i]
-            print(len(self.lines), len(self.line_groups), len(coll_lines))
+            # print(len(self.lines), len(self.line_groups), len(coll_lines))
 
             coll = LineCollection(
                 coll_lines,
@@ -304,6 +310,21 @@ class WeightedEdges(EdgeStrategy):
                 **kwargs,
             )
             results.append(ax.add_collection(coll))
+
+        if legend:
+            cbar_args["location"] = cbar_args.get("location", "lower right")
+            cbar_args["bbox_to_anchor"] = cbar_args.get(
+                "bbox_to_anchor", (0.0, 0.0, 1.0, 1.0)
+            )
+            cbar_args["label"] = cbar_args.pop("title", "Aristas")
+            cbar_args["title_size"] = "large"
+            cbar_args["title_align"] = cbar_args.pop("title_align", "right")
+
+            self.cbar_ax = add_ranged_color_legend(
+                ax, self.bins, edge_colors, **cbar_args
+            )
+        else:
+            self.cbar_ax = None
 
         return results
 

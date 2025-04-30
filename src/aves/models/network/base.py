@@ -37,6 +37,7 @@ class Network(object):
         community_root: int
             El nodo raíz en el árbol de comunidades.
     """
+
     def __init__(self, graph: graph_tool.Graph):
         """
         Inicializa una nueva instancia de la clase Network.
@@ -396,7 +397,7 @@ class Network(object):
 
         Returns
         -------------
-         :meth:`iterator <iterator.__iter__>` 
+         :meth:`iterator <iterator.__iter__>`
         """
         return self.network.vertices()
 
@@ -407,7 +408,7 @@ class Network(object):
 
         Returns
         -------------
-         :meth:`iterator <iterator.__iter__>` 
+         :meth:`iterator <iterator.__iter__>`
         """
         return self.network.edges()
 
@@ -481,53 +482,53 @@ class Network(object):
         copy=False,
     ):
         """
-    Crea un subgrafo de la red a partir de un subconjunto de nodos y/o filtros de vértices/aristas.
+        Crea un subgrafo de la red a partir de un subconjunto de nodos y/o filtros de vértices/aristas.
 
-    Parameters
-    ------------
-    nodes : list, default=None, optional
-        Lista de nodos que se incluirán en el subgrafo. Si se proporciona, el subgrafo contendrá
-        solo los nodos especificados.
-    vertex_filter : callable or graph_tool.PropertyMap or numpy.ndarray, default=None, optional
-        Función de filtro de vértices para seleccionar los vértices que se incluirán en el subgrafo.
-        Puede ser tanto un PropertyMap de valores booleanos o numpy.ndarray, que especifican qué vértices se seleccionan,
-        o una función que devuelve True si se debe incluir un determinado vértice, o False en caso contrario.
-    edge_filter : callable, default=None, optional
-        Función de filtro de aristas para seleccionar las aristas que se incluirán en el subgrafo.
-        Puede ser tanto un PropertyMap de valores booleanos o numpy.ndarray, que especifican qué aristas se seleccionan,
-        o una función que devuelve True si se debe incluir una determinada arista, o False en caso contrario.
-    keep_positions : bool, default=True, optional
-        Indica si se deben mantener las posiciones de los vértices en el subgrafo resultante.
-        Si es True y existe un diseño de nodos (node layout), se copiarán las posiciones correspondientes a los vértices
-        en el subgrafo.
-    copy : bool, default=False, optional
-        Indica si se debe realizar una copia profunda del subgrafo. Si es False, el subgrafo compartirá
-        los datos subyacentes con el grafo original.
+        Parameters
+        ------------
+        nodes : list, default=None, optional
+            Lista de nodos que se incluirán en el subgrafo. Si se proporciona, el subgrafo contendrá
+            solo los nodos especificados.
+        vertex_filter : callable or graph_tool.PropertyMap or numpy.ndarray, default=None, optional
+            Función de filtro de vértices para seleccionar los vértices que se incluirán en el subgrafo.
+            Puede ser tanto un PropertyMap de valores booleanos o numpy.ndarray, que especifican qué vértices se seleccionan,
+            o una función que devuelve True si se debe incluir un determinado vértice, o False en caso contrario.
+        edge_filter : callable, default=None, optional
+            Función de filtro de aristas para seleccionar las aristas que se incluirán en el subgrafo.
+            Puede ser tanto un PropertyMap de valores booleanos o numpy.ndarray, que especifican qué aristas se seleccionan,
+            o una función que devuelve True si se debe incluir una determinada arista, o False en caso contrario.
+        keep_positions : bool, default=True, optional
+            Indica si se deben mantener las posiciones de los vértices en el subgrafo resultante.
+            Si es True y existe un diseño de nodos (node layout), se copiarán las posiciones correspondientes a los vértices
+            en el subgrafo.
+        copy : bool, default=False, optional
+            Indica si se debe realizar una copia profunda del subgrafo. Si es False, el subgrafo compartirá
+            los datos subyacentes con el grafo original.
 
-    Returns
-    ---------
-    Network
-        Un nuevo objeto Network que representa el subgrafo resultante.
+        Returns
+        ---------
+        Network
+            Un nuevo objeto Network que representa el subgrafo resultante.
 
-    Raises
-    ------
-    ValueError
-        Se produce cuando no se especifica al menos un filtro.
+        Raises
+        ------
+        ValueError
+            Se produce cuando no se especifica al menos un filtro.
 
-    Notes
-    --------
-    Para saber más sobre cómo hacer los filtros en base a PropertyMaps, leer la documentación correspondiente de `Graph-Tool <https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.PropertyMap.html#graph_tool.PropertyMap>`__. 
+        Notes
+        --------
+        Para saber más sobre cómo hacer los filtros en base a PropertyMaps, leer la documentación correspondiente de `Graph-Tool <https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.PropertyMap.html#graph_tool.PropertyMap>`__.
 
-    Examples
-    --------
-    net = Network()
-    # Crear un subgrafo con nodos específicos
-    sub = net.subgraph(nodes=[1, 2, 3])
-    # Crear un subgrafo utilizando una función de filtro de vértices
-    sub = net.subgraph(vertex_filter=lambda x: x in [1, 2, 3])
-    # Crear un subgrafo utilizando funciones de filtro de vértices y aristas
-    sub = net.subgraph(vertex_filter=dist.ma < 2000, edge_filter=lambda x: x < 10)
-    """
+        Examples
+        --------
+        net = Network()
+        # Crear un subgrafo con nodos específicos
+        sub = net.subgraph(nodes=[1, 2, 3])
+        # Crear un subgrafo utilizando una función de filtro de vértices
+        sub = net.subgraph(vertex_filter=lambda x: x in [1, 2, 3])
+        # Crear un subgrafo utilizando funciones de filtro de vértices y aristas
+        sub = net.subgraph(vertex_filter=dist.ma < 2000, edge_filter=lambda x: x < 10)
+        """
         if nodes is not None:
             view = graph_tool.GraphView(
                 self.network, vfilt=lambda x: self.id_to_label[x] in nodes
@@ -629,7 +630,7 @@ class Network(object):
         La centralidad de intermediación es una medida de centralidad que cuantifica la importancia de un nodo o arista basándose
         en su prevalencia en los caminos más cortos entre todos los nodos del grafo.
         Los valores calculados también quedan almacenados en las propiedades de aristas y nodos del grafo asociados a la llave "betweenness".
-    
+
         Parameters
         ------------
         weight : PropertyMap, default=None
@@ -749,7 +750,7 @@ class Network(object):
         ranked=False,
     ):
         """
-        Detecta comunidades de nodos en el grafo utilizando el modelo de detección especificado. 
+        Detecta comunidades de nodos en el grafo utilizando el modelo de detección especificado.
         Las comunidades son grupos de nodos que estén altamente conectados entre sí en comparación con las conexiones de los demás nodos.
 
          Si `method` es "sbm", se utilizará el modelo de bloque estocástico para la detección de comunidades. El resultado será almacenado en `self.state`. Para más información acerca del algoritmo usado, ver la `documentación <https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.inference.minimize_blockmodel_dl.html#graph_tool.inference.minimize_blockmodel_dl>`__.
@@ -784,6 +785,15 @@ class Network(object):
             Puede ser "real-exponential" (real-exponencial) u otro tipo de covariante compatible, para más información
             referirse a la documentacion de `GraphTool <https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.inference.BlockState.html#graph_tool.inference.BlockState>`__.
 
+        Examples
+        --------
+        >>> # Detección de comunidades mediante el modelo de bloque estocástico
+        >>> network.detect_communities(method="sbm")
+        >>>
+        >>> # Visualizar comunidades en el nivel 2 de jerarquía
+        >>> network.detect_communities(method="hierarchical")
+        >>> network.set_community_level(2)
+        >>> nodelink = network.visualize(node_kwargs={"categories": "community"})
         """
         np.random.seed(random_state)
         graph_tool.seed_rng(random_state)
@@ -838,7 +848,7 @@ class Network(object):
         al nivel de jerarquía especificado. Este método puede usarse si se detectaron las comunidades de nodos usando
         el método jerárquico.
         Esta función se utiliza para definir con qué comunidades se trabajará.
-        
+
         Parameters
         ------------
         level: int
@@ -851,12 +861,12 @@ class Network(object):
     def get_community_labels(self, level: int = 0):
         """
         Obtiene las etiquetas correspondientes a las comunidades de nodos existentes en el nivel jerárquico especificado.
-        
+
         Parameters
         ------------
         level: int, default=0
             Nivel dentro de la jerarquía de comunidades.
-        
+
         Raises
         ------
         Exception
@@ -930,17 +940,17 @@ class Network(object):
 
     def _build_node_memberships(self):
         """
-    Construye un mapeo de pertenencia de nodos a comunidades para cada nivel en la jerarquía de comunidades
-    detectadas previamente.
+        Construye un mapeo de pertenencia de nodos a comunidades para cada nivel en la jerarquía de comunidades
+        detectadas previamente.
 
-    Returns
-    -------
-    dict
-        Un diccionario que mapea los niveles de la jerarquía de comunidades a un arreglo que lista la comunidad a la que
-        pertenece cada nodo en ese nivel. Es importante el orden en el cual se encuentran los ids de comunidad pues la posición
-        en el arreglo indica a qué nodo corresponde.
+        Returns
+        -------
+        dict
+            Un diccionario que mapea los niveles de la jerarquía de comunidades a un arreglo que lista la comunidad a la que
+            pertenece cada nodo en ese nivel. Es importante el orden en el cual se encuentran los ids de comunidad pues la posición
+            en el arreglo indica a qué nodo corresponde.
 
-    """
+        """
         tree, root = self.community_tree, self.community_root
 
         depth_edges = graph_tool.search.dfs_iterator(tree, source=root, array=True)
@@ -974,3 +984,38 @@ class Network(object):
         )
 
         return membership_per_level
+
+    def summary(self, print_output=False):
+        """
+        Genera un resumen con estadísticas básicas de la red.
+
+        Parameters
+        ----------
+        print_output : bool, default=False
+            Si es True, imprime el resumen. En cualquier caso, devuelve un diccionario
+            con las estadísticas.
+
+        Returns
+        -------
+        dict
+            Diccionario con estadísticas de la red.
+        """
+        stats = {
+            "Nodes": self.num_vertices,
+            "Edges": self.num_edges,
+            "Directed": self.is_directed,
+            "Density": self.num_edges / (self.num_vertices * (self.num_vertices - 1)),
+            "Has weights": self._edge_weight is not None,
+        }
+
+        # Componentes conexas
+        components, sizes = self.connected_components(directed=self.is_directed)
+        stats["Connected components"] = len(sizes)
+        stats["Size of largest component"] = max(sizes)
+
+        if print_output:
+            print("Network Summary:")
+            for key, value in stats.items():
+                print(f"  {key}: {value}")
+
+        return stats

@@ -36,7 +36,15 @@ class NodeLink(object):
 
     """
 
-    def __init__(self, network: Network):
+    def __init__(
+        self,
+        network: Network,
+        auto_layout=True,
+        node_strategy="plain",
+        edge_strategy="plain",
+        node_args=None,
+        edge_args=None,
+    ):
         """
         Constructor de la clase.
 
@@ -44,6 +52,14 @@ class NodeLink(object):
         ----------
         network : Network
             El objeto Network que representa la red a visualizar.
+        auto_layout : bool, default=True
+            Si es True, aplica automáticamente un layout force-directed a la red.
+        default_node_strategy : str, default="plain"
+            Estrategia por defecto para dibujar los nodos.
+        default_edge_strategy : str, default="plain"
+            Estrategia por defecto para dibujar las aristas.
+        node_args, edge_args : dict
+            Argumentos adicionales para las estrategias de visualización.
         """
         self.network = network
         self.bundle_model = None
@@ -54,6 +70,19 @@ class NodeLink(object):
         self.node_strategy_args: dict = None
 
         self.labels = None
+
+        if auto_layout:
+            self.network.layout_nodes(method="force-directed")
+
+        if node_strategy:
+            if node_args is None:
+                node_args = dict()
+            self.set_node_drawing(method=node_strategy, **node_args)
+
+        if edge_strategy:
+            if edge_args is None:
+                edge_args = dict()
+            self.set_edge_drawing(method=edge_strategy, **edge_args)
 
     def layout_nodes(self, *args, **kwargs):
         """
@@ -240,14 +269,16 @@ class NodeLink(object):
             Argumentos adicionales específicos para cada método de dibujo.
             Para ver las opciones disponibles referirse a la documentación de :class:`~aves.visualization.networks.edges.EdgeStrategy`.
 
-        Raises
-        ------
-        ValueError
-           Si el método especificado no está implementado o si hay un problema al ejecutar la estrategia seleccionada.
-
-        Returns
-        -------
-        None
+        Examples
+        --------
+        >>> # Aristas simples
+        >>> nodelink.set_edge_drawing(method="plain")
+        >>>
+        >>> # Aristas con peso según centralidad
+        >>> nodelink.set_edge_drawing(method="weighted", weights="betweenness", k=5)
+        >>>
+        >>> # Aristas según comunidades
+        >>> nodelink.set_edge_drawing(method="community-gradient", level=1)
         """
 
         curved_edges = kwargs.get("curved", False)

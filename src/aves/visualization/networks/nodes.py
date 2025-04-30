@@ -32,6 +32,7 @@ class NodeStrategy(RenderStrategy):
             Argumentos adicionales (sin uso).
         """
         self.network = network
+        self.node_size = kwargs.pop("node_size", 10)
         super().__init__(network.node_layout.node_positions_vector)
 
     def prepare_data(self):
@@ -83,11 +84,11 @@ class PlainNodes(NodeStrategy):
             La red a visualizar.
         weights : str or array-like or None, optional
             Si se provee un string, este debe corresponder a una propiedad de vértice `network` a partir de la cual se calculará el peso.
-            
+
             Si se entrega un arreglo, este representa el peso de los nodos. Esto determina el tamaño de los nodos en la visualización;
             si no es provisto, todos los nodos serán del mismo tamaño.
         node_categories : str or array-like, optional
-            Un string o una lista que define las categorías de los nodos. Si es entregado, los nodos serán coloreados 
+            Un string o una lista que define las categorías de los nodos. Si es entregado, los nodos serán coloreados
             según su categoría.
 
         Raises
@@ -95,7 +96,7 @@ class PlainNodes(NodeStrategy):
         ValueError
             Si el string entregado como peso no corresponde a una propiedad de vértice válida.
             Si los pesos son provistos pero no son del tipo `numpy array` o no tienen un estructura de arreglo.
-    
+
         """
         super().__init__(network, **kwargs)
 
@@ -150,15 +151,17 @@ class PlainNodes(NodeStrategy):
             El tamaño de los nodos en el gráfico.
         palette : str o lista de colores, default=plasma, optional
             La paleta de colores utilizada para mapear las categorías de los nodos a colores.
-    
+
         Raises
         ------
         ValueError
             Si el númer de colores en la paleta no coincide con la cantidad de categorías.
             Si la paleta no tiene un nombre válido (según la librería Seaborn) o no corresponde a un iterable de colores.
-            
+
         """
-        node_size = kwargs.pop("node_size", 10)
+        node_size = kwargs.pop("node_size", self.node_size)
+        show_size_legend = kwargs.pop("size_legend", False)
+        size_legend_kwargs = kwargs.pop("size_legend_args", {})
 
         if self.node_categories is not None:
             palette_name = kwargs.pop("palette", "plasma")
@@ -199,6 +202,58 @@ class PlainNodes(NodeStrategy):
                 **kwargs,
             )
 
+        if show_size_legend and self.weights is not None:
+            from aves.visualization.tables.bubbles import bubble_size_legend
+
+            # Generar tamaños y etiquetas representativos
+            weight_min, weight_max = np.min(self.weights), np.max(self.weights)
+
+            # Crear 3-5 tamaños representativos
+            if "sizes" in size_legend_kwargs:
+                legend_sizes = size_legend_kwargs.pop("sizes")
+                legend_values = size_legend_kwargs.pop("values", legend_sizes)
+            else:
+                num_bubbles = size_legend_kwargs.pop("num_bubbles", 3)
+                if weight_max / weight_min > 100:
+                    # Usar escala logarítmica para grandes diferencias
+                    legend_values = np.logspace(
+                        np.log10(weight_min), np.log10(weight_max), num=num_bubbles
+                    )
+                else:
+                    # Usar escala lineal para diferencias pequeñas
+                    legend_values = np.linspace(weight_min, weight_max, num=num_bubbles)
+
+                # Aplicar la misma transformación que aplicamos a los tamaños reales
+                legend_sizes = (
+                    minmax_scale(np.sqrt(legend_values), feature_range=(0.01, 1.0))
+                    * node_size
+                )
+
+            # Crear etiquetas formateadas
+            if "labels" in size_legend_kwargs:
+                legend_labels = size_legend_kwargs.pop("labels")
+            else:
+                format_spec = size_legend_kwargs.pop("format", "{:.1f}")
+                legend_labels = [format_spec.format(val) for val in legend_values]
+
+            # Obtener título de la leyenda
+            legend_title = size_legend_kwargs.pop("title", "Tamaño")
+
+            size_legend_kwargs["location"] = size_legend_kwargs.get(
+                "location", "lower left"
+            )
+
+            # Crear leyenda
+            self.bubble_legend_ax = bubble_size_legend(
+                ax,
+                sizes=legend_sizes,
+                labels=legend_labels,
+                title=legend_title,
+                facecolor=kwargs.get("facecolor", None),
+                edgecolor=kwargs.get("edgecolor", None),
+                **size_legend_kwargs,
+            )
+
     def name(self):
         return "plain"
 
@@ -222,6 +277,7 @@ class LabeledNodes(PlainNodes):
         Un valor que controla la distancia radial de las etiquetas desde los nodos si `radial` es True,
 
     """
+
     def __init__(self, network: Network, label_property, **kwargs):
         """
         Parameters

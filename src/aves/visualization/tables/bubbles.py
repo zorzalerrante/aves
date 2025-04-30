@@ -30,7 +30,7 @@ def arc_patch(center, radius, theta1, theta2, resolution=50, **kwargs):
     resolution : int, default=50, opcional
         Número de puntos que se utilizarán para aproximar el arco.
     **kwargs : dict
-        Argumentos adicionales para personalizar el polígono. 
+        Argumentos adicionales para personalizar el polígono.
         Una lista completa de todas las posibles especificaciones se encuentra en la documentación de `Matplotlib <https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.Polygon.html>`__
 
     Returns
@@ -287,3 +287,140 @@ def bubble_plot(
     ax.set_ylim([min_y, max_y])
 
     return space, collection, split_collection_l, split_collection_r
+
+
+def bubble_size_legend(
+    ax,
+    sizes,
+    labels,
+    facecolor=None,
+    edgecolor=None,
+    location="lower right",
+    fontsize="x-small",
+    title=None,
+    title_size="small",
+    title_align="left",
+    width="30%",
+    height="30%",
+    bbox_to_anchor=(0.0, 0.0, 1.0, 1.0),
+    bbox_transform=None,
+    frameon=False,
+    **kwargs
+):
+    """
+    Crea una leyenda de tamaños de burbujas/círculos.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Ejes donde se agregará la leyenda.
+    sizes : list or array
+        Lista de tamaños de círculos para la leyenda.
+    labels : list or array
+        Etiquetas correspondientes a cada tamaño.
+    bubble_colors : str or list, default=None
+        Color o lista de colores para las burbujas. Si es None, se usará el color por defecto.
+    location : str, default="lower right"
+        Ubicación de la leyenda. Puede ser cualquier valor válido para `loc` en matplotlib.
+    fontsize : str or int, default="x-small"
+        Tamaño de fuente para las etiquetas.
+    title : str, default=None
+        Título de la leyenda.
+    title_size : str or int, default="small"
+        Tamaño de fuente para el título.
+    title_align : str, default="left"
+        Alineación del título. Puede ser "left", "center" o "right".
+    width : str, default="30%"
+        Ancho de la leyenda como porcentaje de los ejes.
+    height : str, default="30%"
+        Altura de la leyenda como porcentaje de los ejes.
+    bbox_to_anchor : tuple, default=(0.0, 0.0, 1.0, 1.0)
+        Coordenadas de anclaje del cuadro de la leyenda.
+    bbox_transform : Transform, default=None
+        Transformación para el cuadro de anclaje. Si es None, se usa ax.transAxes.
+    frameon : bool, default=False
+        Si es True, dibuja un marco alrededor de la leyenda.
+    **kwargs : dict
+        Argumentos adicionales para pasar a matplotlib.pyplot.legend().
+
+    Returns
+    -------
+    legend : matplotlib.legend.Legend
+        El objeto de leyenda creado.
+    """
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    if bbox_transform is None:
+        bbox_transform = ax.transAxes
+
+    # Crear una figura temporal fuera de la vista para generar los elementos de la leyenda
+    temp_fig, temp_ax = plt.subplots(figsize=(1, 1))
+    temp_fig.set_visible(False)
+
+    # Crear elementos de leyenda
+    legend_elements = []
+
+    # Crear scatter points con diferentes tamaños
+    for size, label in zip(sizes, labels):
+        scatter = temp_ax.scatter(
+            [],
+            [],
+            s=size,
+            facecolor=facecolor,
+            edgecolor=edgecolor,
+            alpha=0.7,
+            label=label,
+        )
+        legend_elements.append(scatter)
+
+    plt.close(temp_fig)
+
+    # Crear leyenda en ax con inset_axes para controlar el tamaño
+    if location != "out":
+        legend = ax.legend(
+            handles=legend_elements,
+            labels=labels,
+            fontsize=fontsize,
+            loc=location,
+            frameon=frameon,
+            **kwargs
+        )
+
+        if title:
+            legend.set_title(title)
+
+        ax.add_artist(legend)
+    else:
+        from mpl_toolkits.axes_grid1 import make_axes_locatable
+        from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+
+        divider = make_axes_locatable(ax)
+        legend_main = divider.append_axes("right", size=width)
+        legend_main.set_axis_off()
+
+        legend_ax = inset_axes(
+            legend_main,
+            width="100%",
+            height=height,
+            loc="center",
+            bbox_to_anchor=(0.0, 0.0, 1.0, 1.0),
+            bbox_transform=legend_main.transAxes,
+            borderpad=0,
+        )
+
+        legend = legend_ax.legend(
+            handles=legend_elements,
+            labels=labels,
+            fontsize=fontsize,
+            loc="center",
+            frameon=frameon,
+            **kwargs
+        )
+
+        if title:
+            legend_ax.set_title(title, loc=title_align)
+
+        legend_ax.axis("off")
+
+    return legend

@@ -218,6 +218,7 @@ class RadialLayout(LayoutStrategy):
         La red sobre la cual se aplicará el algoritmo.
 
     """
+
     def __init__(self, network: Network):
         super().__init__(network, "radial")
         self.node_angles = None
@@ -233,7 +234,7 @@ class RadialLayout(LayoutStrategy):
         ----------
         root : int, optional
             El id del nodo raíz alrededor del cual se organizarán los otros nodos. Por defecto es 0.
-            
+
         **kwargs: keyword arguments
             Parámetros adicionales que permiten configurar la ejecución del algoritmo. Una lista completa de los argumentos
             disponibles se encuentra en la documentación de `graph-tool <https://graph-tool.skewed.de/static/doc/autosummary/graph_tool.draw.sfdp_layout.html#graph_tool.draw.radial_tree_layout>`__.
@@ -261,13 +262,20 @@ class RadialLayout(LayoutStrategy):
         -------
         None
         """
+
         self.node_angles = np.degrees(
-            np.arctan2(self.node_positions, self.node_positions)
+            np.arctan2(
+                self.node_positions_vector[:, 1], self.node_positions_vector[:, 0]
+            )
         )
+
         self.node_angles_dict = dict(
-            zip(self.node_angles_dict.keys(), self.node_angles)
+            zip(self.node_positions_dict.keys(), self.node_angles)
         )
-        self.node_ratios = np.sqrt(np.dot(self.node_positions, self.node_positions))
+
+        self.node_ratios = np.sqrt(
+            np.dot(self.node_positions_vector, self.node_positions_vector.T)
+        )
 
     def get_angle(self, idx):
         return self.node_angles_dict[int(idx)]
@@ -359,7 +367,7 @@ class GeographicalLayout(LayoutStrategy):
     """
     Estrategia de organización de nodos que se basa en coordenadas geográficas para posicionar los nodos.
     """
-    
+
     def __init__(
         self, network: Network, geodataframe: gpd.GeoDataFrame, node_column: str = None
     ):
